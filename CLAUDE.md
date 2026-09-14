@@ -8,6 +8,15 @@ of truth for this repository. Also read
 [the testing and release gates](docs/testing-and-release.md) before taking
 ownership of a task.
 
+## UI verification
+
+When a change affects UI, layout, styling, routing, client state, or rendered
+data, verify the changed flow end to end in the in-app browser. If the agent
+cannot use the in-app browser, use Argent (Chromium CDP) for the same
+end-to-end check. Read `argent-device-interact` first (`argent-test-ui-flow`
+for a one-off interact-verify loop). Do not finish UI work unverified. Details
+are in [`AGENTS.md`](./AGENTS.md).
+
 ## After every change
 
 After each batch of edits, before reporting the work complete:

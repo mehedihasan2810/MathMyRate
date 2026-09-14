@@ -1,6 +1,6 @@
 # MathMyRate agent guide
 
-Last updated: 2026-09-14
+Last updated: 2026-09-15
 
 Read this file and the linked project documents before changing this repository.
 The approved implementation direction is in the workspace document
@@ -34,7 +34,8 @@ record what has actually happened since the plan was written.
   login, signup, or dashboard pages. The pages use labeled native controls
   and browser scripts, not a Preact island, and consume real engine results.
 - There is no hosted CI/CD. Run lint, types, Vitest unit tests, and the web
-  build locally. Exercise the UI in the app browser. Deploy only when
+  build locally. Exercise the UI in the in-app browser. If that browser is
+  unavailable, use Argent for end-to-end UI verification. Deploy only when
   explicitly requested.
 - There is no deployed-ready product and no Cloudflare resource has been
   changed. Retain the existing Alchemy, Workers, D1, KV, Images, API, and
@@ -66,11 +67,21 @@ jurisdictions or payment products.
 ## Safe verification
 
 Use Node.js 24 and the pnpm version pinned by the root `packageManager` field.
-Calculator unit tests use Vitest. There is no Playwright suite; exercise the UI
-in the app browser. The normal local sequence is documented in
+Calculator unit tests use Vitest. There is no Playwright suite. The normal
+local sequence is documented in
 [testing and release](docs/testing-and-release.md). Never report a check,
 browser test, deployment, or source audit as passed unless it was actually run
 and its result recorded.
+
+When a change affects UI, layout, styling, routing, client state, or rendered
+data, verify the changed flow end to end the way a user would (click, type,
+submit, navigate). Prefer the in-app browser. If the agent cannot use the
+in-app browser (missing tools, blocked session, or it will not load the app),
+use Argent to complete the same end-to-end check against a Chromium (CDP)
+target. Read the `argent-device-interact` skill first, and
+`argent-test-ui-flow` for a one-off interact-verify loop. Do not skip UI
+verification because the in-app browser was unavailable, and do not treat a
+single screenshot as evidence of behavior.
 
 The only lint command is `pnpm run lint`. It runs Oxlint with the vendored
 anti-slop plugins from `.oxlintrc.json` (`tools/oxlint/anti-slop`). There is no
