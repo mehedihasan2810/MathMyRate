@@ -1,0 +1,16 @@
+{
+  "name": "@MathMyRate/calculators",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "node --test src/validation.test.ts"
+  },
+  "devDependencies": {
+    "@MathMyRate/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
