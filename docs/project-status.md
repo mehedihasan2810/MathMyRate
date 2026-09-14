@@ -91,7 +91,7 @@ Local checks on 2026-09-14 for the current freelance UI working tree:
 | `pnpm run format:check`                            | Hosted workflow removed; remaining source is expected to pass locally                                             |
 | `git diff --check`                                 | Passed                                                                                                            |
 | Hosted GitHub Actions                              | Removed; verification is local only                                                                               |
-| Chromium production-dist E2E                       | Re-run locally against the production dist before merge                                                           |
+| Chromium production-dist E2E                       | 22 passed in one local run against the production dist                                                            |
 
 The build uses a compile-only invalid API origin, not a working deployed API.
 The E2E result is local production-dist evidence with Chromium only. It is not

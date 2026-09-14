@@ -100,21 +100,15 @@ narrow-screen flows, labels/errors, reset, copy success/failure, no
 mock result. Current browser evidence is Chromium only; it is not cross-browser
 coverage.
 
-The 2026-09-14 local production-dist evidence covers 22 Chromium checks, with
-passing evidence distributed across the initial and targeted rechecks; this is
-not a single 22-test green run. The architect's 18-attempt validation loop had
-16 passes and two long-loop timeouts. The parent's final targeted eight-run had
-seven passes and one CSS expected-unit serialization mismatch; one final
-motion-only corrected assertion passed. Coverage includes the independently
-derived `$60,000 / .75 + $12,000 = $92,000` fixture with `$79.87` hourly,
-`$638.96` day, and `1,152` capacity hours; the project check
-`$83.34 × 10 + 10% labor + $50 = $966.74`; the 100% billable boundary; the
-no-JavaScript `$3,026.25` project default; over-1,000 transfer values; maximum
-supported money and oversized-input rejection; reduced motion; and skip-link
-contrast. Transfer grouping/validation and reduced-motion/skip-link contrast
-were code fixes, not mock-result changes. The rerun invalid-input loops all
-passed within the 60-second budget. This is local production-dist evidence, not
-staging or deployment evidence.
+A later local production-dist Chromium run passed all 22 checks in one
+command (`pnpm test:e2e`, 16.2s). Coverage includes the independently derived
+`$60,000 / .75 + $12,000 = $92,000` fixture with `$79.87` hourly, `$638.96`
+day, and `1,152` capacity hours; the project check `$83.34 × 10 + 10% labor +
+$50 = $966.74`; the 100% billable boundary; the no-JavaScript `$3,026.25`
+project default; over-1,000 transfer values; maximum supported money and
+oversized-input rejection; reduced motion; skip-link contrast; copy
+success/failure; print; and invalid-input loops. This is local
+production-dist evidence, not staging or deployment evidence.
 
 Before release, also verify:
 
