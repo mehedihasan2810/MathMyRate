@@ -45,10 +45,12 @@ send user-entered financial values to analytics or automatic share URLs.
   content before JavaScript runs. The local-storage transfer path includes
   grouping and validation, and the UI styles include reduced-motion behavior
   and skip-link contrast.
-- `packages/calculators` is framework-independent TypeScript. It owns validated
-  inputs, calculation results, named totals/line items, rounding policy,
-  assumptions, warnings, and unsupported conditions. UI parsing and formatting
-  remain consuming-layer concerns.
+- `packages/calculators` is framework-independent TypeScript (it does not depend
+  on Astro, Hono, or the auth/database packages). It owns validated inputs,
+  calculation results, named totals/line items, rounding policy, assumptions,
+  warnings, and unsupported conditions. Decode boundaries use Effect Schema;
+  arithmetic stays bigint cents and integer basis points. UI parsing and
+  formatting remain consuming-layer concerns.
 - `apps/server`, `packages/api`, `packages/auth`, and `packages/db` are
   existing starter backend/auth/database source. They are retained and are not
   a requirement for public calculator keystrokes.
@@ -63,11 +65,11 @@ percentages use integer basis points, with 10,000 basis points equal to 100%.
 Calculations must avoid unreviewed binary floating-point rounding. Any
 conversion to a display number happens after the exact calculation.
 
-Runtime guards reject malformed records, wrong money types, unsafe integers,
-negative/out-of-range money, invalid percentages, and zero or impossible
-capacity. A calculation returns a validated result or explicit errors; it must
-never silently clamp a negative receipt, coerce an unparsed field, or return a
-plausible fallback.
+Runtime Effect Schema decoders reject malformed records, wrong money types,
+unsafe integers, negative/out-of-range money, invalid percentages, and zero or
+impossible capacity. A calculation returns a validated result or explicit
+errors; it must never silently clamp a negative receipt, coerce an unparsed
+field, or return a plausible fallback.
 
 The current freelance engine applies the annual tax gross-up once, computes
 billable capacity from weeks, hours, and billable basis points, and rounds

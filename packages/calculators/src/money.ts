@@ -1,29 +1,42 @@
+import { Schema } from "effect";
+
 /** USD-only boundary helpers. Never convert a floating-point amount to cents. */
 export const MAX_CENTS = 100_000_000_000_000n;
 
-export function requireCents(value: unknown, field = "amount", minimum = 0n): bigint {
-  if (typeof value !== "bigint" || value < minimum || value > MAX_CENTS) {
-    throw new RangeError(`${field} must be bigint cents between ${minimum} and ${MAX_CENTS}`);
-  }
-  return value;
+export const Cents = Schema.BigInt.check(
+  Schema.isGreaterThanOrEqualToBigInt(0n),
+  Schema.isLessThanOrEqualToBigInt(MAX_CENTS),
+);
+
+export type Cents = typeof Cents.Type;
+
+export const PositiveCents = Schema.BigInt.check(
+  Schema.isGreaterThanOrEqualToBigInt(1n),
+  Schema.isLessThanOrEqualToBigInt(MAX_CENTS),
+);
+
+export type PositiveCents = typeof PositiveCents.Type;
+
+const UsdText = Schema.String.check(Schema.isPattern(/^(0|[1-9]\d*)(\.\d{1,2})?$/));
+
+export const requireCents = Schema.decodeUnknownSync(Cents);
+
+export function parseUsd(amount: string): Cents {
+  const text = Schema.decodeSync(UsdText)(amount);
+  const [whole = "", fraction = ""] = text.split(".");
+
+  return Schema.decodeSync(Cents)(BigInt(whole) * 100n + BigInt(fraction.padEnd(2, "0")));
 }
 
-export function parseUsd(value: string): bigint {
-  if (typeof value !== "string" || !/^(0|[1-9]\d*)(\.\d{1,2})?$/.test(value)) {
-    throw new TypeError("amount must be a nonnegative decimal with at most two fractional digits");
-  }
-  const [whole = "", fraction = ""] = value.split(".");
-  return requireCents(BigInt(whole) * 100n + BigInt(fraction.padEnd(2, "0")));
-}
+export function formatUsd(cents: bigint): string {
+  const sign = cents < 0n ? "-" : "";
+  const absolute = cents < 0n ? -cents : cents;
 
-export function formatUsd(value: bigint): string {
-  if (typeof value !== "bigint") throw new TypeError("amount must be bigint cents");
-  const sign = value < 0n ? "-" : "";
-  const absolute = value < 0n ? -value : value;
   return `${sign}${absolute / 100n}.${String(absolute % 100n).padStart(2, "0")}`;
 }
 
 export function ceilDivide(numerator: bigint, denominator: bigint): bigint {
   if (numerator < 0n || denominator <= 0n) throw new RangeError("invalid ceiling division");
+
   return (numerator + denominator - 1n) / denominator;
 }

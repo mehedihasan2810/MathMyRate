@@ -21,12 +21,12 @@ deploys are local.
 The package remains framework-independent, and the implemented freelance Astro
 pages now consume its real results:
 
-- `packages/calculators` has runtime numeric validation that rejects non-finite
-  and unparsed values instead of manufacturing a result.
+- `packages/calculators` uses Effect Schema at decode boundaries and rejects
+  non-finite and unparsed values instead of manufacturing a result.
 - The freelance engine implements hourly/day-rate planning and project receipt
   targets. Monetary inputs and outputs use bigint integer cents; percentages
   use integer basis points; divisions use explicit upward cent rounding.
-- Runtime guards validate object shape, bigint money values, safe integers, and
+- Runtime schemas validate object shape, bigint money values, safe integers, and
   domain boundaries such as tax below 100%, positive work capacity, and
   contingency limits.
 - The math test direction covers hand-derived values, fractional capacity,
@@ -77,19 +77,19 @@ or auth migration.
 
 ## Verification record
 
-Local checks on 2026-09-14 for the current freelance UI working tree:
+Local checks on 2026-09-14 after the Effect Schema / anti-slop cleanup:
 
-| Check                                          | Observed result                                                       |
-| ---------------------------------------------- | --------------------------------------------------------------------- |
-| `pnpm install --frozen-lockfile`               | Passed from the current baseline lockfile                             |
-| `pnpm run lint`                                | Failed after vendoring anti-slop: 229 findings (179 spacing, 50 semantic). Plugin loaded; owned-source cleanup not done. |
-| `pnpm check-types`                             | Passed with 0 errors, 0 warnings, 0 hints (re-run after anti-slop install) |
-| `pnpm run test` / Vitest calculator unit tests | 35 passed in `packages/calculators`                                   |
-| `pnpm build:web`                               | Passed; four static HTML pages emitted (auth pages removed)           |
-| `pnpm run format:check`                        | Passed (re-run after anti-slop install)                               |
-| `git diff --check`                             | Passed                                                                |
-| Hosted GitHub Actions                          | Removed; verification is local only                                   |
-| Browser end-to-end                             | Manual in the running app; Playwright removed                         |
+| Check                                          | Observed result                                                                                                                                                                                                                  |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm install --frozen-lockfile`               | Passed; `@MathMyRate/calculators` depends on `effect@4.0.0-rc.112` from the workspace catalog                                                                                                                                    |
+| `pnpm run lint`                                | Passed with 0 findings (Oxlint + anti-slop). Previous 229 findings were fixed, not suppressed.                                                                                                                                   |
+| `pnpm check-types`                             | Passed: turbo check-types, including web `astro check` 0 errors, 0 warnings, 0 hints                                                                                                                                             |
+| `pnpm run test` / Vitest calculator unit tests | 35 passed in `packages/calculators`                                                                                                                                                                                              |
+| `pnpm build:web`                               | Passed; four static HTML pages emitted (`PUBLIC_SERVER_URL=https://api.example.invalid`)                                                                                                                                         |
+| `pnpm run format:check`                        | Passed                                                                                                                                                                                                                           |
+| `git diff --check`                             | Passed                                                                                                                                                                                                                           |
+| Hosted GitHub Actions                          | Removed; verification is local only                                                                                                                                                                                              |
+| Browser end-to-end                             | Exercised on Astro preview `:4321`: hourly defaults `$103.63`, live update, invalid/reset, transfer into project `$103.63`/`$2,801.84`, zero-time error, reset to `$3,026.25`; `/` and `/freelance/` loaded. Playwright removed. |
 
 The build uses a compile-only invalid API origin, not a working deployed API.
 The independently derived rate fixtures are `$60,000 / .75 + $12,000 =

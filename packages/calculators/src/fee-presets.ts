@@ -148,12 +148,21 @@ function official(preset: OfficialDefinition): FeePreset {
   };
 }
 
-function deepFreeze<T>(value: T): Readonly<T> {
-  if (value && typeof value === "object" && !Object.isFrozen(value)) {
-    for (const child of Object.values(value as Record<string, unknown>)) deepFreeze(child);
-    Object.freeze(value);
+function freezeFeePreset(preset: FeePreset): FeePreset {
+  for (const component of preset.components) {
+    Object.freeze(component);
   }
-  return value as Readonly<T>;
+
+  for (const source of preset.sources) {
+    Object.freeze(source);
+  }
+
+  Object.freeze(preset.components);
+  Object.freeze(preset.sources);
+  Object.freeze(preset.assumptions);
+  Object.freeze(preset.exclusions);
+
+  return Object.freeze(preset);
 }
 
 const officialPresetRecords: FeePreset[] = [
@@ -477,9 +486,10 @@ const officialPresetRecords: FeePreset[] = [
 ];
 
 /** The only records that may claim official provenance. */
-export const feePresets: readonly FeePreset[] = deepFreeze(officialPresetRecords);
+export const feePresets: readonly FeePreset[] = officialPresetRecords.map(freezeFeePreset);
 
 const officialById = new Map(feePresets.map((preset) => [preset.id, preset]));
+
 const officialSourceUrls = new Set(
   feePresets.flatMap((preset) => preset.sources.map((source) => source.url)),
 );

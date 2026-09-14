@@ -1,45 +1,143 @@
+import { Schema } from "effect";
+
 import { isOfficialSourceUrl } from "./fee-presets.ts";
-import type { FeePreset } from "./fee-presets.ts";
 
-function record(value: unknown, name: string): Record<string, unknown> {
-  if (typeof value !== "object" || !value || Array.isArray(value)) {
-    throw new TypeError(`${name} must be an object`);
-  }
-  return value as Record<string, unknown>;
-}
+const RequiredText = Schema.NonEmptyString.check(Schema.isTrimmed());
 
-function text(value: unknown, name: string): asserts value is string {
-  if (typeof value !== "string" || !value.trim()) throw new TypeError(`${name} is required`);
-}
+const IsoDate = Schema.String.check(
+  Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/),
+  Schema.makeFilter((value) => {
+    const parsed = Date.parse(`${value}T00:00:00.000Z`);
 
-function texts(value: unknown, name: string): void {
-  if (!Array.isArray(value) || !value.length) throw new TypeError(`${name} must not be empty`);
-  for (const entry of value) text(entry, name);
-}
+    return (
+      Number.isFinite(parsed) &&
+      new Date(`${value}T00:00:00.000Z`).toISOString().slice(0, 10) === value
+    );
+  }),
+);
 
-function integer(value: unknown, name: string, max: number): asserts value is number {
-  if (!Number.isSafeInteger(value) || typeof value !== "number" || value < 0 || value > max) {
-    throw new RangeError(`${name} must be an integer from 0 to ${max}`);
-  }
-}
+const HttpsUrl = Schema.String.check(
+  Schema.makeFilter((value) => {
+    try {
+      const url = new URL(value);
 
-function isoDate(value: unknown, name: string): asserts value is string {
-  if (
-    typeof value !== "string" ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(value) ||
-    !Number.isFinite(Date.parse(value)) ||
-    new Date(value).toISOString().slice(0, 10) !== value
-  ) {
-    throw new TypeError(`${name} must be a real ISO calendar date`);
-  }
-}
+      return url.protocol === "https:" && url.username === "" && url.password === "";
+    } catch {
+      return false;
+    }
+  }),
+);
 
-const tierPolicies = new Set([
-  "explicitly-excluded",
-  "pre-threshold",
-  "post-threshold",
-  "not-applicable",
-]);
+const FeeSource = Schema.Struct({
+  title: RequiredText,
+  url: HttpsUrl,
+});
+
+const FeeComponent = Schema.Struct({
+  id: RequiredText,
+  label: RequiredText,
+  rateBps: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 9999 })),
+  fixedCents: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 100_000_000 })),
+  base: Schema.Literal("gross"),
+  rounding: Schema.Literal("half-up"),
+});
+
+export const FeePresetSchema = Schema.Struct({
+  id: RequiredText,
+  label: RequiredText,
+  provider: RequiredText,
+  origin: Schema.Literals(["official", "custom"]),
+  kind: Schema.optional(Schema.Literals(["official", "custom"])),
+  currency: Schema.Literal("USD"),
+  accountCountry: Schema.Literal("US"),
+  taxMode: Schema.Literals(["caller-supplied", "zero-only"]),
+  paymentProduct: RequiredText,
+  channel: RequiredText,
+  combinationPolicy: Schema.Literal("exact-scenario-only"),
+  effectiveFrom: Schema.NullOr(IsoDate),
+  tierPolicy: Schema.Literals([
+    "explicitly-excluded",
+    "pre-threshold",
+    "post-threshold",
+    "not-applicable",
+  ]),
+  capsPolicy: Schema.Literal("none-modeled"),
+  customPricingPolicy: Schema.Literals(["excluded", "user-supplied"]),
+  revision: Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 2_147_483_647 })),
+  components: Schema.Array(FeeComponent),
+  sources: Schema.Array(FeeSource),
+  checkedOn: Schema.NullOr(IsoDate),
+  assumptions: Schema.NonEmptyArray(RequiredText),
+  exclusions: Schema.NonEmptyArray(RequiredText),
+  status: Schema.Literals(["supported", "blocked"]),
+  blockedReason: Schema.optional(RequiredText),
+}).check(
+  Schema.makeFilter((preset) => {
+    if (preset.kind !== undefined && preset.kind !== preset.origin) {
+      return "preset kind must match origin";
+    }
+
+    if (preset.origin === "official") {
+      if (preset.id.startsWith("custom:")) {
+        return "official preset id must not use the custom namespace";
+      }
+
+      if (preset.checkedOn === null) return "checkedOn is required";
+
+      if (preset.customPricingPolicy !== "excluded") {
+        return "official preset custom pricing must be excluded";
+      }
+
+      if (preset.sources.length < 1) return "official presets need at least one source";
+    } else {
+      if (!preset.id.startsWith("custom:")) {
+        return "custom preset id must use the custom: namespace";
+      }
+
+      if (preset.checkedOn !== null) return "custom preset checkedOn must be null";
+
+      if (preset.customPricingPolicy !== "user-supplied") {
+        return "custom preset pricing must be user-supplied";
+      }
+
+      if (preset.sources.some((source) => isOfficialSourceUrl(source.url))) {
+        return "custom preset cannot reuse an official source";
+      }
+    }
+
+    if (preset.status === "blocked") {
+      if (preset.blockedReason === undefined) return "blockedReason is required";
+
+      if (preset.components.length > 0) return "blocked rules cannot have actionable components";
+
+      return undefined;
+    }
+
+    if (preset.blockedReason !== undefined) return "supported rule has a blockedReason";
+
+    if (preset.components.length < 1 || preset.components.length > 8) {
+      return "one to eight components required";
+    }
+
+    const ids = new Set(preset.components.map((component) => component.id));
+
+    if (ids.size !== preset.components.length) return "duplicate component id";
+
+    const totalRate = preset.components.reduce((sum, component) => sum + component.rateBps, 0);
+
+    if (totalRate >= 10000) return "combined percentage must be below 100%";
+
+    return undefined;
+  }),
+);
+
+export const FeePresetsSchema = Schema.NonEmptyArray(FeePresetSchema).check(
+  Schema.makeFilter((presets) => {
+    const ids = new Set(presets.map((preset) => preset.id));
+
+    return ids.size === presets.length ? undefined : "duplicate preset id";
+  }),
+);
 
 /**
  * Validate a record's shape and declared provenance at the trust boundary.
@@ -48,121 +146,6 @@ const tierPolicies = new Set([
  * this structural validator while still being rejected by the fee engine if
  * it claims official provenance but is not an exact immutable registry record.
  */
-export function validateFeePreset(value: unknown): FeePreset {
-  const preset = record(value, "preset");
-  for (const key of ["id", "label", "provider", "paymentProduct", "channel"])
-    text(preset[key], key);
+export const validateFeePreset = Schema.decodeUnknownSync(FeePresetSchema);
 
-  if (preset.origin !== "official" && preset.origin !== "custom") {
-    throw new TypeError("explicit preset origin required");
-  }
-  if (preset.kind !== undefined && preset.kind !== preset.origin) {
-    throw new TypeError("preset kind must match origin");
-  }
-  if (preset.currency !== "USD" || preset.accountCountry !== "US") {
-    throw new RangeError("Only explicit US-account/USD presets are supported");
-  }
-  const id = preset.id as string;
-  if (preset.taxMode !== "caller-supplied" && preset.taxMode !== "zero-only") {
-    throw new TypeError("explicit supported tax mode required");
-  }
-  if (preset.combinationPolicy !== "exact-scenario-only") {
-    throw new TypeError("only exact-scenario-only combinations are supported");
-  }
-  if (preset.capsPolicy !== "none-modeled") {
-    throw new TypeError("only none-modeled caps are supported");
-  }
-  if (typeof preset.tierPolicy !== "string" || !tierPolicies.has(preset.tierPolicy)) {
-    throw new TypeError("explicit supported tier policy required");
-  }
-  if (preset.customPricingPolicy !== "excluded" && preset.customPricingPolicy !== "user-supplied") {
-    throw new TypeError("explicit custom pricing policy required");
-  }
-  integer(preset.revision, "revision", 2_147_483_647);
-  if (preset.revision < 1) throw new RangeError("revision must be at least 1");
-
-  if (preset.effectiveFrom !== null) isoDate(preset.effectiveFrom, "effectiveFrom");
-  if (preset.origin === "official") {
-    if (!id || id.startsWith("custom:")) {
-      throw new TypeError("official preset id must not use the custom namespace");
-    }
-    isoDate(preset.checkedOn, "checkedOn");
-    if (preset.customPricingPolicy !== "excluded") {
-      throw new TypeError("official preset custom pricing must be excluded");
-    }
-  } else {
-    if (!id.startsWith("custom:")) {
-      throw new TypeError("custom preset id must use the custom: namespace");
-    }
-    if (preset.checkedOn !== null) {
-      throw new TypeError("custom preset checkedOn must be null");
-    }
-    if (preset.customPricingPolicy !== "user-supplied") {
-      throw new TypeError("custom preset pricing must be user-supplied");
-    }
-  }
-
-  texts(preset.assumptions, "assumptions");
-  texts(preset.exclusions, "exclusions");
-  if (!Array.isArray(preset.sources) || (preset.origin === "official" && !preset.sources.length)) {
-    throw new TypeError("sources array required; official presets need at least one source");
-  }
-  for (const source of preset.sources) {
-    const entry = record(source, "source");
-    text(entry.title, "source.title");
-    text(entry.url, "source.url");
-    const url = new URL(entry.url);
-    if (url.protocol !== "https:" || url.username || url.password) {
-      throw new TypeError("source must use HTTPS");
-    }
-    if (preset.origin === "custom" && isOfficialSourceUrl(entry.url)) {
-      throw new TypeError("custom preset cannot reuse an official source");
-    }
-  }
-
-  if (!Array.isArray(preset.components)) throw new TypeError("components required");
-  if (preset.status === "blocked") {
-    text(preset.blockedReason, "blockedReason");
-    if (preset.components.length) {
-      throw new TypeError("blocked rules cannot have actionable components");
-    }
-  } else if (preset.status === "supported") {
-    if (preset.blockedReason !== undefined) {
-      throw new TypeError("supported rule has a blockedReason");
-    }
-    if (!preset.components.length || preset.components.length > 8) {
-      throw new RangeError("one to eight components required");
-    }
-    const ids = new Set<string>();
-    let totalRate = 0;
-    for (const component of preset.components) {
-      const entry = record(component, "component");
-      text(entry.id, "component.id");
-      text(entry.label, "component.label");
-      if (ids.has(entry.id)) throw new TypeError("duplicate component id");
-      ids.add(entry.id);
-      integer(entry.rateBps, "rateBps", 9999);
-      integer(entry.fixedCents, "fixedCents", 100_000_000);
-      if (entry.base !== "gross") throw new TypeError("unsupported fee base");
-      if (entry.rounding !== "half-up") throw new TypeError("unsupported component rounding");
-      totalRate += entry.rateBps;
-    }
-    if (totalRate >= 10000) throw new RangeError("combined percentage must be below 100%");
-  } else {
-    throw new TypeError("unsupported rule status");
-  }
-  return value as FeePreset;
-}
-
-export function validateFeePresets(values: unknown): FeePreset[] {
-  if (!Array.isArray(values) || !values.length) {
-    throw new TypeError("preset list must not be empty");
-  }
-  const ids = new Set<string>();
-  return values.map((value) => {
-    const preset = validateFeePreset(value);
-    if (ids.has(preset.id)) throw new TypeError("duplicate preset id");
-    ids.add(preset.id);
-    return preset;
-  });
-}
+export const validateFeePresets = Schema.decodeUnknownSync(FeePresetsSchema);

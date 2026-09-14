@@ -4,7 +4,9 @@ import Layout from "../../layouts/Layout.astro";
 import { formatUsdGrouped } from "../../scripts/calculator-form";
 
 const defaults = { takeHome: "85000.00", expenses: "7500.00", tax: "27.00", weeks: "46", hoursWeek: "40", billable: "65.00", hoursDay: "7" };
+
 const example = calculateFreelanceRate({ annualTakeHomeCents: 8500000n, annualExpensesCents: 750000n, taxRateBps: 2700, weeksPerYear: 46, hoursPerWeek: 40, billablePercentBps: 6500, hoursPerDay: 7 });
+
 const fields = [
   ["takeHome", "Desired annual take-home", defaults.takeHome, "Enter the money you want to keep after your planning tax reserve."],
   ["expenses", "Annual business expenses", defaults.expenses, "Software, insurance, subcontractors, and other annual costs."],
@@ -41,21 +43,114 @@ const fields = [
   </main>
   <script>
     import { calculateFreelanceRate } from "@MathMyRate/calculators";
-    import { formatUsdGrouped, InputProblem, percentToBps, setFieldState, usdToCents, wholeNumber } from "../../scripts/calculator-form";
-    const form = document.querySelector<HTMLFormElement>("#hourly-form")!;
-    const input = (id: string) => document.getElementById(id) as HTMLInputElement;
-    const action = (id: string) => document.getElementById(id) as HTMLButtonElement;
-    const message = document.getElementById("hourly-message")!;
+    import {
+      formatUsdGrouped,
+      InputProblem,
+      percentToBps,
+      requireHtmlButton,
+      requireHtmlElement,
+      requireHtmlForm,
+      requireHtmlInput,
+      setFieldState,
+      usdToCents,
+      wholeNumber,
+    } from "../../scripts/calculator-form";
+
+    const form = requireHtmlForm("hourly-form");
+
+    const message = requireHtmlElement("hourly-message");
+
     let latest: bigint | null = null;
-    function clear() { ["hourly-result","day-result","revenue-result","capacity-result"].forEach(id => document.getElementById(id)!.textContent = "—"); latest = null; action("copy-hourly").disabled = true; action("transfer-rate").disabled = true; }
-    function update() { try {
-      const result = calculateFreelanceRate({ annualTakeHomeCents: usdToCents(input("takeHome").value, "takeHome"), annualExpensesCents: usdToCents(input("expenses").value, "expenses"), taxRateBps: percentToBps(input("tax").value, "tax", 9999), weeksPerYear: wholeNumber(input("weeks").value, "weeks", 1, 52), hoursPerWeek: wholeNumber(input("hoursWeek").value, "hoursWeek", 1, 168), billablePercentBps: percentToBps(input("billable").value, "billable", 10000), hoursPerDay: wholeNumber(input("hoursDay").value, "hoursDay", 1, 24) });
-      document.getElementById("hourly-result")!.textContent = formatUsdGrouped(result.hourlyRateCents); document.getElementById("day-result")!.textContent = formatUsdGrouped(result.dayRateCents); document.getElementById("revenue-result")!.textContent = formatUsdGrouped(result.annualRevenueCents); document.getElementById("capacity-result")!.textContent = `${result.annualBillableHours.toLocaleString()} hours`; latest = result.hourlyRateCents; action("copy-hourly").disabled = false; action("transfer-rate").disabled = false; message.textContent = ""; setFieldState(form);
-    } catch (e) { clear(); const p = e instanceof InputProblem ? e : new InputProblem("billable", "Working capacity must be greater than zero."); setFieldState(form, p); } }
-    form.addEventListener("submit", e => { e.preventDefault(); update(); }); form.querySelectorAll("input").forEach(el => el.addEventListener("input", update));
-    action("hourly-reset").addEventListener("click", () => { form.reset(); try { localStorage.removeItem("mathmyrate:hourly-cents"); } catch {} update(); });
-    action("transfer-rate").addEventListener("click", () => { if (latest === null) return; try { localStorage.setItem("mathmyrate:hourly-cents", latest.toString()); location.href = "/freelance/project-rate-calculator/"; } catch { message.textContent = "Your browser could not save this rate. Copy it into the project calculator instead."; } });
-    action("copy-hourly").addEventListener("click", async () => { if (latest === null) return; try { await navigator.clipboard.writeText(`Minimum hourly rate: ${formatUsdGrouped(latest)}`); message.textContent = "Result copied."; } catch { message.textContent = "Copy was unavailable. Select the result to copy it manually."; } });
+
+    function setResult(id: string, text: string): void {
+      requireHtmlElement(id).textContent = text;
+    }
+
+    function clear(): void {
+      for (const id of ["hourly-result", "day-result", "revenue-result", "capacity-result"]) {
+        setResult(id, "—");
+      }
+
+      latest = null;
+      requireHtmlButton("copy-hourly").disabled = true;
+      requireHtmlButton("transfer-rate").disabled = true;
+    }
+
+    function update(): void {
+      try {
+        const result = calculateFreelanceRate({
+          annualTakeHomeCents: usdToCents(requireHtmlInput("takeHome").value, "takeHome"),
+          annualExpensesCents: usdToCents(requireHtmlInput("expenses").value, "expenses"),
+          taxRateBps: percentToBps(requireHtmlInput("tax").value, "tax", 9999),
+          weeksPerYear: wholeNumber(requireHtmlInput("weeks").value, "weeks", 1, 52),
+          hoursPerWeek: wholeNumber(requireHtmlInput("hoursWeek").value, "hoursWeek", 1, 168),
+          billablePercentBps: percentToBps(requireHtmlInput("billable").value, "billable", 10000),
+          hoursPerDay: wholeNumber(requireHtmlInput("hoursDay").value, "hoursDay", 1, 24),
+        });
+
+        setResult("hourly-result", formatUsdGrouped(result.hourlyRateCents));
+        setResult("day-result", formatUsdGrouped(result.dayRateCents));
+        setResult("revenue-result", formatUsdGrouped(result.annualRevenueCents));
+        setResult("capacity-result", `${result.annualBillableHours.toLocaleString()} hours`);
+        latest = result.hourlyRateCents;
+        requireHtmlButton("copy-hourly").disabled = false;
+        requireHtmlButton("transfer-rate").disabled = false;
+        message.textContent = "";
+        setFieldState(form);
+      } catch (error) {
+        clear();
+
+        const problem =
+          error instanceof InputProblem
+            ? error
+            : new InputProblem("billable", "Working capacity must be greater than zero.");
+
+        setFieldState(form, problem);
+      }
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      update();
+    });
+
+    form.querySelectorAll("input").forEach((element) => element.addEventListener("input", update));
+
+    requireHtmlButton("hourly-reset").addEventListener("click", () => {
+      form.reset();
+
+      try {
+        localStorage.removeItem("mathmyrate:hourly-cents");
+      } catch {
+        /* localStorage may be unavailable */
+      }
+
+      update();
+    });
+
+    requireHtmlButton("transfer-rate").addEventListener("click", () => {
+      if (latest === null) return;
+
+      try {
+        localStorage.setItem("mathmyrate:hourly-cents", latest.toString());
+        location.href = "/freelance/project-rate-calculator/";
+      } catch {
+        message.textContent =
+          "Your browser could not save this rate. Copy it into the project calculator instead.";
+      }
+    });
+
+    requireHtmlButton("copy-hourly").addEventListener("click", async () => {
+      if (latest === null) return;
+
+      try {
+        await navigator.clipboard.writeText(`Minimum hourly rate: ${formatUsdGrouped(latest)}`);
+        message.textContent = "Result copied.";
+      } catch {
+        message.textContent = "Copy was unavailable. Select the result to copy it manually.";
+      }
+    });
+
     update();
   </script>
 </Layout>

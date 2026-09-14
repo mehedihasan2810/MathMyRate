@@ -34,6 +34,7 @@ export default Alchemy.Stack(
   },
   Effect.gen(function* () {
     const serverWorker = yield* server;
+
     const webWorker = yield* Cloudflare.Website.Astro("web", {
       rootDir: "../../apps/web",
       env: {

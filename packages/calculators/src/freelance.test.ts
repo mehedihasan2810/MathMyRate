@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "vitest";
 
-import { calculateFreelanceRate, calculateProjectRate } from "./freelance.ts";
+import { Schema } from "effect";
+
+import { calculateFreelanceRate, calculateProjectRate, FreelanceRateInput } from "./freelance.ts";
 
 test("calculates a hand-derived annual, hourly, and day rate", () => {
   const result = calculateFreelanceRate({
@@ -109,18 +111,13 @@ test("rounds labor and contingency at cent boundaries", () => {
 });
 
 test("rejects a zero-minute project to catch blank estimates", () => {
-  assert.throws(
-    () =>
-      calculateProjectRate({
-        hourlyRateCents: 1n,
-        estimatedMinutes: 0,
-        directExpensesCents: 0n,
-        contingencyBps: 0,
-      }),
-    {
-      name: "RangeError",
-      message: "estimatedMinutes must be between 1 and 9007199254740991",
-    },
+  assert.throws(() =>
+    calculateProjectRate({
+      hourlyRateCents: 1n,
+      estimatedMinutes: 0,
+      directExpensesCents: 0n,
+      contingencyBps: 0,
+    }),
   );
 });
 
@@ -134,6 +131,7 @@ test("rate and project prices are monotonic as costs or contingency increase", (
     billablePercentBps: 8_000,
     hoursPerDay: 8,
   });
+
   const higherRate = calculateFreelanceRate({
     annualTakeHomeCents: 100_001n,
     annualExpensesCents: 10_001n,
@@ -143,6 +141,7 @@ test("rate and project prices are monotonic as costs or contingency increase", (
     billablePercentBps: 8_000,
     hoursPerDay: 8,
   });
+
   assert.ok(higherRate.annualRevenueCents > lowerRate.annualRevenueCents);
   assert.ok(higherRate.hourlyRateCents >= lowerRate.hourlyRateCents);
 
@@ -152,31 +151,28 @@ test("rate and project prices are monotonic as costs or contingency increase", (
     directExpensesCents: 1_000n,
     contingencyBps: 500,
   });
+
   const higherProject = calculateProjectRate({
     hourlyRateCents: 5_001n,
     estimatedMinutes: 121,
     directExpensesCents: 1_001n,
     contingencyBps: 501,
   });
+
   assert.ok(higherProject.targetReceiptsCents > lowerProject.targetReceiptsCents);
 });
 
 test("rejects malformed, unsafe, and out-of-range inputs", () => {
-  assert.throws(
-    () =>
-      calculateFreelanceRate({
-        annualTakeHomeCents: 1,
-        annualExpensesCents: 0n,
-        taxRateBps: 0,
-        weeksPerYear: 1,
-        hoursPerWeek: 1,
-        billablePercentBps: 1,
-        hoursPerDay: 1,
-      } as never),
-    {
-      name: "TypeError",
-      message: "annualTakeHomeCents must be a bigint number of cents",
-    },
+  assert.throws(() =>
+    Schema.decodeUnknownSync(FreelanceRateInput)({
+      annualTakeHomeCents: 1,
+      annualExpensesCents: 0n,
+      taxRateBps: 0,
+      weeksPerYear: 1,
+      hoursPerWeek: 1,
+      billablePercentBps: 1,
+      hoursPerDay: 1,
+    }),
   );
 
   for (const input of [

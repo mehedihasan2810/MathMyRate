@@ -15,6 +15,7 @@ import { createAuth } from "./services";
 const app = new Hono();
 
 app.use(logger());
+
 app.use(
   "/*",
   cors({

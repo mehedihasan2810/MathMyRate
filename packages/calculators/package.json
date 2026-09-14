@@ -9,6 +9,9 @@
     "check-types": "tsc --noEmit",
     "test": "vitest run"
   },
+  "dependencies": {
+    "effect": "catalog:"
+  },
   "devDependencies": {
     "@MathMyRate/config": "workspace:*",
     "typescript": "catalog:",

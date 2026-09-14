@@ -17,30 +17,37 @@ test("official lookup returns frozen registry records", () => {
   assert.equal(getFeePreset("custom:missing"), undefined);
   assert(Object.isFrozen(preset));
   assert(Object.isFrozen(preset.components));
-  assert(Object.isFrozen(preset.components[0]));
   assert(Object.isFrozen(preset.sources));
+  assert.ok(preset.components[0]);
+  assert.ok(preset.sources[0]);
+  assert(Object.isFrozen(preset.components[0]));
   assert(Object.isFrozen(preset.sources[0]));
 });
 
 test("official-looking clones are rejected unless their full configuration is canonical", () => {
-  const preset = getFeePreset("stripe-us-online-domestic-card")!;
+  const preset = getFeePreset("stripe-us-online-domestic-card");
+
+  assert.ok(preset);
+  const processing = preset.components[0];
+  const source = preset.sources[0];
+
+  assert.ok(processing);
+  assert.ok(source);
   const forge = (change: Partial<typeof preset>) => ({ ...preset, ...change });
+
   const forged: [string, typeof preset][] = [
     [
       "rate",
       {
         ...preset,
-        components: [{ ...preset.components[0]!, rateBps: 1 }],
+        components: [{ ...processing, rateBps: 1 }],
       },
     ],
     [
       "source",
       {
         ...preset,
-        sources: [
-          { ...preset.sources[0]!, url: "https://example.com/forged" },
-          ...preset.sources.slice(1),
-        ],
+        sources: [{ ...source, url: "https://example.com/forged" }, ...preset.sources.slice(1)],
       },
     ],
     ["date", forge({ checkedOn: "2026-09-15" })],
@@ -48,6 +55,7 @@ test("official-looking clones are rejected unless their full configuration is ca
     ["product", forge({ paymentProduct: "Forged product" })],
     ["revision", forge({ revision: preset.revision + 1 })],
   ];
+
   for (const [, candidate] of forged) {
     assert.throws(
       () => calculateFees({ preset: candidate, grossCents: 10000n }),
@@ -57,14 +65,15 @@ test("official-looking clones are rejected unless their full configuration is ca
 });
 
 // Independent $100 fixtures, directly from the component arithmetic in fee-sources.md.
-const expectedFees: Record<string, bigint> = {
-  "stripe-us-online-domestic-card": 320n,
-  "paypal-us-checkout-paypal-payment": 398n,
-  "gumroad-us-direct-card": 1370n,
-  "gumroad-us-direct-card-high-volume": 870n,
-  "gumroad-us-discover": 3000n,
-  "lemon-squeezy-us-card-single-no-tax": 550n,
-};
+const expectedFees = new Map([
+  ["stripe-us-online-domestic-card", 320n],
+  ["paypal-us-checkout-paypal-payment", 398n],
+  ["gumroad-us-direct-card", 1370n],
+  ["gumroad-us-direct-card-high-volume", 870n],
+  ["gumroad-us-discover", 3000n],
+  ["lemon-squeezy-us-card-single-no-tax", 550n],
+]);
+
 for (const preset of feePresets) {
   test(`${preset.id}: ${preset.status === "supported" ? "official example and inverse" : "explicitly blocked"}`, () => {
     if (preset.status === "blocked") {
@@ -74,20 +83,27 @@ for (const preset of feePresets) {
         () => grossUpFees({ preset, targetProceedsCents: 10000n }),
         /Unsupported scenario/,
       );
+
       return;
     }
-    assert.ok(preset.id in expectedFees, "Each supported rule needs an independent fixture");
-    assert.equal(calculateFees({ preset, grossCents: 10000n }).feeCents, expectedFees[preset.id]);
+
+    const expected = expectedFees.get(preset.id);
+
+    assert.ok(expected !== undefined, "Each supported rule needs an independent fixture");
+    assert.equal(calculateFees({ preset, grossCents: 10000n }).feeCents, expected);
     const result = grossUpFees({ preset, targetProceedsCents: 10000n });
     assert.ok(result.sellerProceedsCents >= 10000n);
+
     // Independent exhaustive small-domain oracle avoids assuming monotonic net.
     for (let gross = 1; gross < Number(result.grossCents); gross++) {
       const fee = preset.components.reduce(
         (sum, c) => sum + Math.floor((gross * c.rateBps + 5000) / 10000) + c.fixedCents,
         0,
       );
+
       assert.ok(gross - fee < 10000, "A smaller charge must not reach the target");
     }
+
     if (preset.taxMode === "zero-only") {
       assert.throws(() => calculateFees({ preset, grossCents: 11000n, taxCents: 1000n }), /no-tax/);
       assert.throws(
@@ -105,8 +121,11 @@ test("a project receipt target composes with payment gross-up without taxing it 
     contingencyBps: 1000,
     directExpensesCents: 5000n,
   });
+
   assert.equal(project.targetReceiptsCents, 115000n);
-  const preset = feePresets.find((p) => p.id === "stripe-us-online-domestic-card")!;
+  const preset = getFeePreset("stripe-us-online-domestic-card");
+
+  assert.ok(preset);
   const quote = grossUpFees({ preset, targetProceedsCents: project.targetReceiptsCents });
   assert.ok(quote.sellerProceedsCents >= 115000n);
   assert.equal(quote.taxCents, 0n);

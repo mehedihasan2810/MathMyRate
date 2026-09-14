@@ -28,8 +28,9 @@ Do not disable anti-slop rules. Provenance and local deviations are in
 
 ## Effect
 
-This repository uses Effect v4 (`4.0.0-rc.112`) in `packages/infra`. Before
-writing Effect code, read
+This repository uses Effect v4 (`4.0.0-rc.112`). `packages/infra` uses Effect
+for config/runtime code. `packages/calculators` uses Effect Schema at decode
+boundaries. Before writing Effect code, read
 [`packages/infra/node_modules/effect/AGENTS.md`](packages/infra/node_modules/effect/AGENTS.md)
 completely and follow the links in that file when required. Search
 `packages/infra/node_modules/effect/src` for APIs the guide does not cover.

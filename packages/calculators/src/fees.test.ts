@@ -63,10 +63,15 @@ test("hand-derived single-payment and gross-up fixtures", () => {
 });
 
 test("tax is included in the fee base but excluded from seller proceeds", () => {
+  const processing = fixture.components[0];
+
+  assert.ok(processing);
+
   const preset = {
     ...fixture,
-    components: [{ ...fixture.components[0]!, rateBps: 500, fixedCents: 50 }],
+    components: [{ ...processing, rateBps: 500, fixedCents: 50 }],
   };
+
   const result = calculateFees({ preset, grossCents: 11000n, taxCents: 1000n });
   assert.equal(result.feeCents, 600n);
   assert.equal(result.netAfterFeesCents, 10400n);
@@ -106,6 +111,7 @@ test("inverse does not assume monotonic net when components round separately", (
       },
     ],
   };
+
   assert.equal(calculateFees({ preset, grossCents: 1n }).sellerProceedsCents, 1n);
   assert.equal(calculateFees({ preset, grossCents: 2n }).sellerProceedsCents, 0n);
   assert.equal(grossUpFees({ preset, targetProceedsCents: 1n }).grossCents, 1n);
@@ -124,16 +130,20 @@ test("gross-up matches independent exhaustive oracle across rounding boundaries"
         rounding: "half-up" as const,
       })),
     };
+
     for (const target of [0, 1, 2, 5, 20]) {
       // Small values permit exact integer arithmetic in this independent Number oracle.
       let expected = 1;
+
       for (; expected < 300000; expected++) {
         const fees = rates.reduce(
           (sum, rate, index) => sum + Math.floor((expected * rate + 5000) / 10000) + index + 1,
           0,
         );
+
         if (expected - fees >= target) break;
       }
+
       assert.equal(
         grossUpFees({ preset, targetProceedsCents: BigInt(target) }).grossCents,
         BigInt(expected),
@@ -143,10 +153,15 @@ test("gross-up matches independent exhaustive oracle across rounding boundaries"
 });
 
 test("zero-rate inverse, negative receipts, limits and invalid amount boundaries", () => {
+  const processing = fixture.components[0];
+
+  assert.ok(processing);
+
   const zero = {
     ...fixture,
-    components: [{ ...fixture.components[0]!, rateBps: 0, fixedCents: 0 }],
+    components: [{ ...processing, rateBps: 0, fixedCents: 0 }],
   };
+
   assert.equal(grossUpFees({ preset: zero, targetProceedsCents: 0n }).grossCents, 1n);
   assert.equal(grossUpFees({ preset: zero, targetProceedsCents: MAX_CENTS }).grossCents, MAX_CENTS);
   assert.equal(calculateFees({ preset: fixture, grossCents: 1n }).sellerProceedsCents, -29n);
@@ -158,30 +173,33 @@ test("zero-rate inverse, negative receipts, limits and invalid amount boundaries
 });
 
 test("schema rejects incomplete or contradictory configurations", () => {
+  const raw = JSON.parse(JSON.stringify(fixture));
+  const processing = raw.components[0];
+
   const invalids = [
     null,
     {},
-    { ...fixture, id: "" },
-    { ...fixture, currency: "EUR" },
-    { ...fixture, accountCountry: "GB" },
-    { ...fixture, checkedOn: "2026-02-30" },
-    { ...fixture, paymentProduct: "" },
-    { ...fixture, channel: "" },
-    { ...fixture, combinationPolicy: "all-scenarios" },
-    { ...fixture, effectiveFrom: "2026-02-30" },
-    { ...fixture, tierPolicy: "unknown" },
-    { ...fixture, capsPolicy: "modeled" },
-    { ...fixture, customPricingPolicy: "excluded" },
-    { ...fixture, revision: 1.5 },
-    { ...fixture, sources: null },
-    { ...fixture, assumptions: [] },
-    { ...fixture, exclusions: [] },
-    { ...fixture, components: [] },
-    { ...fixture, status: "unknown" },
-    { ...fixture, blockedReason: "cannot be supported" },
-    { ...fixture, status: "blocked", blockedReason: "unknown" },
-    { ...fixture, sources: [{ title: "Bad source", url: "http://example.com" }] },
-    { ...fixture, components: [fixture.components[0], fixture.components[0]] },
+    { ...raw, id: "" },
+    { ...raw, currency: "EUR" },
+    { ...raw, accountCountry: "GB" },
+    { ...raw, checkedOn: "2026-02-30" },
+    { ...raw, paymentProduct: "" },
+    { ...raw, channel: "" },
+    { ...raw, combinationPolicy: "all-scenarios" },
+    { ...raw, effectiveFrom: "2026-02-30" },
+    { ...raw, tierPolicy: "unknown" },
+    { ...raw, capsPolicy: "modeled" },
+    { ...raw, customPricingPolicy: "excluded" },
+    { ...raw, revision: 1.5 },
+    { ...raw, sources: null },
+    { ...raw, assumptions: [] },
+    { ...raw, exclusions: [] },
+    { ...raw, components: [] },
+    { ...raw, status: "unknown" },
+    { ...raw, blockedReason: "cannot be supported" },
+    { ...raw, status: "blocked", blockedReason: "unknown" },
+    { ...raw, sources: [{ title: "Bad source", url: "http://example.com" }] },
+    { ...raw, components: [processing, processing] },
     ...[
       { rateBps: 10000 },
       { rateBps: -1 },
@@ -190,24 +208,32 @@ test("schema rejects incomplete or contradictory configurations", () => {
       { base: "subtotal" },
       { rounding: "bankers" },
     ].map((change) => ({
-      ...fixture,
-      components: [{ ...fixture.components[0], ...change }],
+      ...raw,
+      components: [{ ...processing, ...change }],
     })),
     {
-      ...fixture,
+      ...raw,
       components: [
-        { ...fixture.components[0], id: "a", rateBps: 6000 },
-        { ...fixture.components[0], id: "b", rateBps: 4000 },
+        { ...processing, id: "a", rateBps: 6000 },
+        { ...processing, id: "b", rateBps: 4000 },
       ],
     },
   ];
-  for (const invalid of invalids) assert.throws(() => validateFeePreset(invalid));
+
+  for (const invalid of invalids) {
+    assert.throws(() => validateFeePreset(invalid));
+  }
+
   assert.throws(() => validateFeePresets([fixture, fixture]));
   assert.throws(() => validateFeePresets([]));
-  const blocked = { ...fixture, status: "blocked", blockedReason: "unverified", components: [] };
+
+  const blocked = {
+    ...fixture,
+    status: "blocked" as const,
+    blockedReason: "unverified",
+    components: [],
+  };
+
   assert.equal(validateFeePreset(blocked).status, "blocked");
-  assert.throws(
-    () => calculateFees({ preset: blocked as FeePreset, grossCents: 100n }),
-    /Unsupported scenario/,
-  );
+  assert.throws(() => calculateFees({ preset: blocked, grossCents: 100n }), /Unsupported scenario/);
 });

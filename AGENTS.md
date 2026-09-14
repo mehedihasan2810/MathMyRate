@@ -99,13 +99,15 @@ no lintable files changed.
 
 ## Effect
 
-`packages/infra` uses Effect v4 (`4.0.0-rc.112`, aligned with Alchemy). Before
-writing Effect code, read
+This repository uses Effect v4 (`4.0.0-rc.112`, aligned with Alchemy).
+`packages/infra` uses Effect for config/runtime code. `packages/calculators`
+uses Effect Schema at decode boundaries; arithmetic stays bigint cents and
+integer basis points. Before writing Effect code, read
 [`packages/infra/node_modules/effect/AGENTS.md`](packages/infra/node_modules/effect/AGENTS.md)
 completely and follow the links in that file when required. Search
 `packages/infra/node_modules/effect/src` for APIs the guide does not cover.
-Keep Effect in infra and other packages that already depend on it; do not
-replace Hono, oRPC, Zod, Better Auth, or Drizzle to make the MVP look simpler.
+Do not replace Hono, oRPC, Zod, Better Auth, or Drizzle to make the MVP look
+simpler.
 
 For infrastructure, inspect first and review a diff before applying anything.
 Keep preview and production stages separate. No deployment, resource creation,

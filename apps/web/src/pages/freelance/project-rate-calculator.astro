@@ -34,22 +34,135 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
   </main>
   <script>
     import { calculateProjectRate } from "@MathMyRate/calculators";
-    import { formatUsdGrouped, formatUsdInput, hoursToMinutes, InputProblem, percentToBps, setFieldState, usdToCents } from "../../scripts/calculator-form";
-    const $ = (id: string) => document.getElementById(id) as HTMLInputElement | HTMLElement;
-    const form = $("project-form") as HTMLFormElement;
-    const input = (id: string) => $(id) as HTMLInputElement;
-    const button = (id: string) => $(id) as HTMLButtonElement;
+    import {
+      formatUsdGrouped,
+      formatUsdInput,
+      hoursToMinutes,
+      InputProblem,
+      percentToBps,
+      requireHtmlButton,
+      requireHtmlElement,
+      requireHtmlForm,
+      requireHtmlInput,
+      setFieldState,
+      usdToCents,
+    } from "../../scripts/calculator-form";
+
+    const form = requireHtmlForm("project-form");
+
     let latest: bigint | null = null;
+
     let transferMessage = "";
-    function clear() { ["quote-result", "labor-result", "contingency-result", "expense-result", "time-result"].forEach(id => $(id).textContent = "—"); latest = null; button("copy-project").disabled = true; }
-    function calc() { try {
-      const delivery = hoursToMinutes(input("deliveryHours").value, "deliveryHours"); const admin = hoursToMinutes(input("adminHours").value, "adminHours"); if (delivery + admin < 1) throw new InputProblem("deliveryHours", "Plan at least one minute of work.");
-      const r = calculateProjectRate({ hourlyRateCents: usdToCents(input("projectHourly").value, "projectHourly"), estimatedMinutes: delivery + admin, directExpensesCents: usdToCents(input("directExpenses").value, "directExpenses"), contingencyBps: percentToBps(input("contingency").value, "contingency", 10000) });
-      $("quote-result").textContent = formatUsdGrouped(r.targetReceiptsCents); $("labor-result").textContent = formatUsdGrouped(r.laborCents); $("contingency-result").textContent = formatUsdGrouped(r.contingencyCents); $("expense-result").textContent = formatUsdGrouped(r.expensesCents); $("time-result").textContent = `${(delivery + admin) / 60} hours`; latest = r.targetReceiptsCents; button("copy-project").disabled = false; $("project-message").textContent = transferMessage; setFieldState(form); return r.targetReceiptsCents;
-    } catch (e) { clear(); const p = e instanceof InputProblem ? e : new InputProblem("projectHourly", "Check your inputs."); setFieldState(form, p); $("project-message").textContent = ""; return null; } }
-    try { const transferred = localStorage.getItem("mathmyrate:hourly-cents"); localStorage.removeItem("mathmyrate:hourly-cents"); if (transferred && /^\d+$/.test(transferred) && BigInt(transferred) <= 100000000000000n) { input("projectHourly").value = formatUsdInput(BigInt(transferred)); $("transfer-notice").classList.remove("hidden"); } else if (transferred) { transferMessage = "The saved hourly rate was invalid and was not used."; } } catch { transferMessage = "Saved-rate transfer was unavailable; enter an hourly rate manually."; }
-    $("project-form").addEventListener("submit", (e) => { e.preventDefault(); calc(); }); ["projectHourly","deliveryHours","adminHours","contingency","directExpenses"].forEach(id => ($ (id) as HTMLInputElement).addEventListener("input", calc));
-    $("project-reset").addEventListener("click", () => { form.reset(); transferMessage = ""; try { localStorage.removeItem("mathmyrate:hourly-cents"); } catch {} $("transfer-notice").classList.add("hidden"); calc(); });
-    $("copy-project").addEventListener("click", async () => { if (latest === null) return; try { await navigator.clipboard.writeText(`Target project receipts: ${formatUsdGrouped(latest)}`); $("project-message").textContent = "Quote copied."; } catch { $("project-message").textContent = "Copy was unavailable. Select the result to copy it manually."; } }); calc();
+
+    function setResult(id: string, text: string): void {
+      requireHtmlElement(id).textContent = text;
+    }
+
+    function clear(): void {
+      for (const id of [
+        "quote-result",
+        "labor-result",
+        "contingency-result",
+        "expense-result",
+        "time-result",
+      ]) {
+        setResult(id, "—");
+      }
+
+      latest = null;
+      requireHtmlButton("copy-project").disabled = true;
+    }
+
+    function calc(): bigint | null {
+      try {
+        const delivery = hoursToMinutes(requireHtmlInput("deliveryHours").value, "deliveryHours");
+        const admin = hoursToMinutes(requireHtmlInput("adminHours").value, "adminHours");
+
+        if (delivery + admin < 1) {
+          throw new InputProblem("deliveryHours", "Plan at least one minute of work.");
+        }
+
+        const result = calculateProjectRate({
+          hourlyRateCents: usdToCents(requireHtmlInput("projectHourly").value, "projectHourly"),
+          estimatedMinutes: delivery + admin,
+          directExpensesCents: usdToCents(requireHtmlInput("directExpenses").value, "directExpenses"),
+          contingencyBps: percentToBps(requireHtmlInput("contingency").value, "contingency", 10000),
+        });
+
+        setResult("quote-result", formatUsdGrouped(result.targetReceiptsCents));
+        setResult("labor-result", formatUsdGrouped(result.laborCents));
+        setResult("contingency-result", formatUsdGrouped(result.contingencyCents));
+        setResult("expense-result", formatUsdGrouped(result.expensesCents));
+        setResult("time-result", `${(delivery + admin) / 60} hours`);
+        latest = result.targetReceiptsCents;
+        requireHtmlButton("copy-project").disabled = false;
+        requireHtmlElement("project-message").textContent = transferMessage;
+        setFieldState(form);
+
+        return result.targetReceiptsCents;
+      } catch (error) {
+        clear();
+
+        const problem =
+          error instanceof InputProblem ? error : new InputProblem("projectHourly", "Check your inputs.");
+
+        setFieldState(form, problem);
+        requireHtmlElement("project-message").textContent = "";
+
+        return null;
+      }
+    }
+
+    try {
+      const transferred = localStorage.getItem("mathmyrate:hourly-cents");
+
+      localStorage.removeItem("mathmyrate:hourly-cents");
+
+      if (transferred && /^\d+$/.test(transferred) && BigInt(transferred) <= 100000000000000n) {
+        requireHtmlInput("projectHourly").value = formatUsdInput(BigInt(transferred));
+        requireHtmlElement("transfer-notice").classList.remove("hidden");
+      } else if (transferred) {
+        transferMessage = "The saved hourly rate was invalid and was not used.";
+      }
+    } catch {
+      transferMessage = "Saved-rate transfer was unavailable; enter an hourly rate manually.";
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      calc();
+    });
+
+    for (const id of ["projectHourly", "deliveryHours", "adminHours", "contingency", "directExpenses"]) {
+      requireHtmlInput(id).addEventListener("input", calc);
+    }
+
+    requireHtmlButton("project-reset").addEventListener("click", () => {
+      form.reset();
+      transferMessage = "";
+
+      try {
+        localStorage.removeItem("mathmyrate:hourly-cents");
+      } catch {
+        /* localStorage may be unavailable */
+      }
+
+      requireHtmlElement("transfer-notice").classList.add("hidden");
+      calc();
+    });
+
+    requireHtmlButton("copy-project").addEventListener("click", async () => {
+      if (latest === null) return;
+
+      try {
+        await navigator.clipboard.writeText(`Target project receipts: ${formatUsdGrouped(latest)}`);
+        requireHtmlElement("project-message").textContent = "Quote copied.";
+      } catch {
+        requireHtmlElement("project-message").textContent =
+          "Copy was unavailable. Select the result to copy it manually.";
+      }
+    });
+
+    calc();
   </script>
 </Layout>

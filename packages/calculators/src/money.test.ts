@@ -12,6 +12,7 @@ test("decimal input is exact, including cent boundaries and maximum", () => {
     assert.equal(parseUsd(input), cents);
     assert.equal(parseUsd(formatUsd(cents)), cents);
   }
+
   assert.equal(parseUsd(formatUsd(MAX_CENTS)), MAX_CENTS);
   assert.equal(formatUsd(-1n), "-0.01");
 });
@@ -35,6 +36,7 @@ test("reject ambiguous, non-decimal, malformed and out-of-range money", () => {
   ]) {
     assert.throws(() => parseUsd(input));
   }
+
   assert.throws(() => parseUsd(formatUsd(MAX_CENTS + 1n)));
   assert.throws(() => requireCents(0.1));
   assert.throws(() => requireCents(-1n));
