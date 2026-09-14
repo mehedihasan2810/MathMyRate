@@ -75,5 +75,20 @@ unnecessary empty export. Standalone `astro build` failed with
 `NoAdapterInstalled` because the config selected server output without an adapter.
 
 The baseline fixes those lint issues and makes the standalone frontend build an
-actual Turbo task. CI runs on PRs/main with read-only repository permissions; it
-does not deploy, receive production secrets or upload deployable artifacts.
+actual Turbo task.
+
+## CI activation blocked
+
+The workflow is provided as `docs/ci-workflow.yml`, not an active Actions workflow.
+The connected GitHub OAuth grant has repository write access but does not include
+the `workflow` scope. Uploading the workflow through the Git tree API failed;
+the same commit with the workflow stored as documentation succeeded.
+
+An appropriately authorized writer must install this file at
+`.github/workflows/ci.yml` before CI can run on GitHub. Until then, keep this PR
+in draft and do not claim GitHub checks passed. The individual local checks
+passed; hosted CI and deployment validation remain pending.
+
+When activated, the workflow runs on PRs/main with read-only repository
+permissions. It does not deploy, receive production secrets or upload deployable
+artifacts.
