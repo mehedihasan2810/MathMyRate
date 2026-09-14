@@ -62,8 +62,9 @@ outside launch scope.
 The route table is the target, not a statement that these pages exist today.
 The current public frontend is `/`, `/freelance/`,
 `/freelance/hourly-rate-calculator/`,
-`/freelance/project-rate-calculator/`, `/fees/`, and
-`/fees/stripe-fee-calculator/`. There are no account pages.
+`/freelance/project-rate-calculator/`, `/fees/`,
+`/fees/stripe-fee-calculator/`, and `/fees/paypal-fee-calculator/`. There are
+no account pages.
 
 ## Product behavior
 

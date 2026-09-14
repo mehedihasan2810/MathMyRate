@@ -34,10 +34,10 @@ send user-entered financial values to analytics or automatic share URLs.
 - `apps/web` is the Astro presentation and content application. It now contains
   the static home and freelance information pages plus
   `/freelance/hourly-rate-calculator/`, `/freelance/project-rate-calculator/`,
-  the `/fees/` hub, and `/fees/stripe-fee-calculator/`. Login, signup, and
-  dashboard pages are not part of the product: every tool is free. Better Auth
-  remains in `packages/auth`, the server mount, and
-  `apps/web/src/lib/auth-client.ts`.
+  the `/fees/` hub, `/fees/stripe-fee-calculator/`, and
+  `/fees/paypal-fee-calculator/`. Login, signup, and dashboard pages are not
+  part of the product: every tool is free. Better Auth remains in
+  `packages/auth`, the server mount, and `apps/web/src/lib/auth-client.ts`.
 - The freelance pages use labeled native HTML controls and page scripts rather
   than a Preact island or another framework integration. The scripts parse
   input at the browser boundary, call the real calculator package, render
@@ -99,7 +99,7 @@ The checked-in web config selects `output: "static"`, so the public calculator
 pages are prerendered assets with small browser scripts. Astro's on-demand
 rendering documentation confirms that server output needs an adapter; that is
 not a reason to switch this app back to server output for a calculator
-keystroke. The production build currently emits six static HTML pages.
+keystroke. The production build currently emits seven static HTML pages.
 
 Alchemy's `Cloudflare.Website.Astro` resource remains the deployment path.
 Cloudflare Workers static-assets documentation is the reference for asset
