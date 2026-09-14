@@ -9,17 +9,17 @@ copied from a previous run.
 
 ## Executive status
 
-**Not launched.** PR #1 is merged. This branch implements the independent
-calculation package (the math-engine track), while the web app remains the
-starter shell. There is no deployed-ready product, no calculator UI, and no
-calculator E2E path to test yet. There is no hosted CI/CD; checks and deploys
-are local.
+**Not launched.** PR #1 and PR #2 are merged. This branch implements the Astro
+shell and freelance tools. There is still no deployed-ready product, staging
+validation, or production deployment. There is no hosted CI/CD; checks and
+deploys are local.
 
 ## What exists now
 
 ### Math engine track
 
-The branch work is engine-only and is deliberately separate from Astro UI:
+The package remains framework-independent, and the implemented freelance Astro
+pages now consume its real results:
 
 - `packages/calculators` has runtime numeric validation that rejects non-finite
   and unparsed values instead of manufacturing a result.
@@ -45,21 +45,29 @@ The branch work is engine-only and is deliberately separate from Astro UI:
 
 The package export and test scripts must remain aligned whenever this branch
 changes: an implementation file or a fixture is not complete until the
-supported public export and the package-level test command exercise it. Do not
-describe this work as a provider calculator or a shipped feature.
+supported public export and the package-level test command exercise it. The
+freelance UI is implemented, but this is not a provider calculator or a
+deployed/shipped feature.
 
 ### Frontend
 
-The frontend is still the starter four-page Astro site:
+The frontend is now an Astro static site with:
 
 - `/`
+- `/freelance/`
+- `/freelance/hourly-rate-calculator/`
+- `/freelance/project-rate-calculator/`
 - `/login`
 - `/signup`
 - `/dashboard`
 
-It has zero calculator UI and no calculator routes. No calculator E2E test is
-possible yet because there is no calculator interaction to drive. The planned
-Preact island integration is deferred, not installed or certified compatible.
+The freelance pages use native accessible controls and browser scripts, call
+the framework-independent engine, and provide labeled defaults, explanatory
+content, validation/error states, reset, copy, print, and local hourly-rate
+transfer. They do not require a Preact island or another framework integration.
+The starter auth/dashboard routes remain retained source, not launch claims.
+Transfer grouping/validation and reduced-motion/skip-link contrast fixes are
+included in this UI work.
 
 ### Infrastructure and deployment
 
@@ -71,30 +79,34 @@ or auth migration.
 
 ## Verification record
 
-Local checks on 2026-09-14 for `feat/calculation-engines`:
+Local checks on 2026-09-14 for the current freelance UI working tree:
 
-| Check                                                              | Observed result                                                                                            |
-| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| `pnpm install --frozen-lockfile`                                   | Passed from the current baseline lockfile; no new dependencies                                             |
-| `pnpm run lint`                                                    | Passed                                                                                                     |
-| `pnpm run check-types`                                             | Passed across the workspace; three pre-existing Astro unused-code hints                                    |
-| `pnpm run test` / final scoped calculator test run                 | 35 tests passed, including all preset fixtures, exhaustive inverse comparisons, and provenance regressions |
-| `PUBLIC_SERVER_URL=https://api.example.invalid pnpm run build:web` | Passed; all four existing starter HTML files emitted                                                       |
-| `pnpm run format:check`                                            | Hosted workflow removed; remaining source is expected to pass locally                                      |
-| `git diff --check`                                                 | Passed                                                                                                     |
-| Hosted GitHub Actions                                              | Removed; verification is local only                                                                        |
-| Browser calculator E2E / staging / production                      | Not run: calculator UI and deployment are later milestones                                                 |
+| Check                                              | Observed result                                                                                                   |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `pnpm install --frozen-lockfile`                   | Passed from the current baseline lockfile                                                                         |
+| `pnpm run lint`                                    | Passed                                                                                                            |
+| `pnpm check-types`                                 | Passed with 0 errors, 0 warnings, and 2 pre-existing auth hints                                                   |
+| `pnpm run test` / final scoped calculator test run | 35 engine tests passed, including all preset fixtures, exhaustive inverse comparisons, and provenance regressions |
+| `pnpm build:web`                                   | Passed; seven static HTML pages emitted                                                                           |
+| `pnpm run format:check`                            | Hosted workflow removed; remaining source is expected to pass locally                                             |
+| `git diff --check`                                 | Passed                                                                                                            |
+| Hosted GitHub Actions                              | Removed; verification is local only                                                                               |
+| Chromium production-dist E2E                       | 22 passed in one local run against the production dist                                                            |
 
 The build uses a compile-only invalid API origin, not a working deployed API.
-No production-readiness claim is made.
+The E2E result is local production-dist evidence with Chromium only. It is not
+staging or deployment evidence.
+
+The independently derived browser fixtures are `$60,000 / .75 + $12,000 =
+$92,000`, yielding `$79.87` hourly, `$638.96` day, and `1,152` capacity hours;
+project pricing is `$83.34 × 10 + 10% labor + $50 = $966.74`.
 
 Code review confirmed the exact-money arithmetic and reverse-search bounds, but
 identified an official-rule provenance gap and incomplete structured metadata.
 Both were fixed before delivery: the official registry is deeply frozen and
 resolved canonically, altered official-looking records are rejected, custom
 rules carry explicit provenance/warnings, and rule revisions are independent
-of review dates. Final scoped calculator tests/typecheck/lint/format passed
-after those fixes; the frontend and its dependencies were unchanged.
+of review dates.
 
 For every future status update, record:
 
@@ -107,11 +119,9 @@ For every future status update, record:
 ## Remaining gates
 
 1. Review the verified math package and keep provider metadata/fixtures aligned.
-2. Land the Astro freelance UI around the real engine; do not use mock financial
-   results.
-3. Add the four provider calculators only for sourced, supported scenarios.
-4. Complete methodology, worked examples, SEO, privacy, terms, and release
+2. Add the four provider calculators only for sourced, supported scenarios.
+3. Complete methodology, worked examples, SEO, privacy, terms, and release
    checks with truthful source dates.
-5. Resolve Cloudflare account/access state, inventory resources read-only,
+4. Resolve Cloudflare account/access state, inventory resources read-only,
    validate a separately named staging stage, and review resource diffs before
    any production approval.

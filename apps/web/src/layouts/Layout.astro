@@ -4,21 +4,23 @@ import Header from "../components/Header.astro";
 
 interface Props {
   title?: string;
+  description?: string;
 }
 
-const { title = "MathMyRate" } = Astro.props;
+const { title = "MathMyRate", description = "Practical pricing calculators for independent work." } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
     <title>{title}</title>
   </head>
-  <body class="min-h-screen bg-neutral-950 text-white">
+  <body class="grain min-h-[100dvh]">
+    <a href="#main-content" class="sr-only z-[60] rounded bg-ink px-4 py-3 text-paper focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to main content</a>
     <Header />
     <slot />
   </body>

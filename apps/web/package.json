@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@MathMyRate/api": "workspace:*",
+    "@MathMyRate/calculators": "workspace:*",
     "@orpc/client": "catalog:",
     "astro": "^7.3.1",
     "better-auth": "catalog:",

@@ -4,6 +4,8 @@ Last updated: 2026-09-14
 
 This document separates the approved target architecture from the code that is
 actually present. A target component is not evidence that it has been built.
+The freelance Astro UI described below is implemented; provider calculators and
+deployment remain future work.
 
 ## Boundaries
 
@@ -11,7 +13,7 @@ actually present. A target component is not evidence that it has been built.
 Astro prerendered route/content
           |
           v
-browser calculator island (future; Preact deferred)
+browser-native calculator scripts on static pages
           |
           v
 framework-independent @MathMyRate/calculators
@@ -29,9 +31,20 @@ send user-entered financial values to analytics or automatic share URLs.
 
 ## Repository roles
 
-- `apps/web` is the Astro presentation and content application. It currently
-  contains the starter home, login, signup, and dashboard pages; calculator
-  routes and islands do not exist yet.
+- `apps/web` is the Astro presentation and content application. It now contains
+  the static home and freelance information pages plus
+  `/freelance/hourly-rate-calculator/` and
+  `/freelance/project-rate-calculator/`. The starter login, signup, and
+  dashboard routes remain in the repository, but are not part of the public
+  calculator flow.
+- The freelance pages use labeled native HTML controls and page scripts rather
+  than a Preact island or another framework integration. The scripts parse
+  input at the browser boundary, call the real calculator package, render
+  named results and errors, and support reset, copy, print, and hourly-rate
+  transfer. The generated HTML includes useful defaults and explanatory
+  content before JavaScript runs. The local-storage transfer path includes
+  grouping and validation, and the UI styles include reduced-motion behavior
+  and skip-link contrast.
 - `packages/calculators` is framework-independent TypeScript. It owns validated
   inputs, calculation results, named totals/line items, rounding policy,
   assumptions, warnings, and unsupported conditions. UI parsing and formatting
@@ -79,11 +92,11 @@ unsupported or disclosed as an estimate, never invented.
 
 ## Rendering and hosting
 
-The checked-in web config selects `output: "static"`, so the target public
-calculator pages are prerendered assets with small browser islands. Astro's
-on-demand rendering documentation confirms that server output needs an adapter;
-that is not a reason to switch this app back to server output for a calculator
-keystroke.
+The checked-in web config selects `output: "static"`, so the public calculator
+pages are prerendered assets with small browser scripts. Astro's on-demand
+rendering documentation confirms that server output needs an adapter; that is
+not a reason to switch this app back to server output for a calculator
+keystroke. The production build currently emits seven static HTML pages.
 
 Alchemy's `Cloudflare.Website.Astro` resource remains the deployment path.
 Cloudflare Workers static-assets documentation is the reference for asset
@@ -108,17 +121,19 @@ before adding an adapter, integration, or Preact.
 
 ## UI sequencing
 
-Preact is deferred until the first real calculator island and must be tested
-against the locked Astro/Alchemy versions before installation. Use native
-accessible controls unless a richer control has a demonstrated benefit. The UI
-must consume the engine's real results, display assumptions/exclusions and
-warnings, preserve focus during recalculation, support reset/copy/print, and
-never ship mock financial results.
+The first freelance UI uses native accessible controls and Astro page scripts;
+no Preact installation or framework integration was needed. This choice
+followed review of the current Astro scripts, Preact, and testing guidance.
+The UI consumes the engine's real results, displays assumptions and warnings,
+preserves the static example on load, supports reset/copy/print and local
+hourly-rate transfer, and never ships mock financial results. Reconsider a
+framework island only if a later interaction has a demonstrated need.
 
-The current four starter routes and auth navigation are not the target public
-information architecture. Replace or hide starter navigation only as part of
-the reviewed Astro shell work; do not imply that the current starter dashboard
-is a MathMyRate launch feature.
+The current public information architecture now links the home page to the
+freelance tools rather than the starter auth navigation. The retained starter
+dashboard is not a MathMyRate launch feature. Calculator results stay in the
+browser; the transfer uses local storage rather than a query string, and the
+UI makes no calculator fetch, XHR, or beacon calls.
 
 ## Source ownership
 

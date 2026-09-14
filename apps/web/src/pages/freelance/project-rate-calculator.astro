@@ -1,0 +1,55 @@
+---
+import { calculateProjectRate } from "@MathMyRate/calculators";
+import Layout from "../../layouts/Layout.astro";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes: 1320, directExpensesCents: 18000n, contingencyBps: 1500 });
+---
+<Layout title="Freelance Project Rate Calculator | MathMyRate" description="Turn scope, contingency, and expenses into a clear project quote.">
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-12 md:px-8 md:py-16">
+    <div class="max-w-2xl"><p class="eyebrow">Freelance pricing / 02</p><h1 class="display mt-4 text-5xl font-bold leading-none md:text-6xl">Give the scope a number.</h1><p class="mt-5 text-lg leading-relaxed text-ink/70">Build a receipt target from the work, the necessary admin time, a deliberate contingency, and costs you need reimbursed.</p></div>
+    <div id="transfer-notice" class="mt-8 hidden rounded-xl border border-[#aac7a9] bg-[#e2efe1] px-5 py-4 text-sm text-ink"><strong>Hourly rate brought across.</strong> This is stored only in this browser. Your annual tax reserve is already reflected in this rate and is not added again.</div>
+    <div class="mt-10 grid gap-8 lg:grid-cols-[1fr_.85fr]">
+      <form id="project-form" class="print-card rounded-[1.5rem] border border-line bg-[#faf8f1] p-6 shadow-[0_16px_45px_rgba(56,71,61,.08)] md:p-8" novalidate>
+        <div class="flex items-baseline justify-between"><h2 class="display text-2xl font-bold">Project ingredients</h2><span class="mono text-xs text-ink/50">USD</span></div>
+        <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
+        <div class="mt-7 grid gap-5 sm:grid-cols-2">
+          <label class="text-sm font-semibold">Hourly rate <span class="text-clay">*</span><input id="projectHourly" data-field="projectHourly" aria-describedby="projectHourly-error" inputmode="decimal" value="112.50" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" /><span id="projectHourly-error" class="field-error" role="alert"></span></label>
+          <label class="text-sm font-semibold">Delivery hours <input id="deliveryHours" data-field="deliveryHours" aria-describedby="deliveryHours-help deliveryHours-error" inputmode="decimal" value="18" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" /><span id="deliveryHours-help" class="mt-1 block text-xs font-normal text-ink/55">Whole minutes only: 1, 1.25, 1.5, and 1.75 are accepted.</span><span id="deliveryHours-error" class="field-error" role="alert"></span></label>
+          <label class="text-sm font-semibold">Meetings &amp; admin hours <input id="adminHours" data-field="adminHours" aria-describedby="adminHours-help adminHours-error" inputmode="decimal" value="4" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" /><span id="adminHours-help" class="mt-1 block text-xs font-normal text-ink/55">Whole minutes only: 1, 1.25, 1.5, and 1.75 are accepted.</span><span id="adminHours-error" class="field-error" role="alert"></span></label>
+          <label class="text-sm font-semibold">Contingency <div class="relative mt-2"><input id="contingency" data-field="contingency" aria-describedby="contingency-error" inputmode="decimal" value="15.00" class="w-full rounded-lg border border-line bg-paper px-3 py-3 pr-9 text-base font-medium" /><span class="absolute right-3 top-3.5 text-ink/50">%</span></div><span id="contingency-error" class="field-error" role="alert"></span></label>
+          <label class="text-sm font-semibold">Direct project expenses <input id="directExpenses" data-field="directExpenses" aria-describedby="directExpenses-error" inputmode="decimal" value="180.00" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" /><span id="directExpenses-error" class="field-error" role="alert"></span></label>
+        </div>
+        <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="submit">Update quote</button><button id="project-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
+      </form>
+      <aside aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-[#934332] p-7 text-[#fff7eb] shadow-[0_16px_45px_rgba(128,69,47,.18)] md:p-9">
+        <p class="eyebrow !text-[#fee1c9]">Target project receipts</p><p id="quote-result" class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.targetReceiptsCents)}</p><p class="mt-1 text-[#fff7eb]/80">before any project-specific payment processing fees</p>
+        <div class="my-7 border-t border-[#fff7eb]/30"></div>
+        <div class="flex justify-between"><span class="text-[#fff7eb]/80">Labor</span><strong id="labor-result">{formatUsdGrouped(example.laborCents)}</strong></div><div class="mt-4 flex justify-between"><span class="text-[#fff7eb]/80">Contingency allowance</span><strong id="contingency-result">{formatUsdGrouped(example.contingencyCents)}</strong></div><div class="mt-4 flex justify-between"><span class="text-[#fff7eb]/80">Expense reimbursement</span><strong id="expense-result">{formatUsdGrouped(example.expensesCents)}</strong></div><div class="mt-4 flex justify-between"><span class="text-[#fff7eb]/80">Planned time</span><strong id="time-result">22 hours</strong></div>
+        <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-project" type="button" class="rounded-full bg-[#fff7eb] px-4 py-2.5 text-sm font-bold text-ink">Copy quote</button><button type="button" onclick="window.print()" class="rounded-full border border-[#fff7eb]/45 px-4 py-2.5 text-sm font-bold">Print</button></div><p id="project-message" class="mt-4 text-sm text-[#fff0df]"></p>
+      </aside>
+    </div>
+    <noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The example scope is visible; enable JavaScript to calculate a quote locally.</p></noscript>
+    <section class="mt-14 max-w-3xl border-t border-line pt-10"><h2 class="display text-3xl font-bold">A quote, not a tax calculation</h2><p class="mt-4 leading-relaxed text-ink/70">Contingency is applied to labor only. Direct expenses are added separately without markup. The target assumes the hourly rate already includes the annual tax reserve chosen in the hourly calculator, so it never adds that reserve a second time.</p><p class="mt-4 text-sm leading-relaxed text-ink/60">Payment processing fees are intentionally not included here. Add a supported fee calculation when that quote needs a gross-up.</p></section>
+  </main>
+  <script>
+    import { calculateProjectRate } from "@MathMyRate/calculators";
+    import { formatUsdGrouped, formatUsdInput, hoursToMinutes, InputProblem, percentToBps, setFieldState, usdToCents } from "../../scripts/calculator-form";
+    const $ = (id: string) => document.getElementById(id) as HTMLInputElement | HTMLElement;
+    const form = $("project-form") as HTMLFormElement;
+    const input = (id: string) => $(id) as HTMLInputElement;
+    const button = (id: string) => $(id) as HTMLButtonElement;
+    let latest: bigint | null = null;
+    let transferMessage = "";
+    function clear() { ["quote-result", "labor-result", "contingency-result", "expense-result", "time-result"].forEach(id => $(id).textContent = "—"); latest = null; button("copy-project").disabled = true; }
+    function calc() { try {
+      const delivery = hoursToMinutes(input("deliveryHours").value, "deliveryHours"); const admin = hoursToMinutes(input("adminHours").value, "adminHours"); if (delivery + admin < 1) throw new InputProblem("deliveryHours", "Plan at least one minute of work.");
+      const r = calculateProjectRate({ hourlyRateCents: usdToCents(input("projectHourly").value, "projectHourly"), estimatedMinutes: delivery + admin, directExpensesCents: usdToCents(input("directExpenses").value, "directExpenses"), contingencyBps: percentToBps(input("contingency").value, "contingency", 10000) });
+      $("quote-result").textContent = formatUsdGrouped(r.targetReceiptsCents); $("labor-result").textContent = formatUsdGrouped(r.laborCents); $("contingency-result").textContent = formatUsdGrouped(r.contingencyCents); $("expense-result").textContent = formatUsdGrouped(r.expensesCents); $("time-result").textContent = `${(delivery + admin) / 60} hours`; latest = r.targetReceiptsCents; button("copy-project").disabled = false; $("project-message").textContent = transferMessage; setFieldState(form); return r.targetReceiptsCents;
+    } catch (e) { clear(); const p = e instanceof InputProblem ? e : new InputProblem("projectHourly", "Check your inputs."); setFieldState(form, p); $("project-message").textContent = ""; return null; } }
+    try { const transferred = localStorage.getItem("mathmyrate:hourly-cents"); localStorage.removeItem("mathmyrate:hourly-cents"); if (transferred && /^\d+$/.test(transferred) && BigInt(transferred) <= 100000000000000n) { input("projectHourly").value = formatUsdInput(BigInt(transferred)); $("transfer-notice").classList.remove("hidden"); } else if (transferred) { transferMessage = "The saved hourly rate was invalid and was not used."; } } catch { transferMessage = "Saved-rate transfer was unavailable; enter an hourly rate manually."; }
+    $("project-form").addEventListener("submit", (e) => { e.preventDefault(); calc(); }); ["projectHourly","deliveryHours","adminHours","contingency","directExpenses"].forEach(id => ($ (id) as HTMLInputElement).addEventListener("input", calc));
+    $("project-reset").addEventListener("click", () => { form.reset(); transferMessage = ""; try { localStorage.removeItem("mathmyrate:hourly-cents"); } catch {} $("transfer-notice").classList.add("hidden"); calc(); });
+    $("copy-project").addEventListener("click", async () => { if (latest === null) return; try { await navigator.clipboard.writeText(`Target project receipts: ${formatUsdGrouped(latest)}`); $("project-message").textContent = "Quote copied."; } catch { $("project-message").textContent = "Copy was unavailable. Select the result to copy it manually."; } }); calc();
+  </script>
+</Layout>

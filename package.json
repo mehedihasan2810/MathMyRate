@@ -23,6 +23,8 @@
     "format:check": "oxfmt --check",
     "format": "oxfmt --write",
     "test": "turbo run test",
+    "test:e2e": "playwright test",
+    "preview:e2e": "node scripts/serve-static.mjs",
     "build:web": "turbo run build --filter=web",
     "ci": "pnpm run check && pnpm run check-types && pnpm run test && pnpm run build:web"
   },
@@ -32,6 +34,7 @@
   "devDependencies": {
     "@MathMyRate/config": "workspace:*",
     "@cloudflare/workers-types": "catalog:",
+    "@playwright/test": "^1.63.0",
     "@types/node": "catalog:",
     "oxfmt": "^0.66.0",
     "oxlint": "^1.81.0",
