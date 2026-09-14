@@ -10,8 +10,8 @@ copied from a previous run.
 ## Executive status
 
 **Not launched.** PR #1 and PR #2 are merged. This branch implements the Astro
-shell, the freelance tools, and the first provider fee calculators (Stripe,
-PayPal, and Gumroad).
+shell, the freelance tools, and all four provider fee calculators (Stripe,
+PayPal, Gumroad, and Lemon Squeezy).
 There is still no deployed-ready product, staging validation, or production
 deployment. There is no hosted CI/CD; checks and deploys are local.
 
@@ -62,6 +62,7 @@ The frontend is now an Astro static site with:
 - `/fees/stripe-fee-calculator/`
 - `/fees/paypal-fee-calculator/`
 - `/fees/gumroad-fee-calculator/`
+- `/fees/lemon-squeezy-fee-calculator/`
 
 The freelance pages use native accessible controls and browser scripts, call
 the framework-independent engine, and provide labeled defaults, explanatory
@@ -85,9 +86,12 @@ day) repeats that pattern for the official
 `gumroad-us-discover`), shows the engine's per-component line items, renders
 each scenario's assumptions and exclusions, and documents the unsupported
 threshold-crossing case instead of offering it; all three presets are no-tax,
-so the page has no tax input. The `/fees/` hub links to the Stripe, PayPal,
-and Gumroad tools and marks Lemon Squeezy as in development instead of linking
-to a missing page.
+so the page has no tax input. The Lemon Squeezy page (added 2026-09-15) covers
+the official `lemon-squeezy-us-card-single-no-tax` preset with the same two
+modes and line-item display, documents the international, PayPal, subscription,
+and payout gaps from the blocked registry records, and offers no tax input
+because the baseline scenario collects none. The `/fees/` hub links to all four
+fee tools; no provider calculator is marked in development anymore.
 
 ### Infrastructure and deployment
 
@@ -168,6 +172,22 @@ keep `$250.00` the least gross is `$287.94`(fee`$37.94`), and `$287.93`leaves`$2
 $0.50 plus 2.9% + $0.30 = `$20.55`; Discover `$250` pays a flat 30% =
 `$75.00`, and keeping `$250.00` needs `$357.14`(fee`$107.14`).
 
+Local checks on 2026-09-15 for the Lemon Squeezy fee calculator:
+
+| Check                                                              | Observed result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run lint`                                                    | Passed with 0 findings (Oxlint + anti-slop)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `pnpm run format:check`                                            | Passed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `pnpm run check-types`                                             | Passed: turbo check-types, including web `astro check` 0 errors, 0 warnings, 0 hints                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `pnpm run test` / Vitest calculator unit tests                     | 35 passed in `packages/calculators`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `pnpm build:web` (`PUBLIC_SERVER_URL=https://api.example.invalid`) | Passed; nine static HTML pages emitted, including `/fees/lemon-squeezy-fee-calculator/index.html`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Browser end-to-end                                                 | Exercised on Astro preview `:4321` via a Chromium (CDP) browser with an isolated profile: prerendered `$100.00` example shows a `$5.50` fee and `$94.50` kept; typing `$250` live-updates to `$13.00` / `$237.00`; keep-target mode returns `$263.68` for a `$250.00` target and `$105.79` for `$100.00` (one cent less verified insufficient); zero, empty, and malformed (`12.345`) amounts produce the field/summary errors and clear results; reset restores the example; copy reports success; the hub's Lemon Squeezy card navigates to the calculator; a 390px viewport stacks the controls single-column with no overflow. |
+
+Independent hand-derivations used in the browser check: `$250 × .05 = $12.50 +
+$0.50 = $13.00`; to keep `$250.00` the least gross is `$263.68` (fee `$13.68`),
+and `$263.67` leaves `$249.99`; to keep `$100.00` the least gross is `$105.79`
+(fee `$5.79`), and `$105.78` leaves `$99.99`.
+
 Code review confirmed the exact-money arithmetic and reverse-search bounds, but
 identified an official-rule provenance gap and incomplete structured metadata.
 Both were fixed before delivery: the official registry is deeply frozen and
@@ -186,11 +206,8 @@ For every future status update, record:
 ## Remaining gates
 
 1. Review the verified math package and keep provider metadata/fixtures aligned.
-2. Add the remaining provider calculator (Lemon Squeezy) only
-   for sourced, supported scenarios; the Stripe, PayPal, and Gumroad
-   calculators are implemented.
-3. Complete methodology, worked examples, SEO, privacy, terms, and release
+2. Complete methodology, worked examples, SEO, privacy, terms, and release
    checks with truthful source dates.
-4. Resolve Cloudflare account/access state, inventory resources read-only,
+3. Resolve Cloudflare account/access state, inventory resources read-only,
    validate a separately named staging stage, and review resource diffs before
    any production approval.
