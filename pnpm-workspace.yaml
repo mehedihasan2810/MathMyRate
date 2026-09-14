@@ -1,0 +1,24 @@
+packages:
+  - apps/*
+  - packages/*
+allowBuilds:
+  esbuild: true
+  sharp: true
+  msgpackr-extract: true
+  workerd: true
+overrides:
+  "@effect/platform-node-shared": 4.0.0-rc.112
+  "@effect/sql-d1": 4.0.0-rc.112
+  "@effect/sql-sqlite-do": 4.0.0-rc.112
+  "@effect/vitest": 4.0.0-rc.112
+catalog:
+  zod: ^4.5.4
+  typescript: ^6.0.3
+  "@types/node": ^26.4.1
+  varlock: 1.18.0
+  "@cloudflare/workers-types": ^5.20260906.1
+  "@orpc/server": ^1.15.0
+  "@orpc/openapi": ^1.15.0
+  "@orpc/zod": ^1.15.0
+  better-auth: 1.7.3
+  "@orpc/client": ^1.15.0

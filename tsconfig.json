@@ -1,0 +1,3 @@
+{
+  "extends": "@MathMyRate/config/tsconfig.base.json"
+}

@@ -1,0 +1,37 @@
+{
+  "name": "MathMyRate",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "check-types": "turbo run check-types",
+    "postinstall": "tsc -b packages/api && varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/server/ && varlock codegen --path ./packages/db/",
+    "dev:types": "tsc -b packages/api --watch",
+    "dev:web": "turbo run dev:bare -F web --",
+    "dev:server": "turbo run dev:bare -F hono --",
+    "db:generate": "turbo run db:generate -F @MathMyRate/db --",
+    "deploy": "turbo run deploy -F @MathMyRate/infra --",
+    "destroy": "turbo run destroy -F @MathMyRate/infra --",
+    "env:generate": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/server/ && varlock codegen --path ./packages/db/",
+    "check": "oxlint && oxfmt --write"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@MathMyRate/config": "workspace:*",
+    "@cloudflare/workers-types": "catalog:",
+    "@types/node": "catalog:",
+    "oxfmt": "^0.66.0",
+    "oxlint": "^1.81.0",
+    "turbo": "^2.10.12",
+    "typescript": "catalog:",
+    "varlock": "catalog:"
+  },
+  "packageManager": "pnpm@10.34.5"
+}
