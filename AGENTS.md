@@ -72,10 +72,40 @@ in the app browser. The normal local sequence is documented in
 browser test, deployment, or source audit as passed unless it was actually run
 and its result recorded.
 
-`pnpm run lint` loads the vendored anti-slop Oxlint plugins from
-`tools/oxlint/anti-slop`. Do not disable those rules, weaken their severity, or
-add type-laundering to make a task pass. Provenance and local deviations are in
+The only lint command is `pnpm run lint`. It runs Oxlint with the vendored
+anti-slop plugins from `.oxlintrc.json` (`tools/oxlint/anti-slop`). There is no
+separate anti-slop command. Autofixable rules use `pnpm run lint:fix`. Do not
+disable those rules, weaken their severity, or add type-laundering to make a
+task pass. Provenance and local deviations are in
 [`tools/oxlint/anti-slop/UPSTREAM.md`](tools/oxlint/anti-slop/UPSTREAM.md).
+
+## After every change
+
+After each batch of edits, before reporting the work complete:
+
+1. Run `pnpm run lint` from the repository root. That one command is Oxlint
+   and anti-slop together.
+2. If there are findings, fix them. Re-run `pnpm run lint` until it is clean.
+   Spacing and other autofixable findings: `pnpm run lint:fix`, then
+   `pnpm run format`, then `pnpm run lint` again.
+3. Run `pnpm run format:check` on the same pass. Format files you touched if
+   it fails.
+4. Do not finish with known lint failures, suppressions, weaker rule severity,
+   or type-laundering.
+
+A documentation-only edit that does not touch TypeScript or JavaScript still
+needs this pass when those files are in Oxlint's default globs; skip only when
+no lintable files changed.
+
+## Effect
+
+`packages/infra` uses Effect v4 (`4.0.0-rc.112`, aligned with Alchemy). Before
+writing Effect code, read
+[`packages/infra/node_modules/effect/AGENTS.md`](packages/infra/node_modules/effect/AGENTS.md)
+completely and follow the links in that file when required. Search
+`packages/infra/node_modules/effect/src` for APIs the guide does not cover.
+Keep Effect in infra and other packages that already depend on it; do not
+replace Hono, oRPC, Zod, Better Auth, or Drizzle to make the MVP look simpler.
 
 For infrastructure, inspect first and review a diff before applying anything.
 Keep preview and production stages separate. No deployment, resource creation,

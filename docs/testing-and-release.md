@@ -27,6 +27,11 @@ supplied. There is no hosted CI/CD. `pnpm run check` is read-only; use
 change. The invalid API origin is a compile-only fixture, not a runtime
 fallback and not a deployable output.
 
+Agents must run `pnpm run lint` after every change. That is the only lint
+command: Oxlint and anti-slop in one pass. Autofix with `pnpm run lint:fix`.
+Fix every finding before considering the change done. Do not disable anti-slop
+rules or weaken them to make a task pass. See [the agent guide](../AGENTS.md).
+
 Calculator engines and fee rules are unit-tested with Vitest in
 `packages/calculators`. There is no Playwright or other automated browser
 suite. Confirm UI behavior in the running app. Do not count an uninvoked test
