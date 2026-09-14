@@ -1,5 +1,7 @@
 # MathMyRate
 
+> **Project guidance:** Read [AGENTS.md](AGENTS.md), [the project overview](docs/project-overview.md), and [the current status](docs/project-status.md) before making changes. The [architecture](docs/architecture.md) and [testing/release gates](docs/testing-and-release.md) record the approved direction and evidence requirements.
+
 This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines Astro, Hono, ORPC, and more.
 
 ## Features

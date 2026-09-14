@@ -77,18 +77,20 @@ unnecessary empty export. Standalone `astro build` failed with
 The baseline fixes those lint issues and makes the standalone frontend build an
 actual Turbo task.
 
-## CI activation blocked
+## Current CI status
 
-The workflow is provided as `docs/ci-workflow.yml`, not an active Actions workflow.
-The connected GitHub OAuth grant has repository write access but does not include
-the `workflow` scope. Uploading the workflow through the Git tree API failed;
-the same commit with the workflow stored as documentation succeeded.
+The initial workflow upload was blocked by the connector's workflow permissions,
+so `docs/ci-workflow.yml` was provided as a template. The user subsequently added
+`.github/workflows/ci.yml` to main, and main was merged into the baseline branch.
+The active workflow is now the source of truth; the documentation copy is only
+a historical template.
 
-An appropriately authorized writer must install this file at
-`.github/workflows/ci.yml` before CI can run on GitHub. Until then, keep this PR
-in draft and do not claim GitHub checks passed. The individual local checks
-passed; hosted CI and deployment validation remain pending.
+GitHub run 34838966552 did not start its job because GitHub reported an account
+billing lock. Separately, the active workflow is missing its final newline,
+which fails the formatter. An authorized writer must correct that formatting
+and resolve the account restriction; no checks are disabled to hide either issue.
 
-When activated, the workflow runs on PRs/main with read-only repository
+The workflow is intended to run on PRs/main with read-only repository
 permissions. It does not deploy, receive production secrets or upload deployable
-artifacts.
+artifacts. See [project status](project-status.md) for current local verification
+and remaining release gates.
