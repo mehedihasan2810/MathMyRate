@@ -32,10 +32,10 @@ Tests use Node's native TypeScript support without an extra test runner.
 
 The invalid API origin is a **compile-only fixture**, not a runtime fallback.
 The starter's browser-side health/auth requests will fail against that origin.
-Do not publish this CI output. Alchemy injects the real server URL during its
-deployment build; standalone runtime builds must supply the actual API origin.
-No auth secrets, database credentials or Cloudflare credentials are required
-for this CI job.
+Do not publish this local compile output. Alchemy injects the real server URL
+during its deployment build; standalone runtime builds must supply the actual
+API origin. No auth secrets, database credentials or Cloudflare credentials
+are required for these local checks.
 
 ## Rendering and compatibility
 
@@ -77,18 +77,11 @@ unnecessary empty export. Standalone `astro build` failed with
 The baseline fixes those lint issues and makes the standalone frontend build an
 actual Turbo task.
 
-## CI activation blocked
+## Local checks, no hosted CI
 
-The workflow is provided as `docs/ci-workflow.yml`, not an active Actions workflow.
-The connected GitHub OAuth grant has repository write access but does not include
-the `workflow` scope. Uploading the workflow through the Git tree API failed;
-the same commit with the workflow stored as documentation succeeded.
+This repository does not use GitHub Actions or other hosted CI/CD. Run lint,
+types, tests, and the standalone web build locally. Deploy with the existing
+Alchemy commands when a deployment is explicitly requested.
 
-An appropriately authorized writer must install this file at
-`.github/workflows/ci.yml` before CI can run on GitHub. Until then, keep this PR
-in draft and do not claim GitHub checks passed. The individual local checks
-passed; hosted CI and deployment validation remain pending.
-
-When activated, the workflow runs on PRs/main with read-only repository
-permissions. It does not deploy, receive production secrets or upload deployable
-artifacts.
+See [project status](project-status.md) for current local verification and
+remaining release gates.
