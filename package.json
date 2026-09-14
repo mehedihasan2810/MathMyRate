@@ -18,7 +18,13 @@
     "deploy": "turbo run deploy -F @MathMyRate/infra --",
     "destroy": "turbo run destroy -F @MathMyRate/infra --",
     "env:generate": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/server/ && varlock codegen --path ./packages/db/",
-    "check": "oxlint && oxfmt --write"
+    "check": "pnpm run lint && pnpm run format:check",
+    "lint": "oxlint",
+    "format:check": "oxfmt --check",
+    "format": "oxfmt --write",
+    "test": "turbo run test",
+    "build:web": "turbo run build --filter=web",
+    "ci": "pnpm run check && pnpm run check-types && pnpm run test && pnpm run build:web"
   },
   "dependencies": {
     "zod": "catalog:"
