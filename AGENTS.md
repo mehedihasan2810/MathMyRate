@@ -72,6 +72,11 @@ in the app browser. The normal local sequence is documented in
 browser test, deployment, or source audit as passed unless it was actually run
 and its result recorded.
 
+`pnpm run lint` loads the vendored anti-slop Oxlint plugins from
+`tools/oxlint/anti-slop`. Do not disable those rules, weaken their severity, or
+add type-laundering to make a task pass. Provenance and local deviations are in
+[`tools/oxlint/anti-slop/UPSTREAM.md`](tools/oxlint/anti-slop/UPSTREAM.md).
+
 For infrastructure, inspect first and review a diff before applying anything.
 Keep preview and production stages separate. No deployment, resource creation,
 resource deletion, database migration, DNS replacement, or Cloudflare change

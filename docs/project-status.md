@@ -82,11 +82,11 @@ Local checks on 2026-09-14 for the current freelance UI working tree:
 | Check                                          | Observed result                                                       |
 | ---------------------------------------------- | --------------------------------------------------------------------- |
 | `pnpm install --frozen-lockfile`               | Passed from the current baseline lockfile                             |
-| `pnpm run lint`                                | Passed                                                                |
-| `pnpm check-types`                             | Passed with 0 errors, 0 warnings, 0 hints                             |
+| `pnpm run lint`                                | Failed after vendoring anti-slop: 229 findings (179 spacing, 50 semantic). Plugin loaded; owned-source cleanup not done. |
+| `pnpm check-types`                             | Passed with 0 errors, 0 warnings, 0 hints (re-run after anti-slop install) |
 | `pnpm run test` / Vitest calculator unit tests | 35 passed in `packages/calculators`                                   |
 | `pnpm build:web`                               | Passed; four static HTML pages emitted (auth pages removed)           |
-| `pnpm run format:check`                        | Hosted workflow removed; remaining source is expected to pass locally |
+| `pnpm run format:check`                        | Passed (re-run after anti-slop install)                               |
 | `git diff --check`                             | Passed                                                                |
 | Hosted GitHub Actions                          | Removed; verification is local only                                   |
 | Browser end-to-end                             | Manual in the running app; Playwright removed                         |
