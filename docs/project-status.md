@@ -10,7 +10,8 @@ copied from a previous run.
 ## Executive status
 
 **Not launched.** PR #1 and PR #2 are merged. This branch implements the Astro
-shell, the freelance tools, and the first provider fee calculator (Stripe).
+shell, the freelance tools, and the first provider fee calculators (Stripe,
+PayPal, and Gumroad).
 There is still no deployed-ready product, staging validation, or production
 deployment. There is no hosted CI/CD; checks and deploys are local.
 
@@ -60,6 +61,7 @@ The frontend is now an Astro static site with:
 - `/fees/`
 - `/fees/stripe-fee-calculator/`
 - `/fees/paypal-fee-calculator/`
+- `/fees/gumroad-fee-calculator/`
 
 The freelance pages use native accessible controls and browser scripts, call
 the framework-independent engine, and provide labeled defaults, explanatory
@@ -77,9 +79,15 @@ a received-amount mode (`calculateFees`) and a keep-target gross-up mode
 renders the preset's assumptions, exclusions, official source link, and review
 date next to the engine's estimate warning. The PayPal page (added the same
 day) repeats that pattern for the official
-`paypal-us-checkout-paypal-payment` preset. The `/fees/` hub links to the
-Stripe and PayPal tools and marks Gumroad and Lemon Squeezy as in development
-instead of linking to missing pages.
+`paypal-us-checkout-paypal-payment` preset. The Gumroad page (added
+2026-09-15) adds a scenario selector for its three supported presets
+(`gumroad-us-direct-card`, `gumroad-us-direct-card-high-volume`, and
+`gumroad-us-discover`), shows the engine's per-component line items, renders
+each scenario's assumptions and exclusions, and documents the unsupported
+threshold-crossing case instead of offering it; all three presets are no-tax,
+so the page has no tax input. The `/fees/` hub links to the Stripe, PayPal,
+and Gumroad tools and marks Lemon Squeezy as in development instead of linking
+to a missing page.
 
 ### Infrastructure and deployment
 
@@ -142,6 +150,24 @@ Independent hand-derivations used in the browser check: `$250 × .0349 = $8.725
 → $8.73 half-up, + $0.49 = $9.22`; to keep `$250.00` the least gross is
 `$259.55` (fee `$9.55`), and `$259.54` leaves `$249.99`.
 
+Local checks on 2026-09-15 for the Gumroad fee calculator:
+
+| Check                                                              | Observed result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run lint`                                                    | Passed with 0 findings (Oxlint + anti-slop)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `pnpm run format:check`                                            | Passed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `pnpm run check-types`                                             | Passed: turbo check-types, including web `astro check` 0 errors, 0 warnings, 0 hints                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `pnpm run test` / Vitest calculator unit tests                     | 35 passed in `packages/calculators`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `pnpm build:web` (`PUBLIC_SERVER_URL=https://api.example.invalid`) | Passed; eight static HTML pages emitted, including `/fees/gumroad-fee-calculator/index.html`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Browser end-to-end                                                 | Exercised on Astro preview `:4321` via a Chromium (CDP) browser with an isolated profile: prerendered `$100.00` direct example shows a `$13.70` fee (`$10.50` + `$3.20` line items) and `$86.30` kept; typing `$250` live-updates to `$33.05` / `$216.95`; scenario switching re-computes the same input (post-threshold `$20.55` / `$229.45`; Discover `$75.00` / `$175.00`) and updates the supported-scenario note; keep-target mode returns `$287.94` for a `$250.00` target and `$115.73` for `$100.00` (Discover: `$357.14`); zero, empty, and malformed (`12.345`) amounts produce the field/summary errors and clear results; reset restores the example; copy reports success; the hub's Gumroad card navigates to the calculator; a 390px viewport stacks the radio groups single-column with no overflow. |
+
+Independent hand-derivations used in the browser check: direct pre-threshold
+`$250` pays 10% + $0.50 (`$25.50`) plus 2.9% + $0.30 (`$7.55`) = `$33.05`; to
+keep `$250.00` the least gross is `$287.94`(fee`$37.94`), and `$287.93`leaves`$249.99`; to keep `$100.00`the least gross is`$115.73` (fee
+`$15.73`), and `$115.72` leaves `$99.99`; post-threshold `$250` pays 5% +
+$0.50 plus 2.9% + $0.30 = `$20.55`; Discover `$250` pays a flat 30% =
+`$75.00`, and keeping `$250.00` needs `$357.14`(fee`$107.14`).
+
 Code review confirmed the exact-money arithmetic and reverse-search bounds, but
 identified an official-rule provenance gap and incomplete structured metadata.
 Both were fixed before delivery: the official registry is deeply frozen and
@@ -160,9 +186,9 @@ For every future status update, record:
 ## Remaining gates
 
 1. Review the verified math package and keep provider metadata/fixtures aligned.
-2. Add the remaining provider calculators (Gumroad, Lemon Squeezy) only
-   for sourced, supported scenarios; the Stripe and PayPal calculators are
-   implemented.
+2. Add the remaining provider calculator (Lemon Squeezy) only
+   for sourced, supported scenarios; the Stripe, PayPal, and Gumroad
+   calculators are implemented.
 3. Complete methodology, worked examples, SEO, privacy, terms, and release
    checks with truthful source dates.
 4. Resolve Cloudflare account/access state, inventory resources read-only,
