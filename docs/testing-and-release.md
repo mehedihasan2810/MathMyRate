@@ -21,32 +21,16 @@ PUBLIC_SERVER_URL=https://api.example.invalid pnpm run build:web
 ```
 
 `pnpm run ci` is a local convenience that combines the non-mutating check,
-typecheck, native tests, and frontend build when `PUBLIC_SERVER_URL` is
+typecheck, Vitest unit tests, and frontend build when `PUBLIC_SERVER_URL` is
 supplied. There is no hosted CI/CD. `pnpm run check` is read-only; use
 `pnpm run format` explicitly when a maintainer has approved a formatting
 change. The invalid API origin is a compile-only fixture, not a runtime
 fallback and not a deployable output.
 
-For a portable local Chromium browser gate, install the Playwright-managed
-browser and run the production build before the E2E suite:
-
-```sh
-pnpm exec playwright install chromium
-pnpm build:web
-pnpm test:e2e
-```
-
-In the Replit environment, if the managed browser binary or its shared
-libraries are unavailable, the existing Chromium binary may be selected
-without changing the test suite:
-
-```sh
-PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/repl/tools/bin/chromium pnpm test:e2e
-```
-
-Tests use Node's native `node:test` runner. The calculator package's scripts and
-exports must include every supported engine and fixture before a package gate
-can be called complete. Do not count an uninvoked test file as coverage.
+Calculator engines and fee rules are unit-tested with Vitest in
+`packages/calculators`. There is no Playwright or other automated browser
+suite. Confirm UI behavior in the running app. Do not count an uninvoked test
+file as coverage.
 
 ## Math test matrix
 
@@ -83,32 +67,14 @@ or contradictory fee presets fail explicitly.
 
 ## Frontend and release checks
 
-The static Astro app now has a freelance landing page and hourly/day-rate and
+The static Astro app has a freelance landing page and hourly/day-rate and
 project-rate calculators. Their native browser scripts consume the real
 calculation package and show meaningful prerendered defaults before hydration.
-The browser gate is:
 
-1. run the production frontend build;
-2. serve the resulting production preview/static output;
-3. run Playwright against that preview, including direct nested-page loads;
-4. record the exact command, browser result, and any skipped scenario.
-
-This follows the [official Astro testing guidance](https://docs.astro.build/en/guides/testing/)
-checked 2026-09-14. It must cover real calculator output, keyboard and
-narrow-screen flows, labels/errors, reset, copy success/failure, no
-`NaN`/`Infinity`, navigation, and incompatible-state reset. It must not test a
-mock result. Current browser evidence is Chromium only; it is not cross-browser
-coverage.
-
-A later local production-dist Chromium run passed all 22 checks in one
-command (`pnpm test:e2e`, 16.2s). Coverage includes the independently derived
-`$60,000 / .75 + $12,000 = $92,000` fixture with `$79.87` hourly, `$638.96`
-day, and `1,152` capacity hours; the project check `$83.34 × 10 + 10% labor +
-$50 = $966.74`; the 100% billable boundary; the no-JavaScript `$3,026.25`
-project default; over-1,000 transfer values; maximum supported money and
-oversized-input rejection; reduced motion; skip-link contrast; copy
-success/failure; print; and invalid-input loops. This is local
-production-dist evidence, not staging or deployment evidence.
+Confirm UI behavior in the running app. There is no automated end-to-end
+suite. Check real calculator output, keyboard and narrow-screen flows,
+labels/errors, reset, copy, print, no `NaN`/`Infinity`, navigation, and
+incompatible-state reset. Do not treat a mock result as evidence.
 
 Before release, also verify:
 

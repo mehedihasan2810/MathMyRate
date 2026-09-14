@@ -79,25 +79,23 @@ or auth migration.
 
 Local checks on 2026-09-14 for the current freelance UI working tree:
 
-| Check                                              | Observed result                                                                                                   |
-| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `pnpm install --frozen-lockfile`                   | Passed from the current baseline lockfile                                                                         |
-| `pnpm run lint`                                    | Passed                                                                                                            |
-| `pnpm check-types`                                 | Passed with 0 errors, 0 warnings, 0 hints                                                                         |
-| `pnpm run test` / final scoped calculator test run | 35 engine tests passed, including all preset fixtures, exhaustive inverse comparisons, and provenance regressions |
-| `pnpm build:web`                                   | Passed; four static HTML pages emitted (auth pages removed)                                                       |
-| `pnpm run format:check`                            | Hosted workflow removed; remaining source is expected to pass locally                                             |
-| `git diff --check`                                 | Passed                                                                                                            |
-| Hosted GitHub Actions                              | Removed; verification is local only                                                                               |
-| Chromium production-dist E2E                       | 22 passed in one local run against the production dist                                                            |
+| Check                                          | Observed result                                                       |
+| ---------------------------------------------- | --------------------------------------------------------------------- |
+| `pnpm install --frozen-lockfile`               | Passed from the current baseline lockfile                             |
+| `pnpm run lint`                                | Passed                                                                |
+| `pnpm check-types`                             | Passed with 0 errors, 0 warnings, 0 hints                             |
+| `pnpm run test` / Vitest calculator unit tests | 35 passed in `packages/calculators`                                   |
+| `pnpm build:web`                               | Passed; four static HTML pages emitted (auth pages removed)           |
+| `pnpm run format:check`                        | Hosted workflow removed; remaining source is expected to pass locally |
+| `git diff --check`                             | Passed                                                                |
+| Hosted GitHub Actions                          | Removed; verification is local only                                   |
+| Browser end-to-end                             | Manual in the running app; Playwright removed                         |
 
 The build uses a compile-only invalid API origin, not a working deployed API.
-The E2E result is local production-dist evidence with Chromium only. It is not
-staging or deployment evidence.
-
-The independently derived browser fixtures are `$60,000 / .75 + $12,000 =
+The independently derived rate fixtures are `$60,000 / .75 + $12,000 =
 $92,000`, yielding `$79.87` hourly, `$638.96` day, and `1,152` capacity hours;
-project pricing is `$83.34 × 10 + 10% labor + $50 = $966.74`.
+project pricing is `$83.34 × 10 + 10% labor + $50 = $966.74`. Confirm those in
+the app browser when changing UI.
 
 Code review confirmed the exact-money arithmetic and reverse-search bounds, but
 identified an official-rule provenance gap and incomplete structured metadata.

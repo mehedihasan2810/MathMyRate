@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 import { ceilDivide, formatUsd, MAX_CENTS, parseUsd, requireCents } from "./money.ts";
 
 test("decimal input is exact, including cent boundaries and maximum", () => {

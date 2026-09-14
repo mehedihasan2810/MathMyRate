@@ -33,8 +33,9 @@ record what has actually happened since the plan was written.
   and `/freelance/project-rate-calculator/`. Tools are free; there are no
   login, signup, or dashboard pages. The pages use labeled native controls
   and browser scripts, not a Preact island, and consume real engine results.
-- There is no hosted CI/CD. Run lint, types, tests, the web build, and
-  Playwright locally. Deploy only when explicitly requested.
+- There is no hosted CI/CD. Run lint, types, Vitest unit tests, and the web
+  build locally. Exercise the UI in the app browser. Deploy only when
+  explicitly requested.
 - There is no deployed-ready product and no Cloudflare resource has been
   changed. Retain the existing Alchemy, Workers, D1, KV, Images, API, and
   Better Auth source (`packages/auth`, the server mount, and
@@ -65,12 +66,11 @@ jurisdictions or payment products.
 ## Safe verification
 
 Use Node.js 24 and the pnpm version pinned by the root `packageManager` field.
-The repository's unit tests use Node's native test runner and the UI browser
-gate uses Playwright/Chromium. The normal local sequence is documented in
+Calculator unit tests use Vitest. There is no Playwright suite; exercise the UI
+in the app browser. The normal local sequence is documented in
 [testing and release](docs/testing-and-release.md). Never report a check,
 browser test, deployment, or source audit as passed unless it was actually run
-and its result recorded. Browser evidence must identify Chromium-only coverage
-and distinguish a local production-dist preview from staging or production.
+and its result recorded.
 
 For infrastructure, inspect first and review a diff before applying anything.
 Keep preview and production stages separate. No deployment, resource creation,

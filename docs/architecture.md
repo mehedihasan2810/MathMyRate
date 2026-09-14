@@ -110,7 +110,7 @@ Official references checked **2026-09-14**:
 - [Cloudflare Workers static assets](https://developers.cloudflare.com/workers/static-assets/)
   — Worker/static-asset routing and deployment behavior.
 - [Astro testing](https://docs.astro.build/en/guides/testing/)
-  — production build/preview and Playwright testing guidance.
+  — production build/preview guidance. This repository does not use Playwright.
 
 These links are framework guidance, not a certification of this repository's
 build or Cloudflare deployment. The installed declarations were checked

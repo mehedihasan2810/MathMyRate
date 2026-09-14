@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 import type { FeePreset } from "./fee-presets.ts";
 import { validateFeePreset, validateFeePresets } from "./fee-schema.ts";
 import { calculateFees, calculatePaymentBatch, grossUpFees } from "./fees.ts";
