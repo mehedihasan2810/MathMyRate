@@ -63,6 +63,11 @@ The frontend is now an Astro static site with:
 - `/fees/paypal-fee-calculator/`
 - `/fees/gumroad-fee-calculator/`
 - `/fees/lemon-squeezy-fee-calculator/`
+- `/methodology/`
+- `/about/`
+- `/privacy/`
+- `/terms/`
+- a 404 page served for unknown routes
 
 The freelance pages use native accessible controls and browser scripts, call
 the framework-independent engine, and provide labeled defaults, explanatory
@@ -195,6 +200,19 @@ resolved canonically, altered official-looking records are rejected, custom
 rules carry explicit provenance/warnings, and rule revisions are independent
 of review dates.
 
+Local checks on 2026-09-15 for the content pages, footer, and SEO plumbing
+(methodology, about, privacy, terms, 404, canonical/noindex, robots.txt,
+sitemap):
+
+| Check                                          | Observed result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run lint`                                | Passed with 0 findings (Oxlint + anti-slop)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `pnpm run format:check`                        | Passed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `pnpm run check-types`                         | Passed: turbo check-types 7/7, including web `astro check` 0 errors, 0 warnings, 0 hints                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `pnpm run test` / Vitest calculator unit tests | 35 passed in `packages/calculators`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `pnpm run build:web`                           | Passed; fourteen static pages emitted, including `/methodology/`, `/about/`, `/privacy/`, `/terms/`, and `404.html`. Without a configured site, every page carries `noindex, nofollow`, `robots.txt` disallows crawling, and no `sitemap.xml` is emitted; a `--site` build emits canonical links, `robots.txt` with the sitemap line, and a sitemap of the public routes.                                                                                                                                                                                                                                                                                                                                                          |
+| Browser end-to-end                             | Exercised on Astro preview `:4321` via a Chromium (CDP) browser: footer (brand, tagline, four site links) renders on every page; footer navigation opened Methodology, About, Privacy, and Terms, each rendering all sections; an unknown URL serves the 404 page (HTTP 404) whose recovery cards navigate home; Tab focuses the visible skip link and Tab+Enter activates header/hero links; the hourly calculator still renders live engine results. The same pages were re-checked on an iPhone 16 simulator (390pt Safari against the same preview): every new page renders single-column with no horizontal overflow, the 404 cards stack full-width, the footer stacks with its link row intact, and a footer tap navigates. |
+
 For every future status update, record:
 
 1. date, branch, commit, and PR;
@@ -206,8 +224,10 @@ For every future status update, record:
 ## Remaining gates
 
 1. Review the verified math package and keep provider metadata/fixtures aligned.
-2. Complete methodology, worked examples, SEO, privacy, terms, and release
-   checks with truthful source dates.
+2. Complete remaining release checks (staging validation, deployment, truthful
+   source dates at launch). Methodology, worked examples, privacy, terms, and
+   the SEO plumbing are in place; sitemap and canonical URLs activate when a
+   production site is configured.
 3. Resolve Cloudflare account/access state, inventory resources read-only,
    validate a separately named staging stage, and review resource diffs before
    any production approval.

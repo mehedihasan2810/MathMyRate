@@ -27,12 +27,16 @@ record what has actually happened since the plan was written.
 - Keep secrets out of source, documentation, browser bundles, and logs.
   Use the repository's Varlock schemas and managed deployment secret storage.
 
-## Current guardrails (2026-09-14)
+## Current guardrails (2026-09-15)
 
 - Public routes are `/`, `/freelance/`, `/freelance/hourly-rate-calculator/`,
-  and `/freelance/project-rate-calculator/`. Tools are free; there are no
-  login, signup, or dashboard pages. The pages use labeled native controls
-  and browser scripts, not a Preact island, and consume real engine results.
+  and `/freelance/project-rate-calculator/`; `/fees/` plus the Stripe, PayPal,
+  Gumroad, and Lemon Squeezy calculators; `/methodology/`, `/about/`,
+  `/privacy/`, `/terms/`; and a 404 page for unknown routes. Tools are free;
+  there are no login, signup, or dashboard pages. The pages use labeled native
+  controls and browser scripts, not a Preact island, and consume real engine
+  results. Without a configured production site, pages are noindexed and the
+  sitemap is not emitted; both activate with `site` in `astro.config.mjs`.
 - There is no hosted CI/CD. Run lint, types, Vitest unit tests, and the web
   build locally. Test UI changes end to end like a real user, including
   edge cases, until they are production-ready. Prefer the in-app browser;

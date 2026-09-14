@@ -5,9 +5,19 @@ import Header from "../components/Header.astro";
 interface Props {
   title?: string;
   description?: string;
+  noindex?: boolean;
 }
 
-const { title = "MathMyRate", description = "Practical pricing calculators for independent work." } = Astro.props;
+const { title = "MathMyRate", description = "Practical pricing calculators for independent work.", noindex = false } = Astro.props;
+
+const canonicalUrl = Astro.site && !noindex ? new URL(Astro.url.pathname, Astro.site).href : null;
+
+const footerLinks = [
+  { to: "/methodology/", label: "Methodology" },
+  { to: "/about/", label: "About" },
+  { to: "/privacy/", label: "Privacy" },
+  { to: "/terms/", label: "Terms" },
+];
 ---
 
 <!doctype html>
@@ -18,10 +28,24 @@ const { title = "MathMyRate", description = "Practical pricing calculators for i
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="description" content={description} />
     <title>{title}</title>
+    {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : <meta name="robots" content="noindex, nofollow" />}
   </head>
   <body class="grain min-h-[100dvh]">
     <a href="#main-content" class="sr-only z-[60] rounded bg-ink px-4 py-3 text-paper focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to main content</a>
     <Header />
     <slot />
+    <footer class="site-footer border-t border-line px-5 py-10 text-sm text-ink/60 md:px-8">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-6">
+        <div>
+          <p class="display text-base font-bold text-ink">MathMyRate<span class="text-clay">.</span></p>
+          <p class="mt-1">Planning tools, not financial advice.</p>
+        </div>
+        <nav aria-label="Site information" class="flex flex-wrap gap-5">
+          {footerLinks.map((link) => (
+            <a href={link.to} class="transition-colors hover:text-moss">{link.label}</a>
+          ))}
+        </nav>
+      </div>
+    </footer>
   </body>
 </html>
