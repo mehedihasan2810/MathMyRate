@@ -18,9 +18,9 @@ record what has actually happened since the plan was written.
   [the architecture](docs/architecture.md), and
   [the testing and release gates](docs/testing-and-release.md) before taking
   ownership of a task.
-- Keep changes reviewable and ordered by the approved PR sequence. A calculation
-  engine is not a shipped calculator until it is independently tested and wired
-  to an accessible UI.
+- Keep changes reviewable and ordered by the approved PR sequence. The freelance
+  calculation engine is now independently tested and wired to an accessible
+  Astro UI; provider calculators and deployment are still separate milestones.
 - Do not edit `docs/build-baseline.md` or `docs/fee-sources.md` from routine
   product work. They are owned by separate documentation work. If either file
   is absent in a checkout, do not create it as a side effect of another task.
@@ -29,20 +29,18 @@ record what has actually happened since the plan was written.
 
 ## Current guardrails (2026-09-14)
 
-- PR #1 is merged. This branch is the independent math package: freelance
-  hourly/day and project-rate engines, plus sourced fee rules. It is engine
-  work, not calculator UI work. Verify implementations and package exports
-  before calling them complete.
-- There is no hosted CI/CD. Run lint, types, tests, and the web build locally.
-  Deploy only when explicitly requested.
-- The web app remains the starter's four pages (`/`, `/login`, `/signup`, and
-  `/dashboard`) until the freelance UI lands. Preact remains deferred until a
-  calculator island is needed.
+- PR #1 and PR #2 are merged. This branch is the freelance UI: native Astro
+  routes at `/freelance/`, `/freelance/hourly-rate-calculator/`, and
+  `/freelance/project-rate-calculator/`, alongside the retained starter auth
+  and dashboard routes. The pages use labeled native controls and browser
+  scripts, not a Preact island, and consume real engine results.
+- There is no hosted CI/CD. Run lint, types, tests, the web build, and
+  Playwright locally. Deploy only when explicitly requested.
+- Do not describe the retained starter pages as the launch product.
 - There is no deployed-ready product and no Cloudflare resource has been
   changed. Retain the existing Alchemy, Workers, D1, KV, Images, API, and
   authentication source. Do not migrate React, the database, or auth to make
   the MVP appear simpler.
-- Do not describe the starter as the finished MathMyRate product.
 
 ## Official-source discipline
 
@@ -68,11 +66,12 @@ jurisdictions or payment products.
 ## Safe verification
 
 Use Node.js 24 and the pnpm version pinned by the root `packageManager` field.
-The repository's tests use Node's native test runner; no extra test framework
-is implied. The normal local sequence is documented in
+The repository's unit tests use Node's native test runner and the UI browser
+gate uses Playwright/Chromium. The normal local sequence is documented in
 [testing and release](docs/testing-and-release.md). Never report a check,
 browser test, deployment, or source audit as passed unless it was actually run
-and its result recorded.
+and its result recorded. Browser evidence must identify Chromium-only coverage
+and distinguish a local production-dist preview from staging or production.
 
 For infrastructure, inspect first and review a diff before applying anything.
 Keep preview and production stages separate. No deployment, resource creation,

@@ -3,7 +3,8 @@
 Last updated: 2026-09-14
 
 This is the evidence policy for MathMyRate. A command listed here is a gate to
-run, not a claim that it has already passed.
+run; current local evidence is recorded below and is not staging or production
+certification.
 
 ## Local baseline commands
 
@@ -25,6 +26,23 @@ supplied. There is no hosted CI/CD. `pnpm run check` is read-only; use
 `pnpm run format` explicitly when a maintainer has approved a formatting
 change. The invalid API origin is a compile-only fixture, not a runtime
 fallback and not a deployable output.
+
+For a portable local Chromium browser gate, install the Playwright-managed
+browser and run the production build before the E2E suite:
+
+```sh
+pnpm exec playwright install chromium
+pnpm build:web
+pnpm test:e2e
+```
+
+In the Replit environment, if the managed browser binary or its shared
+libraries are unavailable, the existing Chromium binary may be selected
+without changing the test suite:
+
+```sh
+PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/repl/tools/bin/chromium pnpm test:e2e
+```
 
 Tests use Node's native `node:test` runner. The calculator package's scripts and
 exports must include every supported engine and fixture before a package gate
@@ -65,8 +83,10 @@ or contradictory fee presets fail explicitly.
 
 ## Frontend and release checks
 
-The frontend currently has no calculator UI, so calculator E2E coverage is not
-possible yet. Once the first functional UI exists, the browser gate is:
+The static Astro app now has a freelance landing page and hourly/day-rate and
+project-rate calculators. Their native browser scripts consume the real
+calculation package and show meaningful prerendered defaults before hydration.
+The browser gate is:
 
 1. run the production frontend build;
 2. serve the resulting production preview/static output;
@@ -74,10 +94,27 @@ possible yet. Once the first functional UI exists, the browser gate is:
 4. record the exact command, browser result, and any skipped scenario.
 
 This follows the [official Astro testing guidance](https://docs.astro.build/en/guides/testing/)
-checked 2026-09-14. Do not report this gate as run today. It must cover real
-calculator output, keyboard and narrow-screen flows, labels/errors, reset,
-copy success/failure, no `NaN`/`Infinity`, navigation, and incompatible-state
-reset. It must not test a mock result.
+checked 2026-09-14. It must cover real calculator output, keyboard and
+narrow-screen flows, labels/errors, reset, copy success/failure, no
+`NaN`/`Infinity`, navigation, and incompatible-state reset. It must not test a
+mock result. Current browser evidence is Chromium only; it is not cross-browser
+coverage.
+
+The 2026-09-14 local production-dist evidence covers 22 Chromium checks, with
+passing evidence distributed across the initial and targeted rechecks; this is
+not a single 22-test green run. The architect's 18-attempt validation loop had
+16 passes and two long-loop timeouts. The parent's final targeted eight-run had
+seven passes and one CSS expected-unit serialization mismatch; one final
+motion-only corrected assertion passed. Coverage includes the independently
+derived `$60,000 / .75 + $12,000 = $92,000` fixture with `$79.87` hourly,
+`$638.96` day, and `1,152` capacity hours; the project check
+`$83.34 × 10 + 10% labor + $50 = $966.74`; the 100% billable boundary; the
+no-JavaScript `$3,026.25` project default; over-1,000 transfer values; maximum
+supported money and oversized-input rejection; reduced motion; and skip-link
+contrast. Transfer grouping/validation and reduced-motion/skip-link contrast
+were code fixes, not mock-result changes. The rerun invalid-input loops all
+passed within the 60-second budget. This is local production-dist evidence, not
+staging or deployment evidence.
 
 Before release, also verify:
 
@@ -103,11 +140,9 @@ or a deployment.
 
 Follow the approved order:
 
-1. **PR 1 — baseline/build:** preserve the repository, establish non-mutating
-   checks, a real frontend build, and compatibility evidence.
-2. **PR 2 — math engines/fee rules:** land formulas, exact money handling,
-   schema validation, sourced rules, fixtures, boundaries, and reverse tests.
-3. **PR 3 — Astro shell/freelance tools:** wire real math into accessible UI.
+1. **PR 1 — baseline/build:** merged.
+2. **PR 2 — math engines/fee rules:** merged.
+3. **PR 3 — Astro shell/freelance tools:** this branch.
 4. **PR 4 — provider calculators:** add only sourced product scenarios and
    visible assumptions/exclusions.
 5. **PR 5 — content/SEO/legal:** complete methodology, worked examples,

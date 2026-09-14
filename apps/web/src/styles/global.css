@@ -1,8 +1,123 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap");
 @import "tailwindcss";
 
-/* Add your theme customizations here. */
-/* See the TailwindCSS v4 docs for more info: https://tailwindcss.com/docs/v4-beta */
-
 @theme {
-  --font-sans: "Inter", sans-serif;
+  --font-sans: "DM Sans", sans-serif;
+  --font-serif: "Fraunces", serif;
+  --font-mono: "DM Mono", monospace;
+  --color-ink: #23302a;
+  --color-paper: #f5f1e7;
+  --color-mist: #e7eee6;
+  --color-moss: #426455;
+  --color-clay: #c86c4e;
+  --color-line: #d6d7cc;
+}
+
+:root {
+  color-scheme: light;
+}
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  margin: 0;
+  background: #f5f1e7;
+  color: #23302a;
+  font-family: "DM Sans", sans-serif;
+}
+::selection {
+  background: #c9d9c8;
+  color: #23302a;
+}
+.display {
+  font-family: "Fraunces", serif;
+  letter-spacing: -0.045em;
+}
+.mono {
+  font-family: "DM Mono", monospace;
+}
+.grain {
+  position: relative;
+}
+.grain::after {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  opacity: 0.025;
+  z-index: 50;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E");
+}
+.eyebrow {
+  font:
+    500 0.71rem/1 "DM Mono",
+    monospace;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: #567465;
+}
+.page-enter {
+  animation: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+input:focus,
+button:focus,
+a:focus {
+  outline: 3px solid #b4cbb6;
+  outline-offset: 3px;
+}
+input[type="number"]::-webkit-inner-spin-button {
+  opacity: 0.5;
+}
+.field-error {
+  color: #a44631;
+  font-size: 0.78rem;
+  margin-top: 0.35rem;
+  display: none;
+}
+.field-error.visible {
+  display: block;
+}
+.result-value {
+  overflow-wrap: anywhere;
+}
+@media print {
+  header,
+  .no-print,
+  .calculator-actions,
+  .site-footer {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+  .print-card {
+    box-shadow: none !important;
+    border-color: #bbb !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
