@@ -23,9 +23,7 @@
     "argent": {
       "type": "stdio",
       "command": "argent",
-      "args": [
-        "mcp"
-      ]
+      "args": ["mcp"]
     }
   }
 }

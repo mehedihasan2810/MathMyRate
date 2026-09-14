@@ -1,6 +1,6 @@
 # MathMyRate project overview
 
-Last updated: 2026-09-14
+Last updated: 2026-09-15
 
 ## Goal
 
@@ -61,8 +61,9 @@ outside launch scope.
 
 The route table is the target, not a statement that these pages exist today.
 The current public frontend is `/`, `/freelance/`,
-`/freelance/hourly-rate-calculator/`, and
-`/freelance/project-rate-calculator/`. There are no account pages.
+`/freelance/hourly-rate-calculator/`,
+`/freelance/project-rate-calculator/`, `/fees/`, and
+`/fees/stripe-fee-calculator/`. There are no account pages.
 
 ## Product behavior
 
@@ -119,9 +120,9 @@ Results should say **net receipts before expenses and income tax**, not
 
 ## Current product boundary
 
-The math package is being built independently of the UI. Current engine work
-does not constitute six launched tools. The current Astro pages still expose
-starter health/auth behavior, and the public navigation has not yet been
-converted to the calculator information architecture. Preact is intentionally
-deferred until the first calculator island and must be checked against the
+The math package is implemented, and the freelance and Stripe fee pages consume
+its real results; this is still not six launched tools. The PayPal, Gumroad,
+and Lemon Squeezy pages, the trust/content pages, and any deployment remain
+future work. Preact remains intentionally deferred: the calculators use native
+controls and page scripts, and a framework island must be checked against the
 locked Astro/Alchemy versions before it is added.

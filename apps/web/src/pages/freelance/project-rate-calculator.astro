@@ -30,7 +30,7 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
       </aside>
     </div>
     <noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The example scope is visible; enable JavaScript to calculate a quote locally.</p></noscript>
-    <section class="mt-14 max-w-3xl border-t border-line pt-10"><h2 class="display text-3xl font-bold">A quote, not a tax calculation</h2><p class="mt-4 leading-relaxed text-ink/70">Contingency is applied to labor only. Direct expenses are added separately without markup. The target assumes the hourly rate already includes the annual tax reserve chosen in the hourly calculator, so it never adds that reserve a second time.</p><p class="mt-4 text-sm leading-relaxed text-ink/60">Payment processing fees are intentionally not included here. Add a supported fee calculation when that quote needs a gross-up.</p></section>
+    <section class="mt-14 max-w-3xl border-t border-line pt-10"><h2 class="display text-3xl font-bold">A quote, not a tax calculation</h2><p class="mt-4 leading-relaxed text-ink/70">Contingency is applied to labor only. Direct expenses are added separately without markup. The target assumes the hourly rate already includes the annual tax reserve chosen in the hourly calculator, so it never adds that reserve a second time.</p><p class="mt-4 text-sm leading-relaxed text-ink/60">Payment processing fees are intentionally not included here. <a class="underline" href="/fees/stripe-fee-calculator/">Add a supported fee calculation</a> when that quote needs a gross-up.</p></section>
   </main>
   <script>
     import { calculateProjectRate } from "@MathMyRate/calculators";
