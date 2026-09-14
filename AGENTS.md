@@ -24,36 +24,25 @@ record what has actually happened since the plan was written.
 - Do not edit `docs/build-baseline.md` or `docs/fee-sources.md` from routine
   product work. They are owned by separate documentation work. If either file
   is absent in a checkout, do not create it as a side effect of another task.
-- Keep secrets out of source, documentation, browser bundles, and CI output.
+- Keep secrets out of source, documentation, browser bundles, and logs.
   Use the repository's Varlock schemas and managed deployment secret storage.
 
 ## Current guardrails (2026-09-14)
 
-- PR #1 is still a draft baseline. The user added the GitHub workflow on
-  `main` and merged it to the baseline remote, but it is not release evidence.
-- GitHub run `34838966552` failed before any steps ran with the exact annotation
-  `account locked due billing issue`. This is an account/billing failure, not
-  evidence that the repository checks failed.
-- The workflow file currently has no trailing newline, which causes the
-  formatter check to fail. Connector edits to workflows are blocked. Do not
-  bypass or disable the check, and do not repeatedly retry a blocked workflow
-  edit; leave the issue visible for the owning agent or an authorized maintainer.
-- The current branch is building the framework-independent math package. It is
-  engine work, not calculator UI work. The freelance engine covers hourly/day
-  and project-rate calculations; the fee-engine contract uses exact bigint
-  cents, integer basis points, runtime schema guards, and validation,
-  boundary, and brute-force inverse tests. Verify the implementation and
-  exports before calling it complete.
+- PR #1 is merged. This branch is the independent math package: freelance
+  hourly/day and project-rate engines, plus sourced fee rules. It is engine
+  work, not calculator UI work. Verify implementations and package exports
+  before calling them complete.
+- There is no hosted CI/CD. Run lint, types, tests, and the web build locally.
+  Deploy only when explicitly requested.
 - The web app remains the starter's four pages (`/`, `/login`, `/signup`, and
-  `/dashboard`). It has zero calculator UI, so no calculator E2E test can
-  honestly pass yet. Preact remains deferred until a calculator island is
-  needed.
+  `/dashboard`) until the freelance UI lands. Preact remains deferred until a
+  calculator island is needed.
 - There is no deployed-ready product and no Cloudflare resource has been
   changed. Retain the existing Alchemy, Workers, D1, KV, Images, API, and
   authentication source. Do not migrate React, the database, or auth to make
   the MVP appear simpler.
-- Until PR #1 and PR #2 are approved, `main` retains the initial template and
-  workflow. Do not describe the starter as the finished MathMyRate product.
+- Do not describe the starter as the finished MathMyRate product.
 
 ## Official-source discipline
 

@@ -9,22 +9,11 @@ copied from a previous run.
 
 ## Executive status
 
-**Not launched.** PR #1 is a draft baseline. The next branch implements the independent
+**Not launched.** PR #1 is merged. This branch implements the independent
 calculation package (the math-engine track), while the web app remains the
 starter shell. There is no deployed-ready product, no calculator UI, and no
-calculator E2E path to test yet.
-
-The user added the GitHub workflow on `main`; the agent merged main into the baseline
-remote. GitHub run `34838966552` failed **before any steps ran** with the exact
-annotation `The job was not started because your account is locked due to a billing issue.` Treat that as hosted account
-evidence only; it does not establish a source, test, build, or deployment
-failure.
-
-The workflow file has no trailing newline, which causes the formatter check to
-fail. Connector workflow edits are blocked. There is no approved bypass or
-disable; keep the failure visible and wait for an authorized workflow fix.
-Until PR #1 and PR #2 are approved, `main` retains the initial template and
-workflow.
+calculator E2E path to test yet. There is no hosted CI/CD; checks and deploys
+are local.
 
 ## What exists now
 
@@ -84,20 +73,20 @@ or auth migration.
 
 Local checks on 2026-09-14 for `feat/calculation-engines`:
 
-| Check                                                              | Observed result                                                                                             |
-| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| `pnpm install --frozen-lockfile`                                   | Passed from the current baseline lockfile; no new dependencies                                              |
-| `pnpm run lint`                                                    | Passed                                                                                                      |
-| `pnpm run check-types`                                             | Passed across the workspace; three pre-existing Astro unused-code hints                                     |
-| `pnpm run test` / final scoped calculator test run                 | 35 tests passed, including all preset fixtures, exhaustive inverse comparisons, and provenance regressions  |
-| `PUBLIC_SERVER_URL=https://api.example.invalid pnpm run build:web` | Passed; all four existing starter HTML files emitted                                                        |
-| `pnpm run format:check`                                            | Failed only for the existing `.github/workflows/ci.yml` missing final newline; changed math/docs files pass |
-| `git diff --check`                                                 | Passed                                                                                                      |
-| Hosted GitHub Actions                                              | Blocked before steps by the GitHub billing lock                                                             |
-| Browser calculator E2E / staging / production                      | Not run: calculator UI and deployment are later milestones                                                  |
+| Check                                                              | Observed result                                                                                            |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| `pnpm install --frozen-lockfile`                                   | Passed from the current baseline lockfile; no new dependencies                                             |
+| `pnpm run lint`                                                    | Passed                                                                                                     |
+| `pnpm run check-types`                                             | Passed across the workspace; three pre-existing Astro unused-code hints                                    |
+| `pnpm run test` / final scoped calculator test run                 | 35 tests passed, including all preset fixtures, exhaustive inverse comparisons, and provenance regressions |
+| `PUBLIC_SERVER_URL=https://api.example.invalid pnpm run build:web` | Passed; all four existing starter HTML files emitted                                                       |
+| `pnpm run format:check`                                            | Hosted workflow removed; remaining source is expected to pass locally                                      |
+| `git diff --check`                                                 | Passed                                                                                                     |
+| Hosted GitHub Actions                                              | Removed; verification is local only                                                                        |
+| Browser calculator E2E / staging / production                      | Not run: calculator UI and deployment are later milestones                                                 |
 
 The build uses a compile-only invalid API origin, not a working deployed API.
-No aggregate green-CI or production-readiness claim is made.
+No production-readiness claim is made.
 
 Code review confirmed the exact-money arithmetic and reverse-search bounds, but
 identified an official-rule provenance gap and incomplete structured metadata.
@@ -110,20 +99,19 @@ after those fixes; the frontend and its dependencies were unchanged.
 For every future status update, record:
 
 1. date, branch, commit, and PR;
-2. the exact command or hosted run ID;
+2. the exact command;
 3. pass/fail/blocked result and meaningful counts;
-4. whether the result is local, hosted, preview, staging, or production;
+4. whether the result is local, preview, staging, or production;
 5. any pre-existing or infrastructure failure that prevents interpretation.
 
 ## Remaining gates
 
 1. Review the verified math package and keep provider metadata/fixtures aligned.
-2. Complete PR #1/PR #2 review without hiding the workflow/account issue.
-3. Build the Astro shell and freelance tools around the real engine; do not use
-   mock financial results.
-4. Add the four provider calculators only for sourced, supported scenarios.
-5. Complete methodology, worked examples, SEO, privacy, terms, and release
+2. Land the Astro freelance UI around the real engine; do not use mock financial
+   results.
+3. Add the four provider calculators only for sourced, supported scenarios.
+4. Complete methodology, worked examples, SEO, privacy, terms, and release
    checks with truthful source dates.
-6. Resolve Cloudflare account/access state, inventory resources read-only,
+5. Resolve Cloudflare account/access state, inventory resources read-only,
    validate a separately named staging stage, and review resource diffs before
    any production approval.

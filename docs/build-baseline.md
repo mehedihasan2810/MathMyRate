@@ -32,10 +32,10 @@ Tests use Node's native TypeScript support without an extra test runner.
 
 The invalid API origin is a **compile-only fixture**, not a runtime fallback.
 The starter's browser-side health/auth requests will fail against that origin.
-Do not publish this CI output. Alchemy injects the real server URL during its
-deployment build; standalone runtime builds must supply the actual API origin.
-No auth secrets, database credentials or Cloudflare credentials are required
-for this CI job.
+Do not publish this local compile output. Alchemy injects the real server URL
+during its deployment build; standalone runtime builds must supply the actual
+API origin. No auth secrets, database credentials or Cloudflare credentials
+are required for these local checks.
 
 ## Rendering and compatibility
 
@@ -77,20 +77,11 @@ unnecessary empty export. Standalone `astro build` failed with
 The baseline fixes those lint issues and makes the standalone frontend build an
 actual Turbo task.
 
-## Current CI status
+## Local checks, no hosted CI
 
-The initial workflow upload was blocked by the connector's workflow permissions,
-so `docs/ci-workflow.yml` was provided as a template. The user subsequently added
-`.github/workflows/ci.yml` to main, and main was merged into the baseline branch.
-The active workflow is now the source of truth; the documentation copy is only
-a historical template.
+This repository does not use GitHub Actions or other hosted CI/CD. Run lint,
+types, tests, and the standalone web build locally. Deploy with the existing
+Alchemy commands when a deployment is explicitly requested.
 
-GitHub run 34838966552 did not start its job because GitHub reported an account
-billing lock. Separately, the active workflow is missing its final newline,
-which fails the formatter. An authorized writer must correct that formatting
-and resolve the account restriction; no checks are disabled to hide either issue.
-
-The workflow is intended to run on PRs/main with read-only repository
-permissions. It does not deploy, receive production secrets or upload deployable
-artifacts. See [project status](project-status.md) for current local verification
-and remaining release gates.
+See [project status](project-status.md) for current local verification and
+remaining release gates.

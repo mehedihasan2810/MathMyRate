@@ -19,11 +19,12 @@ pnpm run test
 PUBLIC_SERVER_URL=https://api.example.invalid pnpm run build:web
 ```
 
-`pnpm run ci` combines the non-mutating check, typecheck, native tests, and
-frontend build when `PUBLIC_SERVER_URL` is supplied. `pnpm run check` is
-read-only; use `pnpm run format` explicitly when a maintainer has approved a
-formatting change. The invalid API origin is a compile-only fixture, not a
-runtime fallback and not a deployable output.
+`pnpm run ci` is a local convenience that combines the non-mutating check,
+typecheck, native tests, and frontend build when `PUBLIC_SERVER_URL` is
+supplied. There is no hosted CI/CD. `pnpm run check` is read-only; use
+`pnpm run format` explicitly when a maintainer has approved a formatting
+change. The invalid API origin is a compile-only fixture, not a runtime
+fallback and not a deployable output.
 
 Tests use Node's native `node:test` runner. The calculator package's scripts and
 exports must include every supported engine and fixture before a package gate
@@ -92,20 +93,11 @@ Before release, also verify:
 - the production asset build and nested routes work in the intended static
   asset hosting path.
 
-## Current hosted-check caveat
+## Local verification only
 
-The baseline PR #1 remains a draft. The user added the workflow on `main` and
-merged it to the baseline remote. GitHub run `34838966552` failed before any
-steps with the exact annotation `account locked due billing issue`; it provides
-no hosted test counts. The workflow also lacks a trailing newline, which causes
-the formatter check to fail. Connector workflow edits are blocked, and there
-is no approved bypass or disable. Do not reinterpret this run as a code pass or
-failure, and do not claim hosted CI until a later run actually executes steps.
-
-The final main agent updates the actual current-run counts and results. Every
-status entry should distinguish local checks, hosted CI, production preview,
-Cloudflare staging, and production. A green local command does not certify an
-account, a resource diff, or a deployment.
+There is no hosted CI/CD. Record local check results in [project status](project-status.md).
+A green local command does not certify a Cloudflare account, a resource diff,
+or a deployment.
 
 ## PR and deployment sequence
 
