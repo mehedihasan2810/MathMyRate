@@ -34,9 +34,9 @@ record what has actually happened since the plan was written.
   login, signup, or dashboard pages. The pages use labeled native controls
   and browser scripts, not a Preact island, and consume real engine results.
 - There is no hosted CI/CD. Run lint, types, Vitest unit tests, and the web
-  build locally. Exercise the UI in the in-app browser. If that browser is
-  unavailable, use Argent for end-to-end UI verification. Deploy only when
-  explicitly requested.
+  build locally. Test UI changes end to end like a real user, including
+  edge cases, until they are production-ready. Prefer the in-app browser;
+  if it is unavailable, use Argent. Deploy only when explicitly requested.
 - There is no deployed-ready product and no Cloudflare resource has been
   changed. Retain the existing Alchemy, Workers, D1, KV, Images, API, and
   Better Auth source (`packages/auth`, the server mount, and
@@ -74,14 +74,30 @@ browser test, deployment, or source audit as passed unless it was actually run
 and its result recorded.
 
 When a change affects UI, layout, styling, routing, client state, or rendered
-data, verify the changed flow end to end the way a user would (click, type,
-submit, navigate). Prefer the in-app browser. If the agent cannot use the
-in-app browser (missing tools, blocked session, or it will not load the app),
-use Argent to complete the same end-to-end check against a Chromium (CDP)
-target. Read the `argent-device-interact` skill first, and
-`argent-test-ui-flow` for a one-off interact-verify loop. Do not skip UI
-verification because the in-app browser was unavailable, and do not treat a
-single screenshot as evidence of behavior.
+data, the agent must test the changed product the way a real user would, end
+to end, covering every edge case the change can hit, until the work is
+production-ready. That means:
+
+1. Walk the main flow: load the page, fill real inputs, submit, read the
+   result, navigate related routes that share state, and use reset, copy,
+   and print where they exist.
+2. Cover edge cases on every surface the change touches: empty and
+   malformed inputs, validation and error copy, keyboard and narrow-screen
+   use, incompatible-state reset, shared state across routes, and no
+   `NaN`/`Infinity` or broken labels. Hunt for regressions in surrounding
+   flows, not only the happy path.
+3. Prefer the in-app browser. If the agent cannot use it (missing tools,
+   blocked session, or it will not load the app), use Argent to complete
+   the same end-to-end pass against a Chromium (CDP) target. Read the
+   `argent-device-interact` skill first, and `argent-test-ui-flow` for a
+   one-off interact-verify loop.
+4. Do not skip this pass because the in-app browser was unavailable. Do
+   not treat a single screenshot as evidence. Do not report the work
+   production-ready, or the UI verified, until the checks actually ran,
+   failures were fixed, and the flow was re-verified.
+
+The frontend checklist in [testing and release](docs/testing-and-release.md)
+is the minimum for calculator pages.
 
 The only lint command is `pnpm run lint`. It runs Oxlint with the vendored
 anti-slop plugins from `.oxlintrc.json` (`tools/oxlint/anti-slop`). There is no

@@ -11,11 +11,15 @@ ownership of a task.
 ## UI verification
 
 When a change affects UI, layout, styling, routing, client state, or rendered
-data, verify the changed flow end to end in the in-app browser. If the agent
-cannot use the in-app browser, use Argent (Chromium CDP) for the same
-end-to-end check. Read `argent-device-interact` first (`argent-test-ui-flow`
-for a one-off interact-verify loop). Do not finish UI work unverified. Details
-are in [`AGENTS.md`](./AGENTS.md).
+data, test it end to end like a real user until it is production-ready. Cover
+the main flow and every edge case the change can hit: empty and invalid
+inputs, errors, keyboard and narrow-screen use, reset/copy/print, related
+routes, and regressions. Prefer the in-app browser. If that browser is
+unavailable, use Argent (Chromium CDP) for the same pass. Read
+`argent-device-interact` first (`argent-test-ui-flow` for a one-off
+interact-verify loop). Do not finish on a screenshot, skip edge cases, or
+call the work production-ready until the checks ran, failures were fixed,
+and the flow was re-verified. Details are in [`AGENTS.md`](./AGENTS.md).
 
 ## After every change
 
