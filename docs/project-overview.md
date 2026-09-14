@@ -60,8 +60,9 @@ outside launch scope.
 | `/404`                                | Useful navigation for unavailable URLs                    |
 
 The route table is the target, not a statement that these pages exist today.
-The current frontend is still the starter's four pages: `/`, `/login`,
-`/signup`, and `/dashboard`.
+The current public frontend is `/`, `/freelance/`,
+`/freelance/hourly-rate-calculator/`, and
+`/freelance/project-rate-calculator/`. There are no account pages.
 
 ## Product behavior
 

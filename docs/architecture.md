@@ -34,9 +34,9 @@ send user-entered financial values to analytics or automatic share URLs.
 - `apps/web` is the Astro presentation and content application. It now contains
   the static home and freelance information pages plus
   `/freelance/hourly-rate-calculator/` and
-  `/freelance/project-rate-calculator/`. The starter login, signup, and
-  dashboard routes remain in the repository, but are not part of the public
-  calculator flow.
+  `/freelance/project-rate-calculator/`. Login, signup, and dashboard pages
+  are not part of the product: every tool is free. Better Auth remains in
+  `packages/auth`, the server mount, and `apps/web/src/lib/auth-client.ts`.
 - The freelance pages use labeled native HTML controls and page scripts rather
   than a Preact island or another framework integration. The scripts parse
   input at the browser boundary, call the real calculator package, render
@@ -96,7 +96,7 @@ The checked-in web config selects `output: "static"`, so the public calculator
 pages are prerendered assets with small browser scripts. Astro's on-demand
 rendering documentation confirms that server output needs an adapter; that is
 not a reason to switch this app back to server output for a calculator
-keystroke. The production build currently emits seven static HTML pages.
+keystroke. The production build currently emits four static HTML pages.
 
 Alchemy's `Cloudflare.Website.Astro` resource remains the deployment path.
 Cloudflare Workers static-assets documentation is the reference for asset
@@ -129,9 +129,8 @@ preserves the static example on load, supports reset/copy/print and local
 hourly-rate transfer, and never ships mock financial results. Reconsider a
 framework island only if a later interaction has a demonstrated need.
 
-The current public information architecture now links the home page to the
-freelance tools rather than the starter auth navigation. The retained starter
-dashboard is not a MathMyRate launch feature. Calculator results stay in the
+The current public information architecture links the home page to the
+freelance tools. There is no account navigation. Calculator results stay in the
 browser; the transfer uses local storage rather than a query string, and the
 UI makes no calculator fetch, XHR, or beacon calls.
 

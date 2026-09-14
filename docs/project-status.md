@@ -57,17 +57,15 @@ The frontend is now an Astro static site with:
 - `/freelance/`
 - `/freelance/hourly-rate-calculator/`
 - `/freelance/project-rate-calculator/`
-- `/login`
-- `/signup`
-- `/dashboard`
 
 The freelance pages use native accessible controls and browser scripts, call
 the framework-independent engine, and provide labeled defaults, explanatory
 content, validation/error states, reset, copy, print, and local hourly-rate
 transfer. They do not require a Preact island or another framework integration.
-The starter auth/dashboard routes remain retained source, not launch claims.
-Transfer grouping/validation and reduced-motion/skip-link contrast fixes are
-included in this UI work.
+Login, signup, and dashboard pages were removed because every tool is free.
+Better Auth server, database schema, and the unused web client remain in
+source. Transfer grouping/validation and reduced-motion/skip-link contrast
+fixes are included in this UI work.
 
 ### Infrastructure and deployment
 
@@ -85,9 +83,9 @@ Local checks on 2026-09-14 for the current freelance UI working tree:
 | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `pnpm install --frozen-lockfile`                   | Passed from the current baseline lockfile                                                                         |
 | `pnpm run lint`                                    | Passed                                                                                                            |
-| `pnpm check-types`                                 | Passed with 0 errors, 0 warnings, and 2 pre-existing auth hints                                                   |
+| `pnpm check-types`                                 | Passed with 0 errors, 0 warnings, 0 hints                                                                         |
 | `pnpm run test` / final scoped calculator test run | 35 engine tests passed, including all preset fixtures, exhaustive inverse comparisons, and provenance regressions |
-| `pnpm build:web`                                   | Passed; seven static HTML pages emitted                                                                           |
+| `pnpm build:web`                                   | Passed; four static HTML pages emitted (auth pages removed)                                                       |
 | `pnpm run format:check`                            | Hosted workflow removed; remaining source is expected to pass locally                                             |
 | `git diff --check`                                 | Passed                                                                                                            |
 | Hosted GitHub Actions                              | Removed; verification is local only                                                                               |

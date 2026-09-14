@@ -29,18 +29,17 @@ record what has actually happened since the plan was written.
 
 ## Current guardrails (2026-09-14)
 
-- PR #1 and PR #2 are merged. This branch is the freelance UI: native Astro
-  routes at `/freelance/`, `/freelance/hourly-rate-calculator/`, and
-  `/freelance/project-rate-calculator/`, alongside the retained starter auth
-  and dashboard routes. The pages use labeled native controls and browser
-  scripts, not a Preact island, and consume real engine results.
+- Public routes are `/`, `/freelance/`, `/freelance/hourly-rate-calculator/`,
+  and `/freelance/project-rate-calculator/`. Tools are free; there are no
+  login, signup, or dashboard pages. The pages use labeled native controls
+  and browser scripts, not a Preact island, and consume real engine results.
 - There is no hosted CI/CD. Run lint, types, tests, the web build, and
   Playwright locally. Deploy only when explicitly requested.
-- Do not describe the retained starter pages as the launch product.
 - There is no deployed-ready product and no Cloudflare resource has been
   changed. Retain the existing Alchemy, Workers, D1, KV, Images, API, and
-  authentication source. Do not migrate React, the database, or auth to make
-  the MVP appear simpler.
+  Better Auth source (`packages/auth`, the server mount, and
+  `apps/web/src/lib/auth-client.ts`). Do not migrate React, the database, or
+  auth to make the MVP appear simpler.
 
 ## Official-source discipline
 
