@@ -194,3 +194,43 @@ export function calculatePaymentBatch(
     sellerProceedsCents: results.reduce((sum, result) => sum + result.sellerProceedsCents, 0n),
   };
 }
+
+const SalesCount = Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 1_000_000 }));
+
+/** Totals for a number of identical sales, such as a month of same-size orders. */
+export interface RepeatedSaleTotals {
+  readonly salesCount: number;
+  readonly grossCents: bigint;
+  readonly taxCents: bigint;
+  readonly feeCents: bigint;
+  readonly sellerProceedsCents: bigint;
+}
+
+/**
+ * Multiplies one evaluated sale by a count of identical sales. Every sale pays
+ * its own fixed charge and its own separately rounded percentage, so totals
+ * are exact multiples of the single sale, never a re-rounded blended rate.
+ */
+export function repeatSale(
+  sale: { grossCents: bigint; taxCents: bigint; feeCents: bigint; sellerProceedsCents: bigint },
+  salesCount: number,
+): RepeatedSaleTotals {
+  const count = Schema.decodeSync(SalesCount)(salesCount);
+  const factor = BigInt(count);
+
+  return {
+    salesCount: count,
+    grossCents: sale.grossCents * factor,
+    taxCents: sale.taxCents * factor,
+    feeCents: sale.feeCents * factor,
+    sellerProceedsCents: sale.sellerProceedsCents * factor,
+  };
+}
+
+/** Fees as a share of the amount charged, in basis points rounded half up. */
+export function effectiveFeeRateBps(feeCents: bigint, grossCents: bigint): bigint {
+  const gross = Schema.decodeSync(PositiveCents)(grossCents);
+  const fee = Schema.decodeSync(Cents)(feeCents);
+
+  return (fee * 20_000n + gross) / (gross * 2n);
+}

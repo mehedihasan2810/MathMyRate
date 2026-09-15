@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import { test } from "vitest";
 import type { FeePreset } from "./fee-presets.ts";
 import { validateFeePreset, validateFeePresets } from "./fee-schema.ts";
-import { calculateFees, calculatePaymentBatch, grossUpFees } from "./fees.ts";
+import {
+  calculateFees,
+  calculatePaymentBatch,
+  effectiveFeeRateBps,
+  grossUpFees,
+  repeatSale,
+} from "./fees.ts";
 import { MAX_CENTS } from "./money.ts";
 
 const fixture: FeePreset = {
@@ -236,4 +242,30 @@ test("schema rejects incomplete or contradictory configurations", () => {
 
   assert.equal(validateFeePreset(blocked).status, "blocked");
   assert.throws(() => calculateFees({ preset: blocked, grossCents: 100n }), /Unsupported scenario/);
+});
+
+test("repeated identical sales multiply every per-sale fee, including the fixed charge", () => {
+  // Independently: 2.9% of $100.00 is $2.90, plus $0.30, so each sale pays $3.20.
+  const sale = calculateFees({ preset: fixture, grossCents: 10_000n });
+  const month = repeatSale(sale, 250);
+
+  assert.equal(month.salesCount, 250);
+  assert.equal(month.grossCents, 2_500_000n);
+  assert.equal(month.feeCents, 80_000n);
+  assert.equal(month.sellerProceedsCents, 2_420_000n);
+  assert.equal(month.taxCents, 0n);
+  assert.throws(() => repeatSale(sale, 0));
+  assert.throws(() => repeatSale(sale, 1.5));
+  assert.throws(() => repeatSale(sale, 1_000_001));
+});
+
+test("effective fee rate is basis points of the amount charged, rounded half up", () => {
+  // $36.56 of $1,250.50 is 2.9236...%, which is 292 basis points.
+  assert.equal(effectiveFeeRateBps(3_656n, 125_050n), 292n);
+  // $1 of $8 is exactly 12.5%; $1 of $3 is 33.33...%.
+  assert.equal(effectiveFeeRateBps(100n, 800n), 1_250n);
+  assert.equal(effectiveFeeRateBps(100n, 300n), 3_333n);
+  // One cent of $200.00 is exactly half a basis point, which rounds up.
+  assert.equal(effectiveFeeRateBps(1n, 20_000n), 1n);
+  assert.throws(() => effectiveFeeRateBps(1n, 0n));
 });

@@ -50,7 +50,7 @@ test("official-looking clones are rejected unless their full configuration is ca
         sources: [{ ...source, url: "https://example.com/forged" }, ...preset.sources.slice(1)],
       },
     ],
-    ["date", forge({ checkedOn: "2026-09-15" })],
+    ["date", forge({ checkedOn: "2026-09-16" })],
     ["channel", forge({ channel: "in-person" })],
     ["product", forge({ paymentProduct: "Forged product" })],
     ["revision", forge({ revision: preset.revision + 1 })],
@@ -64,14 +64,25 @@ test("official-looking clones are rejected unless their full configuration is ca
   }
 });
 
-// Independent $100 fixtures, directly from the component arithmetic in fee-sources.md.
+// Independent $100 fixtures, derived by hand from each published component:
+// a percentage of $100.00 in cents, plus any fixed charge.
 const expectedFees = new Map([
-  ["stripe-us-online-domestic-card", 320n],
-  ["paypal-us-checkout-paypal-payment", 398n],
-  ["gumroad-us-direct-card", 1370n],
-  ["gumroad-us-direct-card-high-volume", 870n],
-  ["gumroad-us-discover", 3000n],
-  ["lemon-squeezy-us-card-single-no-tax", 550n],
+  ["stripe-us-online-domestic-card", 320n], // 2.9% = 290, + 30
+  ["stripe-us-online-international-card", 470n], // 290 + 30 + 1.5% = 150
+  ["stripe-us-online-manual-domestic-card", 370n], // 290 + 30 + 0.5% = 50
+  ["paypal-us-checkout-paypal-payment", 398n], // 3.49% = 349, + 49
+  ["paypal-us-standard-card-payment", 348n], // 2.99% = 299, + 49
+  ["paypal-us-invoice-paypal-payment", 398n], // 349 + 49
+  ["paypal-us-invoice-card-payment", 348n], // 299 + 49
+  ["paypal-us-checkout-international", 548n], // 349 + 49 + 1.50% = 150
+  ["paypal-us-qr-code", 238n], // 2.29% = 229, + 9
+  ["gumroad-us-direct-card", 1370n], // 1000 + 50 + 290 + 30
+  ["gumroad-us-direct-card-high-volume", 870n], // 500 + 50 + 290 + 30
+  ["gumroad-us-discover", 3000n], // 30%
+  ["lemon-squeezy-us-domestic-card", 550n], // 5% = 500, + 50
+  ["lemon-squeezy-us-international-card", 700n], // 500 + 50 + 150
+  ["lemon-squeezy-us-paypal", 700n], // 500 + 50 + 150
+  ["lemon-squeezy-us-subscription", 600n], // 500 + 50 + 0.5% = 50
 ]);
 
 for (const preset of feePresets) {
@@ -129,4 +140,33 @@ test("a project receipt target composes with payment gross-up without taxing it 
   const quote = grossUpFees({ preset, targetProceedsCents: project.targetReceiptsCents });
   assert.ok(quote.sellerProceedsCents >= 115000n);
   assert.equal(quote.taxCents, 0n);
+});
+
+test("Lemon Squeezy matches the worked examples on its own fee and sales tax pages", () => {
+  const international = getFeePreset("lemon-squeezy-us-international-card");
+
+  assert.ok(international);
+
+  // Fees page: $20.00 product, $4.00 VAT, $24.00 total, platform fee $2.06, net $17.94.
+  const france = calculateFees({ preset: international, grossCents: 2400n, taxCents: 400n });
+
+  assert.equal(france.feeCents, 206n);
+  assert.equal(france.sellerProceedsCents, 1794n);
+
+  // Sales tax page: $15.00 subtotal, $3.00 VAT, $18.00 total, platform fee $1.67, net $13.33.
+  const uk = calculateFees({ preset: international, grossCents: 1800n, taxCents: 300n });
+
+  assert.equal(uk.feeCents, 167n);
+  assert.equal(uk.sellerProceedsCents, 1333n);
+});
+
+test("PayPal's international Checkout fee is the domestic fee plus 1.50%", () => {
+  const domestic = getFeePreset("paypal-us-checkout-paypal-payment");
+  const international = getFeePreset("paypal-us-checkout-international");
+
+  assert.ok(domestic && international);
+
+  // $250.00: domestic 3.49% is 872.5, rounded to 873, + 49 = 922; the add-on is 1.50% = 375.
+  assert.equal(calculateFees({ preset: domestic, grossCents: 25_000n }).feeCents, 922n);
+  assert.equal(calculateFees({ preset: international, grossCents: 25_000n }).feeCents, 1_297n);
 });
