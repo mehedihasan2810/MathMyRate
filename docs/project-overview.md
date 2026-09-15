@@ -41,44 +41,48 @@ outside launch scope.
 
 ## Planned information architecture
 
-| Route                                     | Purpose                                                     |
-| ----------------------------------------- | ----------------------------------------------------------- |
-| `/`                                       | Product promise and tool selection                          |
-| `/freelance/`                             | Freelance pricing hub                                       |
-| `/freelance/hourly-rate-calculator/`      | Sustainable hourly/day-rate planning                        |
-| `/freelance/project-rate-calculator/`     | Scope-based project quotation                               |
-| `/freelance/retainer-calculator/`         | Monthly retainer fee, discount, and effective rates         |
-| `/freelance/markup-margin-calculator/`    | Price from a markup or margin, or both from a price         |
-| `/freelance/salary-to-hourly-calculator/` | Pay converted across hours, days, weeks, months, and years  |
-| `/fees/`                                  | Supported platform-fee hub                                  |
-| `/fees/stripe-fee-calculator/`            | Stripe gross/net calculation                                |
-| `/fees/paypal-fee-calculator/`            | Product-specific PayPal calculation                         |
-| `/fees/square-fee-calculator/`            | Square fees by plan and payment channel                     |
-| `/fees/etsy-fee-calculator/`              | Etsy transaction, processing, and listing fees              |
-| `/fees/ebay-fee-calculator/`              | eBay final value and per-order fees by category             |
-| `/fees/upwork-fee-calculator/`            | Upwork service fee on a contract and withdrawal fees        |
-| `/fees/fiverr-fee-calculator/`            | Fiverr's seller commission and withdrawal fees              |
-| `/fees/kickstarter-fee-calculator/`       | Kickstarter and processing fees per pledge and per campaign |
-| `/fees/patreon-fee-calculator/`           | Patreon platform, processing, and iOS fees on a membership  |
-| `/fees/ko-fi-fee-calculator/`             | Ko-fi's service fee and Stripe processing                   |
-| `/fees/substack-fee-calculator/`          | Substack's 10% fee and Stripe card and Billing fees         |
-| `/fees/payhip-fee-calculator/`            | Payhip plan fees and Stripe processing on a sale            |
-| `/fees/kdp-royalty-calculator/`           | Amazon KDP eBook, paperback, and hardcover royalties        |
-| `/fees/gumroad-fee-calculator/`           | Gumroad direct/Discover take-home                           |
-| `/fees/lemon-squeezy-fee-calculator/`     | Order fees and separate payout estimate                     |
-| `/fees/stripe-vs-paypal-fees/`            | Stripe and PayPal fees on the same sale                     |
-| `/fees/gumroad-vs-lemon-squeezy-fees/`    | Gumroad and Lemon Squeezy fees on the same sale             |
-| `/fees/digital-product-platform-fees/`    | Digital product platform fees compared on one sale          |
-| `/fees/upwork-vs-fiverr-fees/`            | Upwork and Fiverr freelancer fees on the same job           |
-| `/fees/patreon-vs-ko-fi-fees/`            | Patreon and Ko-fi fees on the same payment                  |
-| `/methodology/`                           | Calculations, sourcing, rounding, review, and corrections   |
-| `/about/`                                 | Truthful product/operator information                       |
-| `/privacy/`                               | Actual data collection and storage disclosures              |
-| `/terms/`                                 | Estimates, exclusions, permitted use, and limitations       |
-| `/changelog/`                             | Dated record of fee rule changes and their sources          |
-| `/guides/`                                | Worked guides that hand off to calculators                  |
-| `/embed/<calculator>/`                    | Noindex iframe copies of every calculator                   |
-| `/404`                                    | Useful navigation for unavailable URLs                      |
+| Route                                           | Purpose                                                     |
+| ----------------------------------------------- | ----------------------------------------------------------- |
+| `/`                                             | Product promise and tool selection                          |
+| `/freelance/`                                   | Freelance pricing hub                                       |
+| `/freelance/hourly-rate-calculator/`            | Sustainable hourly/day-rate planning                        |
+| `/freelance/project-rate-calculator/`           | Scope-based project quotation                               |
+| `/freelance/retainer-calculator/`               | Monthly retainer fee, discount, and effective rates         |
+| `/freelance/markup-margin-calculator/`          | Price from a markup or margin, or both from a price         |
+| `/freelance/salary-to-hourly-calculator/`       | Pay converted across hours, days, weeks, months, and years  |
+| `/freelance/early-payment-discount-calculator/` | Early payment discount terms and their annualized cost      |
+| `/freelance/rate-increase-calculator/`          | A rate change's effect on monthly and yearly revenue        |
+| `/fees/`                                        | Supported platform-fee hub                                  |
+| `/fees/stripe-fee-calculator/`                  | Stripe gross/net calculation                                |
+| `/fees/paypal-fee-calculator/`                  | Product-specific PayPal calculation                         |
+| `/fees/square-fee-calculator/`                  | Square fees by plan and payment channel                     |
+| `/fees/etsy-fee-calculator/`                    | Etsy transaction, processing, and listing fees              |
+| `/fees/ebay-fee-calculator/`                    | eBay final value and per-order fees by category             |
+| `/fees/upwork-fee-calculator/`                  | Upwork service fee on a contract and withdrawal fees        |
+| `/fees/fiverr-fee-calculator/`                  | Fiverr's seller commission and withdrawal fees              |
+| `/fees/kickstarter-fee-calculator/`             | Kickstarter and processing fees per pledge and per campaign |
+| `/fees/patreon-fee-calculator/`                 | Patreon platform, processing, and iOS fees on a membership  |
+| `/fees/ko-fi-fee-calculator/`                   | Ko-fi's service fee and Stripe processing                   |
+| `/fees/substack-fee-calculator/`                | Substack's 10% fee and Stripe card and Billing fees         |
+| `/fees/payhip-fee-calculator/`                  | Payhip plan fees and Stripe processing on a sale            |
+| `/fees/kdp-royalty-calculator/`                 | Amazon KDP eBook, paperback, and hardcover royalties        |
+| `/fees/gumroad-fee-calculator/`                 | Gumroad direct/Discover take-home                           |
+| `/fees/lemon-squeezy-fee-calculator/`           | Order fees and separate payout estimate                     |
+| `/fees/stripe-vs-paypal-fees/`                  | Stripe and PayPal fees on the same sale                     |
+| `/fees/gumroad-vs-lemon-squeezy-fees/`          | Gumroad and Lemon Squeezy fees on the same sale             |
+| `/fees/digital-product-platform-fees/`          | Digital product platform fees compared on one sale          |
+| `/fees/upwork-vs-fiverr-fees/`                  | Upwork and Fiverr freelancer fees on the same job           |
+| `/fees/patreon-vs-ko-fi-fees/`                  | Patreon and Ko-fi fees on the same payment                  |
+| `/fees/substack-vs-patreon-fees/`               | Substack and Patreon fees on the same payment               |
+| `/fees/payhip-vs-gumroad-fees/`                 | Payhip and Gumroad fees on the same sale                    |
+| `/methodology/`                                 | Calculations, sourcing, rounding, review, and corrections   |
+| `/about/`                                       | Truthful product/operator information                       |
+| `/privacy/`                                     | Actual data collection and storage disclosures              |
+| `/terms/`                                       | Estimates, exclusions, permitted use, and limitations       |
+| `/changelog/`                                   | Dated record of fee rule changes and their sources          |
+| `/guides/`                                      | Worked guides that hand off to calculators                  |
+| `/embed/<calculator>/`                          | Noindex iframe copies of every calculator                   |
+| `/404`                                          | Useful navigation for unavailable URLs                      |
 
 Every route in the table exists as of 2026-09-15. There are no account pages.
 

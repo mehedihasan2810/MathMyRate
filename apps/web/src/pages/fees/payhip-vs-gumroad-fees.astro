@@ -1,0 +1,114 @@
+---
+import { calculateFees, type FeePreset } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeComparison from "../../components/FeeComparison.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findFeeComparison } from "../../data/fee-comparisons";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { feeColumnsByAmount, formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("payhip-vs-gumroad");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const comparison = findFeeComparison("payhip-vs-gumroad");
+
+const payhipFree = requireOfficialPreset("payhip-us-free-stripe-card");
+
+const payhipPlus = requireOfficialPreset("payhip-us-plus-stripe-card");
+
+const gumroadDirect = requireOfficialPreset("gumroad-us-direct-card");
+
+const gumroadDiscover = requireOfficialPreset("gumroad-us-discover");
+
+function feeCents(preset: FeePreset, grossCents: bigint): bigint {
+  return calculateFees({ preset, grossCents }).feeCents;
+}
+
+function feeText(preset: FeePreset, grossCents: bigint): string {
+  return formatUsdGrouped(feeCents(preset, grossCents));
+}
+
+const amounts = [500n, 1_000n, 2_500n, 5_000n, 10_000n, 25_000n];
+
+const amountRows = feeColumnsByAmount(
+  comparison.options.map((option) => option.presetId),
+  amounts,
+);
+
+const freeAlwaysCheaper = amounts.every((grossCents) => feeCents(payhipFree, grossCents) < feeCents(gumroadDirect, grossCents));
+
+// Payhip Plus's monthly price, from Payhip's pricing page.
+const plusMonthlyCents = 2_900n;
+
+const plusSavingAtTwentyFive = feeCents(gumroadDirect, 2_500n) - feeCents(payhipPlus, 2_500n);
+
+const plusSalesToCover = plusSavingAtTwentyFive > 0n ? (plusMonthlyCents + plusSavingAtTwentyFive - 1n) / plusSavingAtTwentyFive : null;
+
+const plusCoverText = plusSalesToCover === null ? "" : `, so ${plusSalesToCover} sales a month cover the plan's price`;
+
+const sources = [
+  ...new Map(
+    comparison.options
+      .flatMap((option) => requireOfficialPreset(option.presetId).sources)
+      .map((source) => [source.url, source]),
+  ).values(),
+];
+
+const updatedOn = "2026-09-16";
+
+const faq: readonly FaqEntry[] = [
+  { question: "Is Payhip cheaper than Gumroad?", answer: `${freeAlwaysCheaper ? "Yes, at every price in the table." : "It depends on the price."} On a $25 sale paid by card, Payhip's Free Forever plan pays ${feeText(payhipFree, 2_500n)} in fees including Stripe's card fee, a Gumroad direct sale pays ${feeText(gumroadDirect, 2_500n)}, and a Gumroad Discover sale pays ${feeText(gumroadDiscover, 2_500n)}.` },
+  { question: "When do Payhip's paid plans beat Gumroad?", answer: `Payhip Plus costs $29 a month and lowers Payhip's fee to 2%. At $25 a sale, it saves ${formatUsdGrouped(plusSavingAtTwentyFive)} per sale against a Gumroad direct sale${plusCoverText}. Against Payhip's own Free Forever plan, Plus costs less once sales pass $966.67 a month.` },
+  { question: "Which platform handles sales tax and VAT?", answer: "Gumroad is a merchant of record, so it collects and remits sales tax and VAT on your sales. Payhip collects and pays digital EU and UK VAT for you by default, and US sales tax as a marketplace facilitator since July 1, 2026." },
+  { question: "Where does the money go?", answer: "On Payhip, buyers pay through your own Stripe or PayPal account, which charges its own fees. Gumroad runs the payment itself and includes card processing in the fees shown here." },
+  { question: "What about Gumroad Discover and Payhip's marketplace?", answer: "Gumroad Discover charges a flat 30% on sales it brings you. Payhip says sales from its marketplace pay no extra fee beyond your plan's usual fee." },
+];
+---
+<Layout title="Payhip vs Gumroad Fees: Which Costs Less? | MathMyRate" description="Compare Payhip's Free, Plus, and Pro plan fees with Gumroad's direct and Discover fees on the same digital product sale, with tax handling explained." ogImage="/og/payhip-vs-gumroad.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">What Payhip and Gumroad each take from the same digital product sale, from their published fees.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={payhipFree.checkedOn} />
+    <FeeComparison comparisonId="payhip-vs-gumroad" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>The short answer</h2>
+      <p>{freeAlwaysCheaper ? "Payhip costs less per sale." : "The cheaper platform depends on the price."} On a <strong>$25</strong> sale, Payhip's Free Forever plan pays <strong>{feeText(payhipFree, 2_500n)}</strong> including Stripe's card fee, a Gumroad direct sale pays <strong>{feeText(gumroadDirect, 2_500n)}</strong>, and a Gumroad Discover sale pays <strong>{feeText(gumroadDiscover, 2_500n)}</strong>. Payhip's Plus and Pro plans lower the fee further for a monthly price.</p>
+
+      <h2>Fees at common prices</h2>
+      <p>Card sales with no sales tax. The Payhip columns include Stripe's card fee; the Plus and Pro columns leave out their monthly price.</p>
+      <DataTable caption="Fees on one digital product sale, by platform" headers={["Sale", ...comparison.options.map((option) => option.shortLabel ?? option.label)]} rows={amountRows} />
+
+      <h2>How each platform charges</h2>
+      <ul>
+        <li><strong>Payhip:</strong> 5% on the Free Forever plan, 2% on Plus at $29 a month, and nothing on Pro at $99 a month. Your Stripe or PayPal account charges its own fee; this page uses Stripe's 2.9% + $0.30 US card rate.</li>
+        <li><strong>Gumroad direct sales:</strong> 10% + $0.50 per sale, plus 2.9% + $0.30 card processing. Gumroad's rate drops after $20,000 of sales in a calendar month, explained in <a href="/guides/gumroad-20000-threshold/">how Gumroad's threshold works</a>.</li>
+        <li><strong>Gumroad Discover:</strong> a flat 30% on sales that come through Gumroad's marketplace, including processing.</li>
+      </ul>
+
+      <h2>When a paid Payhip plan pays off</h2>
+      <p>Against Payhip's Free Forever plan, Plus costs less once your sales pass <strong>$966.67</strong> a month, and Pro costs less than Plus once they pass <strong>$3,500</strong>. The <a href="/fees/payhip-fee-calculator/">Payhip fee calculator</a> shows the monthly cost of each plan at different sales levels.</p>
+
+      <h2>Tax and payments</h2>
+      <ul>
+        <li><strong>Gumroad</strong> is a merchant of record: it runs the payment and collects and remits sales tax and VAT.</li>
+        <li><strong>Payhip</strong> collects and pays digital EU and UK VAT, and US sales tax since July 1, 2026, while the payment goes through your own Stripe or PayPal account.</li>
+      </ul>
+      <p>Not included here: subscriptions, PayPal payments, refunds, and payouts. See the <a href="/fees/gumroad-fee-calculator/">Gumroad fee calculator</a> and the <a href="/fees/digital-product-platform-fees/">digital product platform comparison</a> for more options.</p>
+
+      <FaqSection entries={faq} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Rates were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Payhip, Gumroad, or Stripe. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

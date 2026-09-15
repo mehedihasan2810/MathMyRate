@@ -1,0 +1,246 @@
+---
+import { raiseRateByPercent } from "@MathMyRate/calculators";
+import { formatPercentBps, formatUsdGrouped } from "../scripts/calculator-form";
+import NumberField from "./NumberField.astro";
+import ResultRow from "./ResultRow.astro";
+import StickyResult from "./StickyResult.astro";
+
+interface Props {
+  /** Embedded copies leave out the pinned result bar. */
+  embedded?: boolean;
+}
+
+const { embedded = false } = Astro.props;
+
+const rowLabel = "text-[#f3f5fa]/80";
+
+const radioCard = "flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium";
+
+const example = raiseRateByPercent({ currentRateCents: 8_000n, increaseBps: 1_000, billableMinutesPerMonth: 6_000 });
+---
+
+<div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
+  <form id="raise-form" data-calculator-form class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate>
+    <div class="flex items-baseline justify-between gap-3"><h2 class="display text-2xl font-bold">Your rate</h2><span class="shrink-0 text-xs text-ink/50">USD per hour</span></div>
+    <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
+    <fieldset class="mt-6">
+      <legend class="text-sm font-semibold">How do you want to set the new rate?</legend>
+      <div class="mt-3 grid gap-2 sm:grid-cols-2">
+        <label class={radioCard}><input type="radio" name="raiseMode" value="percent" class="mt-1" checked /><span>Raise by a percentage<span class="mt-1 block text-xs font-normal text-ink/55">Find the new rate.</span></span></label>
+        <label class={radioCard}><input type="radio" name="raiseMode" value="rate" class="mt-1" /><span>Compare a new rate<span class="mt-1 block text-xs font-normal text-ink/55">See the change it makes.</span></span></label>
+      </div>
+    </fieldset>
+    <div class="mt-6 grid gap-5 sm:grid-cols-2">
+      <NumberField id="currentRate" label="Current hourly rate" value="80.00" unit="usd" required />
+      <NumberField id="increasePercent" wrapperId="increase-field" label="Raise" value="10" unit="percent" required help="Can be more than 100%." />
+      <NumberField id="newRate" wrapperId="new-rate-field" hidden label="New hourly rate" value="88.00" unit="usd" required help="A lower rate shows what a cut costs." />
+      <NumberField id="billableHours" label="Billable hours per month" value="100" required help="Up to 2 decimal places, such as 87.5." />
+    </div>
+    <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="raise-update">Update rate</button><button id="raise-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
+  </form>
+  <aside id="raise-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
+    <p class="eyebrow !text-[#f2e3bd]" id="raise-primary-label" data-primary-label>New hourly rate</p><p id="raise-primary-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.newRateCents)}</p><p id="raise-primary-note" class="mt-1 text-[#f3f5fa]/80">rounded up to the cent</p>
+    <div class="my-7 border-t border-[#f3f5fa]/30"></div>
+    <div class="[&>:first-child]:mt-0">
+      <ResultRow label="Current rate" valueId="current-result" value={formatUsdGrouped(example.currentRateCents)} labelClass={rowLabel} />
+      <ResultRow label="New rate" valueId="new-result" value={formatUsdGrouped(example.newRateCents)} labelClass={rowLabel} />
+      <ResultRow label="Change per hour" valueId="hour-change-result" value={formatUsdGrouped(example.changePerHourCents)} labelClass={rowLabel} />
+      <ResultRow label="Change" valueId="percent-change-result" value={formatPercentBps(example.changeBps ?? 0n)} labelClass={rowLabel} />
+      <ResultRow label="Monthly revenue now" valueId="before-result" value={formatUsdGrouped(example.monthlyBeforeCents)} labelClass={rowLabel} />
+      <ResultRow label="Monthly revenue at the new rate" valueId="after-result" value={formatUsdGrouped(example.monthlyAfterCents)} labelClass={rowLabel} />
+      <ResultRow label="Change per month" valueId="month-change-result" value={formatUsdGrouped(example.monthlyChangeCents)} labelClass={rowLabel} />
+      <ResultRow label="Change per year" valueId="year-change-result" value={formatUsdGrouped(example.yearlyChangeCents)} labelClass={rowLabel} />
+      <ResultRow label="Hours you could lose and earn the same" valueId="loss-result" value="9.09% (9.08 hours)" labelClass={rowLabel} />
+      <ResultRow label="Hours for today's revenue" valueId="hours-needed-result" value="90.92" labelClass={rowLabel} />
+    </div>
+    <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-raise" type="button" class="rounded-full bg-[#f3f5fa] px-4 py-2.5 text-sm font-bold text-ink">Copy result</button><button type="button" data-print class="rounded-full border border-[#f3f5fa]/45 px-4 py-2.5 text-sm font-bold">Print</button></div><p id="raise-message" class="mt-4 text-sm text-[#f2e3bd]" aria-live="polite"></p>
+  </aside>
+</div>
+{embedded ? null : <StickyResult />}
+<noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The example shows a 10% raise from $80.00 an hour over 100 billable hours a month.</p></noscript>
+
+<script>
+  import { changeRateTo, raiseRateByPercent, type RateChangeResult } from "@MathMyRate/calculators";
+  import {
+    type CalculationTrigger,
+    focusProblemField,
+    formatPercentBps,
+    formatUsdGrouped,
+    hoursToMinutes,
+    InputProblem,
+    markResultsCurrent,
+    markResultsStale,
+    percentToBps,
+    requireHtmlButton,
+    requireHtmlElement,
+    requireHtmlForm,
+    requireHtmlInput,
+    setFieldState,
+    shouldDeferProblem,
+    usdToCents,
+    watchCalculatorFields,
+  } from "../scripts/calculator-form";
+
+  type RaiseMode = "percent" | "rate";
+
+  const form = requireHtmlForm("raise-form");
+
+  const panel = requireHtmlElement("raise-panel");
+
+  const copyButton = requireHtmlButton("copy-raise");
+
+  let latest: { readonly mode: RaiseMode; readonly minutes: number; readonly result: RateChangeResult } | null = null;
+
+  function setText(id: string, text: string): void {
+    requireHtmlElement(id).textContent = text;
+  }
+
+  function currentMode(): RaiseMode {
+    return form.querySelector<HTMLInputElement>('input[name="raiseMode"]:checked')?.value === "rate" ? "rate" : "percent";
+  }
+
+  function signedPercent(bps: bigint | null): string {
+    if (bps === null) return "Not defined";
+
+    return bps < 0n ? `-${formatPercentBps(-bps)}` : formatPercentBps(bps);
+  }
+
+  /**
+   * Minutes as hours with two decimals. Hours needed round up and hours that
+   * could be lost round down, so neither overstates what the new rate allows.
+   */
+  function hoursText(minutes: bigint, rounding: "up" | "down"): string {
+    const hundredths = rounding === "up" ? (minutes * 100n + 59n) / 60n : (minutes * 100n) / 60n;
+
+    return (Number(hundredths) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function showMode(mode: RaiseMode): void {
+    requireHtmlElement("increase-field").hidden = mode !== "percent";
+    requireHtmlElement("new-rate-field").hidden = mode !== "rate";
+    setText("raise-primary-label", mode === "percent" ? "New hourly rate" : "Change per month");
+    setText("raise-primary-note", mode === "percent" ? "rounded up to the cent" : "over the same billable hours");
+  }
+
+  function readMinutes(): number {
+    const minutes = hoursToMinutes(requireHtmlInput("billableHours").value, "billableHours");
+
+    if (minutes < 1) throw new InputProblem("billableHours", "Enter hours above zero.");
+
+    if (minutes > 100_000) throw new InputProblem("billableHours", "Enter no more than 1,666 hours a month.");
+
+    return minutes;
+  }
+
+  function clear(): void {
+    for (const id of ["raise-primary-result", "current-result", "new-result", "hour-change-result", "percent-change-result", "before-result", "after-result", "month-change-result", "year-change-result", "loss-result", "hours-needed-result"]) {
+      setText(id, "—");
+    }
+
+    latest = null;
+    markResultsCurrent(panel, []);
+    copyButton.disabled = true;
+  }
+
+  function calculate(trigger: CalculationTrigger): void {
+    const mode = currentMode();
+
+    try {
+      const currentRateCents = usdToCents(requireHtmlInput("currentRate").value, "currentRate");
+
+      if (currentRateCents === 0n) throw new InputProblem("currentRate", "Enter a rate above zero.");
+
+      const billableMinutesPerMonth = readMinutes();
+
+      const result =
+        mode === "percent"
+          ? raiseRateByPercent({ currentRateCents, increaseBps: percentToBps(requireHtmlInput("increasePercent").value, "increasePercent", 1_000_000), billableMinutesPerMonth })
+          : changeRateTo({ currentRateCents, newRateCents: usdToCents(requireHtmlInput("newRate").value, "newRate"), billableMinutesPerMonth });
+
+      const lostMinutes = result.minutesForSameRevenue === null ? null : BigInt(billableMinutesPerMonth) - result.minutesForSameRevenue;
+
+      setText("raise-primary-result", formatUsdGrouped(mode === "percent" ? result.newRateCents : result.monthlyChangeCents));
+      setText("current-result", formatUsdGrouped(result.currentRateCents));
+      setText("new-result", formatUsdGrouped(result.newRateCents));
+      setText("hour-change-result", formatUsdGrouped(result.changePerHourCents));
+      setText("percent-change-result", signedPercent(result.changeBps));
+      setText("before-result", formatUsdGrouped(result.monthlyBeforeCents));
+      setText("after-result", formatUsdGrouped(result.monthlyAfterCents));
+      setText("month-change-result", formatUsdGrouped(result.monthlyChangeCents));
+      setText("year-change-result", formatUsdGrouped(result.yearlyChangeCents));
+      setText("loss-result", result.hoursLossShareBps === null || lostMinutes === null ? "None" : `${formatPercentBps(result.hoursLossShareBps)} (${hoursText(lostMinutes > 0n ? lostMinutes : 0n, "down")} hours)`);
+      setText("hours-needed-result", result.minutesForSameRevenue === null ? "Not defined" : hoursText(result.minutesForSameRevenue, "up"));
+      latest = { mode, minutes: billableMinutesPerMonth, result };
+      markResultsCurrent(panel, [copyButton]);
+
+      setText(
+        "raise-message",
+        result.newRateCents === 0n
+          ? "A rate of $0.00 earns nothing, so no number of hours matches today's revenue."
+          : result.changePerHourCents < 0n
+            ? "The new rate is lower, so the same hours earn less."
+            : result.changePerHourCents === 0n
+              ? "The rate does not change."
+              : "",
+      );
+      setFieldState(form);
+    } catch (error) {
+      const problem = error instanceof InputProblem ? error : new InputProblem("currentRate", "Check your inputs.");
+
+      if (shouldDeferProblem(form, trigger)) {
+        markResultsStale(panel, [copyButton]);
+
+        return;
+      }
+
+      clear();
+      setFieldState(form, problem);
+
+      if (trigger === "submit") focusProblemField(form, problem);
+      setText("raise-message", "");
+    }
+  }
+
+  function copyText(minutes: number, result: RateChangeResult): string {
+    const hours = hoursText(BigInt(minutes), "down");
+
+    return `${formatUsdGrouped(result.currentRateCents)} to ${formatUsdGrouped(result.newRateCents)} an hour (${signedPercent(result.changeBps)}): ${formatUsdGrouped(result.monthlyChangeCents)} a month and ${formatUsdGrouped(result.yearlyChangeCents)} a year over ${hours} billable hours a month.`;
+  }
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    calculate("submit");
+  });
+
+  requireHtmlButton("raise-update").addEventListener("click", () => calculate("submit"));
+
+  form.querySelectorAll('input[name="raiseMode"]').forEach((element) => {
+    element.addEventListener("change", () => {
+      showMode(currentMode());
+      calculate("commit");
+    });
+  });
+
+  watchCalculatorFields(form, calculate);
+
+  requireHtmlButton("raise-reset").addEventListener("click", () => {
+    form.reset();
+    showMode(currentMode());
+    calculate("commit");
+  });
+
+  copyButton.addEventListener("click", async () => {
+    if (latest === null) return;
+
+    try {
+      await navigator.clipboard.writeText(copyText(latest.minutes, latest.result));
+      setText("raise-message", "Result copied.");
+    } catch {
+      setText("raise-message", "Copy was unavailable. Select the result to copy it manually.");
+    }
+  });
+
+  showMode(currentMode());
+
+  calculate("commit");
+</script>

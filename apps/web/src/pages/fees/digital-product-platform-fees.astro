@@ -80,26 +80,26 @@ const sources = [...new Map(options.flatMap((option) => option.preset.sources).m
 
 const reviewedOn = options[0]?.preset.checkedOn ?? null;
 
-const updatedOn = "2026-09-15";
+const updatedOn = "2026-09-16";
 
 const faq: readonly FaqEntry[] = [
   { question: "What is the cheapest way to sell digital products?", answer: `It depends on whether you already have a website. Among platforms that run the checkout for you, ${platformSummary}. If you can build your own checkout and handle tax yourself, ${overallSummary}, but a payment processor only takes the payment.` },
   { question: "Why not just take payments with Stripe or PayPal?", answer: "You can, and their per-payment fees are lower. But they only process the payment: you need your own site, a way to deliver files, and your own approach to sales tax. Stripe, for example, sells tax collection as a separate product, Stripe Tax." },
-  { question: "Which of these platforms handle sales tax for me?", answer: "Gumroad and Lemon Squeezy are merchants of record: they collect and remit sales tax and VAT on your sales. Etsy's policy says it calculates, collects, and remits sales tax for orders shipped to customers in the US; check how that applies to your digital listings." },
+  { question: "Which of these platforms handle sales tax for me?", answer: "Gumroad and Lemon Squeezy are merchants of record: they collect and remit sales tax and VAT on your sales. Etsy's policy says it calculates, collects, and remits sales tax for orders shipped to customers in the US; check how that applies to your digital listings. Payhip collects and pays digital EU and UK VAT, and US sales tax since July 1, 2026." },
   { question: "Is a marketplace worth its higher fee?", answer: `A marketplace can bring buyers who would never find your own site. Gumroad Discover charges 30% on those sales, ${feeText("gumroad-discover", 2_500n)} on a $25 product, and Etsy's fees on a $25 order are ${feeText("etsy", 2_500n)}. Whether that is worth it depends on how much those buyers would cost you to reach another way.` },
   { question: "Does this comparison include payouts, refunds, or subscriptions?", answer: "No. It prices one card sale with no tax. Each platform's own calculator covers its other scenarios, and the Gumroad vs Lemon Squeezy comparison lists their refund and payout rules." },
 ];
 ---
-<Layout title="Cheapest Way to Sell Digital Products, by Fees | MathMyRate" description="Compare Lemon Squeezy, Gumroad, Etsy, Stripe, and PayPal fees on the same digital product sale at $10, $25, $50, and $100, from official published rates." ogImage="/og/digital-product-fees.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+<Layout title="Cheapest Way to Sell Digital Products, by Fees | MathMyRate" description="Compare Lemon Squeezy, Gumroad, Payhip, Etsy, Stripe, and PayPal fees on the same digital product sale at $10, $25, $50, and $100, from official rates." ogImage="/og/digital-product-fees.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
     <Breadcrumbs items={breadcrumbs} />
     <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
-    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">What Lemon Squeezy, Gumroad, Etsy, Stripe, and PayPal each keep from the same digital product sale, from their published US rates.</p>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">What Lemon Squeezy, Gumroad, Payhip, Etsy, Stripe, and PayPal each keep from the same digital product sale, from their published US rates.</p>
     <PageByline updatedOn={updatedOn} reviewedOn={reviewedOn} />
     <FeeComparison comparisonId="digital-products" />
     <article class="guide mt-14 border-t border-line pt-4">
       <h2>The short answer</h2>
-      <p>Among the platforms that run the checkout and deliver the product for you, <strong>{platformSummary}</strong>. On a $25 product, Lemon Squeezy's fee is {feeText("lemon", 2_500n)}, a Gumroad direct sale pays {feeText("gumroad-direct", 2_500n)}, an Etsy order pays {feeText("etsy", 2_500n)}, and a Gumroad Discover sale pays {feeText("gumroad-discover", 2_500n)}.</p>
+      <p>Among the platforms that run the checkout and deliver the product for you, <strong>{platformSummary}</strong>. On a $25 product, Lemon Squeezy's fee is {feeText("lemon", 2_500n)}, a Gumroad direct sale pays {feeText("gumroad-direct", 2_500n)}, a Payhip sale on its Free Forever plan pays {feeText("payhip", 2_500n)} including Stripe's card fee, an Etsy order pays {feeText("etsy", 2_500n)}, and a Gumroad Discover sale pays {feeText("gumroad-discover", 2_500n)}.</p>
       <p>Payment processors cost less per payment: {overallSummary}. A $25 card payment through Stripe pays {feeText("stripe", 2_500n)}. But a processor only takes the money, so you supply the storefront, the file delivery, and the tax handling.</p>
 
       <h2>Fees at common digital product prices</h2>
@@ -108,13 +108,13 @@ const faq: readonly FaqEntry[] = [
 
       <h2>Three ways to sell, three kinds of fee</h2>
       <ul>
-        <li><strong>Your own storefront on a merchant of record.</strong> Lemon Squeezy and Gumroad direct sales host the checkout, deliver the product, and collect and remit sales tax and VAT. You bring the buyers.</li>
+        <li><strong>Your own storefront on a merchant of record.</strong> Lemon Squeezy and Gumroad direct sales host the checkout, deliver the product, and collect and remit sales tax and VAT. You bring the buyers. Payhip also hosts the checkout and delivers the product, and collects EU and UK VAT and US sales tax, but buyers pay through your own Stripe or PayPal account, which charges its own fee.</li>
         <li><strong>A marketplace.</strong> Gumroad Discover and Etsy can put your product in front of buyers already browsing there. Discover's 30% includes processing, and Etsy adds a $0.20 listing fee to its transaction and processing fees.</li>
         <li><strong>A payment processor.</strong> Stripe and PayPal take card or wallet payments on a site you run. Their fees are the lowest here, and everything else is up to you.</li>
       </ul>
 
       <h2>What this comparison leaves out</h2>
-      <p>Sales tax, payouts, refunds, and disputes; subscriptions; PayPal sales on Gumroad, whose rate Gumroad does not publish; Lemon Squeezy's extra fees for international cards and PayPal; Etsy's Offsite Ads fee; Gumroad's lower rate after $20,000 of sales in a month, explained in <a href="/guides/gumroad-20000-threshold/">how Gumroad's threshold works</a>; and custom pricing. Each provider's calculator covers its own scenarios in full.</p>
+      <p>Sales tax, payouts, refunds, and disputes; subscriptions; PayPal sales on Gumroad, whose rate Gumroad does not publish; Lemon Squeezy's extra fees for international cards and PayPal; Etsy's Offsite Ads fee; Payhip's Plus and Pro plans, which lower its fee for a monthly price; Gumroad's lower rate after $20,000 of sales in a month, explained in <a href="/guides/gumroad-20000-threshold/">how Gumroad's threshold works</a>; and custom pricing. Each provider's calculator covers its own scenarios in full.</p>
 
       <FaqSection entries={faq} />
 

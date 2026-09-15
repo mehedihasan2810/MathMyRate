@@ -1,0 +1,90 @@
+---
+import { calculateEarlyPaymentDiscount } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EarlyPaymentDiscountCalculator from "../../components/EarlyPaymentDiscountCalculator.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatPercentBps, formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("early-payment-discount");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const example = calculateEarlyPaymentDiscount({ invoiceCents: 100_000n, discountBps: 200, discountDays: 10, netDays: 30 });
+
+const oneTen = calculateEarlyPaymentDiscount({ invoiceCents: 100_000n, discountBps: 100, discountDays: 10, netDays: 30 });
+
+const commonTerms: readonly (readonly [number, number, number])[] = [
+  [100, 10, 30],
+  [200, 10, 30],
+  [200, 10, 45],
+  [200, 10, 60],
+  [300, 10, 30],
+  [100, 15, 45],
+  [200, 15, 60],
+];
+
+const termRows = commonTerms.map(([discountBps, discountDays, netDays]) => {
+  const result = calculateEarlyPaymentDiscount({ invoiceCents: 100_000n, discountBps, discountDays, netDays });
+
+  return [`${discountBps / 100}/${discountDays} net ${netDays}`, formatUsdGrouped(result.discountCents), formatUsdGrouped(result.discountedTotalCents), String(result.daysEarlier), formatPercentBps(result.annualizedCostBps)];
+});
+
+const updatedOn = "2026-09-16";
+
+const faq: readonly FaqEntry[] = [
+  { question: "What does 2/10 net 30 mean?", answer: `The client can take 2% off the invoice by paying within 10 days; otherwise the full amount is due in 30 days. On a $1,000 invoice, paying early costs ${formatUsdGrouped(example.discountedTotalCents)} and paying on the due date costs $1,000.` },
+  { question: "How do I calculate an early payment discount?", answer: "Multiply the invoice amount by the discount percentage to get the discount, and subtract it from the invoice for the early payment amount. A 2% discount on a $1,000 invoice is $20, so the client pays $980." },
+  { question: "What is the annualized cost of an early payment discount?", answer: `It turns the discount into a yearly rate for the days the client pays early: the discount divided by what the client pays, times 365 divided by the days between the discount period and the due date. For 2/10 net 30 that is 2 ÷ 98 × 365 ÷ 20, or ${formatPercentBps(example.annualizedCostBps)}. This is a simple rate; compounding would make it higher.` },
+  { question: "Should I offer an early payment discount on my invoices?", answer: `It depends on how much faster cash is worth to you. Offering 2/10 net 30 gives up money at a yearly rate of ${formatPercentBps(example.annualizedCostBps)}, and even 1/10 net 30 is ${formatPercentBps(oneTen.annualizedCostBps)}. Compare that with what it costs you to wait for payment or to borrow, such as a credit card or line of credit rate.` },
+  { question: "Does the discount apply to tax or reimbursed expenses?", answer: "That depends on your terms and local rules, so this calculator applies the discount to exactly the amount you enter. Enter only the part of the invoice the discount covers." },
+  { question: "Is my information saved or sent anywhere?", answer: "No. Everything is calculated in your browser, and nothing is stored." },
+];
+---
+<Layout title="Early Payment Discount Calculator: 2/10 Net 30 | MathMyRate" description="Work out an early payment discount on an invoice, what the client pays under terms like 2/10 net 30, and the discount's annualized cost as a yearly rate." ogImage="/og/early-payment-discount.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what an early payment discount saves your client, what it costs you, and the yearly rate hidden in terms like 2/10 net 30.</p>
+    <PageByline updatedOn={updatedOn} />
+    <EarlyPaymentDiscountCalculator />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The early payment discount calculator shows both sides of payment terms. On a $1,000 invoice with <strong>2/10 net 30</strong> terms, a client who pays within 10 days pays <strong>{formatUsdGrouped(example.discountedTotalCents)}</strong>, and one who waits pays $1,000 by day 30. That $20 for paying 20 days sooner works out to <strong>{formatPercentBps(example.annualizedCostBps)}</strong> a year.</p>
+
+      <h2>How to read payment terms</h2>
+      <ul>
+        <li><strong>The first number</strong> is the discount: 2 means 2% off.</li>
+        <li><strong>The second number</strong> is the discount period in days: pay within 10 days to take the discount.</li>
+        <li><strong>Net and the last number</strong> give the due date for the full amount: net 30 means 30 days.</li>
+      </ul>
+      <p>Days are usually counted from the invoice date. Write your terms on the invoice so the client knows which date counts.</p>
+
+      <h2>The formulas</h2>
+      <ul>
+        <li><strong>Discount</strong> = invoice × discount percentage, rounded to the cent</li>
+        <li><strong>Early payment</strong> = invoice − discount</li>
+        <li><strong>Annualized cost</strong> = discount ÷ (100% − discount) × 365 ÷ (net days − discount days)</li>
+      </ul>
+
+      <h2>Common terms on a $1,000 invoice</h2>
+      <DataTable caption="Discount, early payment, and annualized cost for common payment terms on a $1,000 invoice" headers={["Terms", "Discount", "Paid early", "Days earlier", "Annualized cost"]} rows={termRows} />
+
+      <h2>Is offering a discount worth it?</h2>
+      <p>An early payment discount is a way of paying for faster cash. The annualized cost shows how expensive that cash is: 2/10 net 30 gives up money at {formatPercentBps(example.annualizedCostBps)} a year. That can still make sense if waiting for payment would mean missing a bill, turning down work, or borrowing at a higher rate. If it would not, a smaller discount, a shorter discount period, or a deposit up front may cost less. The same number works in reverse when you are the one paying: taking a 2/10 net 30 discount earns you that rate on the money.</p>
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId={tool.id} />
+
+      <p class="text-sm text-ink/60">Planning estimate only; not tax, accounting, or legal advice. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

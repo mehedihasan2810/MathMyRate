@@ -250,6 +250,8 @@ assumptions, exclusions, and inverse tests:
 
 **Update 2026-09-16** (branch `feat/creator-guides-more-platforms`). Added the Substack and Payhip fee calculators, a Patreon vs Ko-fi comparison, and guides to KDP royalties and to pricing Kickstarter rewards; the methodology page now explains embedding and citing. Substack uses Stripe's 0.7% Billing fee, the rate on Substack's cost page and Stripe's Billing pricing page, although one older Substack page still says 0.5%. Substack's iOS in-app purchases and local-currency prices, and Payhip's subscriptions, PayPal, and Square payments, are left out because the providers give only ranges or leave the fee unstated. Buy Me a Coffee was researched but not built: its pages give a 5% fee and Stripe's card fee without saying how its extra processing fees combine or what amount the 5% is charged on. A KDP list price outside KDP's range is now an input error, and the fee calculator says when fees are at least as large as the payment.
 
+**Update 2026-09-16** (branch `feat/creator-comparisons-freelance-tools`). Added the Early Payment Discount and Rate Increase calculators, which need no provider rates, and Substack vs Patreon and Payhip vs Gumroad comparisons built from the existing sourced presets. Payhip joins the digital product platform comparison. The About, Methodology, Privacy, and Terms pages have longer, more descriptive titles.
+
 Add tools inside the niche so topical authority compounds. Verify demand in
 Search Console and Keyword Planner before building; do not publish a tool
 without the eight content sections. Candidates, grouped by hub:
@@ -260,9 +262,9 @@ Freelance pricing
 - Contractor versus employee rate (the "1099 vs W-2" conversion).
 - Retainer calculator (hours, rollover, discount).
 - Markup and margin calculator.
-- Discount and late-fee calculator for invoices.
+- Discount and late-fee calculator for invoices (early payment discount done 2026-09-16; late fees not built, because limits depend on local law).
 - Time and materials estimate with contingency ranges.
-- Rate increase calculator (what a 10% raise does across a year).
+- Rate increase calculator (what a 10% raise does across a year) (done 2026-09-16).
 
 Platform and marketplace fees (all from official pricing pages)
 
