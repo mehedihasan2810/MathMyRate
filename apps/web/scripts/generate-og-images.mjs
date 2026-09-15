@@ -117,6 +117,22 @@ const cards = [
     description: "What you keep from a sale, and what to charge to net a target amount.",
     path: "/fees/lemon-squeezy-fee-calculator/",
   },
+  {
+    file: "stripe-vs-paypal",
+    eyebrow: "Compare / Stripe vs PayPal",
+    accent: palette.navy,
+    title: "Stripe vs PayPal fees",
+    description: "The same sale priced under both providers' published US rates.",
+    path: "/fees/stripe-vs-paypal-fees/",
+  },
+  {
+    file: "gumroad-vs-lemon-squeezy",
+    eyebrow: "Compare / Digital products",
+    accent: palette.gold,
+    title: "Gumroad vs Lemon Squeezy fees",
+    description: "What each platform keeps from the same digital product sale.",
+    path: "/fees/gumroad-vs-lemon-squeezy-fees/",
+  },
 ];
 
 /** Minimal plain-object element builder for satori. */

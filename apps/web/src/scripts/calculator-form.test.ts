@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  formatPercentBps,
   formatUsdInput,
   hoursToMinutes,
   percentToBps,
@@ -80,6 +81,11 @@ describe("wholeNumber", () => {
   ])("rejects %j", (text, message) => {
     expect(() => wholeNumber(text, "weeks", 1, 52)).toThrow(message);
   });
+  it("groups the digits of a large limit in its message", () => {
+    expect(() => wholeNumber("0", "salesPerMonth", 1, 1_000_000)).toThrow(
+      "Enter a whole number from 1 to 1,000,000.",
+    );
+  });
 });
 
 describe("hoursToMinutes", () => {
@@ -112,5 +118,16 @@ describe("formatUsdInput", () => {
 
   it("round-trips through usdToCents", () => {
     expect(usdToCents(formatUsdInput(123_456_789n), "amount")).toBe(123_456_789n);
+  });
+});
+
+describe("formatPercentBps", () => {
+  it.each([
+    [292n, "2.92%"],
+    [1_250n, "12.50%"],
+    [5n, "0.05%"],
+    [10_000n, "100.00%"],
+  ])("formats %s basis points as %j", (bps, text) => {
+    expect(formatPercentBps(bps)).toBe(text);
   });
 });

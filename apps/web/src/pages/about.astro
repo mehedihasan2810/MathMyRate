@@ -1,24 +1,30 @@
 ---
+import { issuesUrl, repositoryUrl } from "../data/site";
 import Layout from "../layouts/Layout.astro";
 ---
 <Layout title="About | MathMyRate" description="What MathMyRate is and is not: free, browser-based pricing and payment-fee calculators with officially sourced fee rules, and no accounts or paywalls.">
   <main id="main-content" class="mx-auto max-w-3xl px-5 py-16 md:px-8 md:py-24">
     <p class="eyebrow">About</p>
     <h1 class="display mt-4 text-5xl font-bold leading-none md:text-6xl">A calculator, not an oracle.</h1>
-    <div class="mt-10 space-y-10 text-lg leading-relaxed text-ink/70">
-      <p>MathMyRate is a free suite of pricing calculators for freelancers and digital-product sellers. It exists to answer two practical questions, what to charge and what you keep, with the assumptions attached, so you can disagree with the inputs instead of the tool.</p>
-      <div>
-        <h2 class="display text-2xl font-bold text-ink">What this is</h2>
-        <p class="mt-3">Client-side calculators that run in your browser. Fee rules are limited to documented, officially sourced scenarios, and each page links to its source with a review date. There are no accounts, no paywalls, and no ads.</p>
-      </div>
-      <div>
-        <h2 class="display text-2xl font-bold text-ink">What this is not</h2>
-        <p class="mt-3">It is not a tax, accounting, or legal service, and it is not affiliated with or endorsed by Stripe, PayPal, Gumroad, or Lemon Squeezy. Results are estimates that depend entirely on the inputs you provide. For decisions that matter, talk to a qualified professional who knows your situation.</p>
-      </div>
-      <div>
-        <h2 class="display text-2xl font-bold text-ink">How it is built</h2>
-        <p class="mt-3">The calculation engine is a framework-independent package using exact integer arithmetic. This site is a static build; public calculations happen in your browser and are not sent to a server.</p>
-      </div>
+    <div class="guide mt-10 text-lg">
+      <p>MathMyRate is a free suite of pricing calculators for freelancers and digital-product sellers. It answers two practical questions, what to charge and what you keep, with the assumptions attached, so you can disagree with the inputs instead of the tool.</p>
+      <h2>Who runs it</h2>
+      <p>MathMyRate is an independent project. It is not affiliated with, sponsored by, or endorsed by Stripe, PayPal, Gumroad, Lemon Squeezy, or any other provider it covers. The complete source code, including every fee rule and the tests that check it, is public on <a href={repositoryUrl}>GitHub</a>.</p>
+      <h2>How the numbers are made</h2>
+      <ul>
+        <li>Fee rules come only from each provider's own pricing and help pages. Every fee calculator links its sources and shows the date they were last reviewed.</li>
+        <li>Calculations use integer-cent arithmetic. The worked examples and tables on each page come from the same code as the calculator.</li>
+        <li>Cases the sources do not document are labeled unsupported instead of estimated.</li>
+      </ul>
+      <p>The <a href="/methodology/">methodology page</a> explains rounding, sourcing, and review in detail, and the <a href="/changelog/">changelog</a> lists every fee rule change.</p>
+      <h2>Corrections</h2>
+      <p>If a result disagrees with a provider's current pricing, or with the assumptions a page states, please <a href={issuesUrl}>open an issue on GitHub</a>. Include the page, the numbers you entered, and the official page you compared against. Issues are public, so leave out any private financial details.</p>
+      <h2>What this is not</h2>
+      <p>It is not a tax, accounting, legal, or financial advice service. Results are estimates that depend on the inputs you provide. For decisions that matter, talk to a qualified professional who knows your situation.</p>
+      <h2>How it is paid for</h2>
+      <p>Every calculator is free, with no accounts and no paywalls. The site shows no advertising today. If advertising is added later, the <a href="/privacy/">privacy page</a> will name the ad providers, what they collect, and your consent choices before any ad appears.</p>
+      <h2>How it is built</h2>
+      <p>The site is a static build. Calculations run in your browser and are not sent to a server.</p>
     </div>
   </main>
 </Layout>

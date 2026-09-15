@@ -44,8 +44,7 @@ Order of sections, top to bottom. Every calculator page has all of them.
    amount, fee, net, effective rate).
 8. What changes the number: scenarios with a source each, or an explicit "not
    modeled" line. This is where the assumptions and exclusions lists live.
-9. FAQ: six to ten questions in searcher wording, sourced or scoped answers,
-   marked up as `FAQPage`. Questions are `<h3>` under an `<h2>FAQ</h2>`.
+9. FAQ: six to ten questions in searcher wording, with sourced or scoped answers. Keep them visible; do not add `FAQPage` markup (see Structured data). Questions are `<h3>` under an `<h2>FAQ</h2>`.
 10. Related calculators: siblings first, then the other hub, one sentence
     each.
 11. Sources, reviewed date, last-updated date, and the operator line.
@@ -99,8 +98,18 @@ Each calculator:
 }
 ```
 
-plus `BreadcrumbList` and, when the FAQ exists on the page, `FAQPage` whose
-questions and answers are the same text as the visible FAQ.
+plus `BreadcrumbList`.
+
+Do not add `FAQPage` markup. Google stopped showing FAQ rich results for all
+sites on May 7, 2026, and removed the FAQ structured data documentation on
+June 15, 2026 ([Search Central documentation updates](https://developers.google.com/search/updates)).
+
+The Software App rich result requires `name`, `offers.price`, and either
+`aggregateRating` or `review`
+([Google's SoftwareApplication documentation](https://developers.google.com/search/docs/appearance/structured-data/software-app)).
+MathMyRate has no real ratings, so its `WebApplication` markup describes the
+page but is not eligible for that rich result. Never add invented ratings or
+reviews to become eligible.
 
 Validate every page in Google's Rich Results test before release and after
 any template change.
@@ -182,6 +191,19 @@ Comparison pages to add: "stripe vs paypal fees", "gumroad vs lemon
 squeezy", "cheapest platform to sell digital products".
 
 ## Ads and consent readiness
+
+Google AdSense requires content that is "high-quality, original, and attract
+an audience", and its publisher policies do not allow Google-served ads on
+screens with low-value content or on dead-end pages such as error pages
+([eligibility](https://support.google.com/adsense/answer/9724),
+[publisher policies](https://support.google.com/adsense/answer/10502938)). Its
+privacy policy requirements say the policy must disclose that third-party
+vendors, including Google, use cookies to serve ads based on prior visits, and
+explain how to opt out ([required content](https://support.google.com/adsense/answer/1348695)).
+Personalized ads in the EEA and UK have required a Google-certified consent
+management platform integrated with the IAB TCF since 16 January 2024, and in
+Switzerland since 31 July 2024
+([consent requirements](https://support.google.com/adsense/answer/13554116)).
 
 Do not apply to an ad network until:
 

@@ -1,293 +1,129 @@
 ---
-import { calculateFees, getFeePreset } from "@MathMyRate/calculators";
+import { calculateFees, grossUpFees } from "@MathMyRate/calculators";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
-import NumberField from "../../components/NumberField.astro";
+import DataTable from "../../components/DataTable.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
 import RelatedTools from "../../components/RelatedTools.astro";
-import ResultRow from "../../components/ResultRow.astro";
-import StickyResult from "../../components/StickyResult.astro";
+import { findFeeCalculator } from "../../data/fee-calculators";
 import { findTool, toolBreadcrumbs } from "../../data/tools";
 import Layout from "../../layouts/Layout.astro";
-import { formatFeeRate } from "../../lib/fee-labels";
+import { formatCombinedRate } from "../../lib/fee-labels";
+import { commonSaleAmounts, feeFor, feeRowsByAmount, requireOfficialPreset, scenarioRowsAt } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
 import { formatUsdGrouped } from "../../scripts/calculator-form";
 
 const tool = findTool("paypal-fees");
 
 const breadcrumbs = toolBreadcrumbs(tool.id);
 
-const preset = getFeePreset("paypal-us-checkout-paypal-payment");
+const config = findFeeCalculator("paypal");
 
-if (!preset) {
-  throw new Error("The PayPal fee preset is missing from the registry.");
-}
+const checkout = requireOfficialPreset("paypal-us-checkout-paypal-payment");
 
-const component = preset.components[0];
+const card = requireOfficialPreset("paypal-us-standard-card-payment");
 
-if (!component) {
-  throw new Error("The PayPal fee preset has no fee components.");
-}
+const international = requireOfficialPreset("paypal-us-checkout-international");
 
-const exampleSale = calculateFees({ preset, grossCents: 10000n });
+const rate = formatCombinedRate(checkout.components);
 
-const rate = formatFeeRate(component);
+const cardRate = formatCombinedRate(card.components);
 
-const ratePercent = component.rateBps / 100;
+const sale = calculateFees({ preset: checkout, grossCents: 10000n });
 
-const fixedFee = formatUsdGrouped(BigInt(component.fixedCents));
+const internationalSale = calculateFees({ preset: international, grossCents: 10000n });
 
-const reviewedOn = preset.checkedOn ?? "date not recorded";
+const target = grossUpFees({ preset: checkout, targetProceedsCents: 10000n });
+
+const fee = formatUsdGrouped(sale.feeCents);
+
+const kept = formatUsdGrouped(sale.sellerProceedsCents);
+
+const amountRows = feeRowsByAmount(checkout, commonSaleAmounts);
+
+const scenarioRows = scenarioRowsAt(config.scenarios, 10000n);
+
+const updatedOn = "2026-09-15";
 
 const title = `${tool.name} (${rate}) | MathMyRate`;
 
-const description = `Estimate PayPal Checkout's ${rate} fee, what you keep from a sale, and what to charge to net a target, using PayPal's published fees.`;
+const description = `Estimate PayPal's ${rate} Checkout fee, card, invoice, international, and QR code fees, what you keep, and what to charge to net a target.`;
+
+const guideSources = [
+  { title: "PayPal Merchant Fees (last updated by PayPal on September 1, 2026)", url: "https://www.paypal.com/us/business/paypal-business-fees" },
+  { title: "PayPal User Agreement", url: "https://www.paypal.com/us/legalhub/paypal/useragreement-full" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "What is PayPal's fee for receiving a payment?", answer: `It depends on the product. For a US Business account receiving a domestic payment in USD, PayPal Checkout costs ${rate}, standard card payments cost ${cardRate}, and QR code payments cost 2.29% + 9¢. Invoices use the Checkout or card rate depending on how the customer pays.` },
+  { question: "Are card payments cheaper than PayPal Checkout?", answer: `At PayPal's published rates, yes. Standard card payments cost ${cardRate} and PayPal Checkout costs ${rate}, so a $100 sale pays ${feeFor("paypal-us-standard-card-payment", 10000n)} by card and ${fee} through Checkout.` },
+  { question: "Does PayPal return its fee when I refund a customer?", answer: "No. PayPal charges no fee to make a refund, but the fees you paid to receive the original payment are not returned, for both full and partial refunds." },
+  { question: "How much are PayPal's dispute and chargeback fees?", answer: "PayPal's standard dispute fee is 15.00 USD, or 30.00 USD for high-volume dispute accounts. Card chargebacks on transactions not processed through a PayPal account or guest checkout carry a 20.00 USD chargeback fee." },
+  { question: "Can I avoid fees with Friends and Family payments?", answer: "Not for sales. PayPal's User Agreement says personal transactions must not be used to pay for goods or services, and business accounts cannot receive them." },
+  { question: "How much does PayPal charge for invoices?", answer: `An invoice paid through PayPal Checkout, Venmo, or guest checkout costs ${rate}. An invoice paid by card, Apple Pay, or another wallet costs ${cardRate}. Pay Later costs 4.99% plus the fixed fee, and Pay by Bank costs 1%, capped at $10.00.` },
+  { question: "What does PayPal charge for international payments?", answer: `PayPal adds 1.50% to the domestic fee when the buyer and seller are residents of different markets. A $100 international Checkout payment pays ${formatUsdGrouped(internationalSale.feeCents)}. A currency conversion adds a spread to the exchange rate as well, which this calculator does not include.` },
+  { question: "How do I charge enough to cover PayPal's fee?", answer: `Choose I want to keep a target and enter the amount you want to receive. To keep $100.00 from a PayPal Checkout payment, charge ${formatUsdGrouped(target.grossCents)}.` },
+  { question: "Does it cost money to move PayPal money to my bank?", answer: "A standard transfer to a linked bank account is free when no currency conversion is involved. An instant transfer from a Business account costs 1.50% of the amount, with a 0.50 USD minimum fee." },
+];
 ---
 <Layout title={title} description={description} ogImage="/og/paypal.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
     <Breadcrumbs items={breadcrumbs} />
     <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
-    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">PayPal's fee, out in the open. PayPal Checkout payments at {rate}, worked out in cents.</p>
-    <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
-      <form id="paypal-fee-form" data-calculator-form class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate>
-        <div class="flex items-baseline justify-between gap-3"><h2 class="display text-2xl font-bold">Payment details</h2><span class="shrink-0 text-xs text-ink/50">USD / per transaction</span></div>
-        <p class="mt-2 text-sm text-ink/60">Supported scenario: US PayPal Business account, USD, PayPal Checkout paid with the buyer's PayPal payment method.</p>
-        <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
-        <fieldset class="mt-6">
-          <legend class="text-sm font-semibold">What do you want to work out?</legend>
-          <div class="mt-3 grid gap-2 sm:grid-cols-2">
-            <label class="flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium"><input type="radio" name="feeMode" value="received" class="mt-1" checked /><span>Customer paid an amount<span class="mt-1 block text-xs font-normal text-ink/55">See the fee and what you keep.</span></span></label>
-            <label class="flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium"><input type="radio" name="feeMode" value="net" class="mt-1" /><span>I want to keep a target<span class="mt-1 block text-xs font-normal text-ink/55">Find what to charge for it.</span></span></label>
-          </div>
-        </fieldset>
-        <div class="mt-6 grid gap-5 sm:grid-cols-2">
-          <NumberField id="amount" label="Amount the customer paid" labelTextId="amount-label" value="100.00" unit="usd" required help="The full amount processed, including any sales tax you collected." />
-          <NumberField id="taxIncluded" label="Sales tax collected (optional)" unit="usd" placeholder="0.00" help="A pass-through you enter; this calculator never computes tax. The fee applies to the amount that includes it." />
-        </div>
-        <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="paypal-fee-update">Update fees</button><button id="paypal-fee-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
-      </form>
-      <aside id="fee-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-ink p-7 text-paper shadow-[0_16px_45px_rgba(19,31,51,.16)] md:p-9">
-        <p class="eyebrow !text-[#c3d2ea]" id="primary-label" data-primary-label>You keep from this sale</p>
-        <p id="fee-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(exampleSale.sellerProceedsCents)}</p>
-        <p class="mt-1 text-paper/70">before expenses and income tax</p>
-        <div class="my-7 border-t border-paper/25"></div>
-        <div class="[&>:first-child]:mt-0">
-          <ResultRow label="PayPal fee" valueId="fee-total-result" value={formatUsdGrouped(exampleSale.feeCents)} />
-          <ResultRow label="Net after fees" valueId="net-result" value={formatUsdGrouped(exampleSale.netAfterFeesCents)} />
-          <ResultRow label="Sales tax collected" valueId="tax-result" value="—" rowId="tax-row" hidden />
-          <ResultRow label="You keep after fees and tax" valueId="keep-result" value="—" rowId="keep-row" hidden />
-        </div>
-        <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-fee" type="button" class="rounded-full bg-paper px-4 py-2.5 text-sm font-bold text-ink">Copy result</button><button type="button" data-print class="rounded-full border border-paper/35 px-4 py-2.5 text-sm font-bold">Print</button></div>
-        <ul class="mt-6 list-disc space-y-1 pl-5 text-sm text-[#ccd8ec]">{exampleSale.warnings.map((warning) => <li>{warning}</li>)}</ul>
-        <p id="fee-message" class="mt-4 text-sm text-[#ccd8ec]" aria-live="polite"></p>
-      </aside>
-    </div>
-    <StickyResult />
-    <noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The worked example above uses a $100.00 PayPal payment; enable JavaScript to calculate your own amounts locally.</p></noscript>
-    <section class="mt-14 max-w-3xl border-t border-line pt-10">
-      <h2 class="display text-3xl font-bold">Where this rate comes from</h2>
-      <p class="mt-4 leading-relaxed text-ink/70">This tool covers exactly one documented scenario: a US PayPal Business account receiving a domestic USD commercial transaction through PayPal Checkout, where the buyer pays with PayPal's own payment method. The fee is one processing component: {ratePercent}% of the processed amount plus {fixedFee} per transaction. Results are estimates rounded to the nearest cent; PayPal's published pages do not establish a component-rounding policy.</p>
-      <p class="mt-4 leading-relaxed text-ink/70">Sales tax is never calculated here. If you collected tax on the transaction, enter it yourself: it stays part of the processed amount, so the percentage fee applies to it, and it is not counted as your income. Card payments through PayPal Checkout are a different product with a different fee and are not covered here.</p>
-      <h3 class="display mt-8 text-xl font-bold">Stated assumptions</h3>
-      <ul class="mt-3 list-disc space-y-1 pl-5 text-sm leading-relaxed text-ink/70">{preset.assumptions.map((assumption) => <li>{assumption}</li>)}</ul>
-      <h3 class="display mt-8 text-xl font-bold">Not covered by this calculator</h3>
-      <ul class="mt-3 list-disc space-y-1 pl-5 text-sm leading-relaxed text-ink/70">{preset.exclusions.map((exclusion) => <li>{exclusion}</li>)}</ul>
-      <p class="mt-8 text-sm text-ink/60">Official sources: {preset.sources.map((source, index) => <span>{index > 0 && " "}<a class="underline" href={source.url} rel="noopener">{source.title}</a></span>)}. Reviewed {reviewedOn}. Rates can change; unsupported cases are refused rather than estimated.</p>
-    </section>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">PayPal's fee, out in the open, for Checkout, card, invoice, international, and QR code payments.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={checkout.checkedOn} />
+    <FeeCalculator calculatorId="paypal" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The PayPal fee calculator shows what PayPal keeps from a payment and what reaches you. PayPal prices each product separately. For a US Business account, a domestic PayPal Checkout payment costs <strong>{rate}</strong>, so a $100 sale pays <strong>{fee}</strong> and leaves <strong>{kept}</strong>. Standard card payments, invoices, international Checkout payments, and QR codes each have their own scenario.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Choose how the customer paid: PayPal Checkout, a card, an invoice, an international Checkout payment, or a QR code.</li>
+        <li>Choose whether you know what the customer paid, or what you want to keep.</li>
+        <li>Enter the amount, and any sales tax you collected so it is not counted as yours.</li>
+        <li>To see monthly and yearly totals, enter how many same-size sales you make a month.</li>
+      </ol>
+
+      <h2>How the fee is built</h2>
+      <p>Here is a $100.00 PayPal Checkout payment, using the same code as the calculator.</p>
+      <ol>
+        <li><strong>Percentage.</strong> 3.49% of $100.00 is $3.49.</li>
+        <li><strong>Fixed fee.</strong> PayPal's fixed fee for payments received in US dollars is 49¢, so the fee is {fee} and you keep {kept}.</li>
+        <li><strong>International buyer.</strong> PayPal adds 1.50% when buyer and seller are in different markets, for a total of {formatUsdGrouped(internationalSale.feeCents)}.</li>
+        <li><strong>Working backward.</strong> To keep $100.00 from a Checkout payment, charge {formatUsdGrouped(target.grossCents)}.</li>
+      </ol>
+
+      <h2>PayPal Checkout fees at common sale amounts</h2>
+      <p>Domestic PayPal Checkout payments. The fixed 49¢ takes a bigger share of small sales.</p>
+      <DataTable caption={`PayPal Checkout fee (${rate}) by sale amount`} headers={["Sale", "PayPal fee", "You keep", "Fee share"]} rows={amountRows} />
+
+      <h2>The same $100 sale in every scenario</h2>
+      <DataTable caption="PayPal fee on a $100 payment by payment type" headers={["Scenario", "Rate", "PayPal fee", "You keep"]} rows={scenarioRows} />
+
+      <h2>Other PayPal fees this calculator does not add</h2>
+      <p>From PayPal's merchant fees page and User Agreement, for US Business accounts.</p>
+      <ul>
+        <li><strong>Pay Later:</strong> 4.99% plus the fixed fee.</li>
+        <li><strong>Advanced Credit and Debit Card Payments:</strong> 2.89% + 0.29 USD, subject to PayPal's application and approval.</li>
+        <li><strong>Micropayments:</strong> 4.99% + 0.09 USD, for accounts approved for that pricing.</li>
+        <li><strong>Invoices:</strong> Pay by Bank costs 1%, capped at $10.00, and an optional Invoice Subscription costs 14.99 USD a month.</li>
+        <li><strong>Currency conversion:</strong> a spread of 3.00% or 4.00% built into the exchange rate, depending on the transaction.</li>
+        <li><strong>Disputes and chargebacks:</strong> a 15.00 USD standard dispute fee, 30.00 USD for high-volume dispute accounts, and a 20.00 USD chargeback fee on card transactions not processed through a PayPal account or guest checkout.</li>
+        <li><strong>Refunds:</strong> no fee to refund, but the original fees are not returned.</li>
+        <li><strong>Instant transfers:</strong> 1.50% of the amount, with a 0.50 USD minimum. Standard transfers to a linked bank are free without currency conversion.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="paypal" />
+
+      <FaqSection entries={faq} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{guideSources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">PayPal's pages were reviewed on the date shown at the top of this page. Custom pricing can differ. MathMyRate is not affiliated with PayPal. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
     <RelatedTools current={tool.id} />
   </main>
-  <script>
-    import {
-      calculateFees,
-      getFeePreset,
-      grossUpFees,
-      type FeePreset,
-    } from "@MathMyRate/calculators";
-    import {
-      type CalculationTrigger,
-      formatUsdGrouped,
-      focusProblemField,
-      InputProblem,
-      markResultsCurrent,
-      markResultsStale,
-      requireHtmlButton,
-      requireHtmlElement,
-      requireHtmlForm,
-      requireHtmlInput,
-      setFieldState,
-      shouldDeferProblem,
-      usdToCents,
-      watchCalculatorFields,
-    } from "../../scripts/calculator-form";
-
-    const preset = getFeePreset("paypal-us-checkout-paypal-payment");
-
-    if (!preset) {
-      throw new Error("The PayPal fee preset is missing from the registry.");
-    }
-
-    const form = requireHtmlForm("paypal-fee-form");
-
-    const panel = requireHtmlElement("fee-panel");
-
-    const copyButton = requireHtmlButton("copy-fee");
-
-    const MODE_TEXT = {
-      received: {
-        amountLabel: "Amount the customer paid",
-        amountHelp: "The full amount processed, including any sales tax you collected.",
-        primaryLabel: "You keep from this sale",
-      },
-      net: {
-        amountLabel: "Amount you want to keep",
-        amountHelp: "What should reach you after PayPal's fee and any sales tax you collect.",
-        primaryLabel: "Charge the customer",
-      },
-    } as const;
-
-    type FeeMode = keyof typeof MODE_TEXT;
-
-    let latestCopy: string | null = null;
-
-    function currentMode(): FeeMode {
-      const checked = form.querySelector('input[name="feeMode"]:checked');
-
-      return checked instanceof HTMLInputElement && checked.value === "net" ? "net" : "received";
-    }
-
-    function setResult(id: string, text: string): void {
-      requireHtmlElement(id).textContent = text;
-    }
-
-    function applyModeText(mode: FeeMode): void {
-      const text = MODE_TEXT[mode];
-
-      requireHtmlElement("amount-label").textContent = text.amountLabel;
-      requireHtmlElement("amount-help").textContent = text.amountHelp;
-      requireHtmlElement("primary-label").textContent = text.primaryLabel;
-      requireHtmlElement("keep-row").hidden = mode !== "net";
-    }
-
-    function clear(): void {
-      for (const id of ["fee-result", "fee-total-result", "net-result", "tax-result", "keep-result"]) {
-        setResult(id, "—");
-      }
-
-      requireHtmlElement("tax-row").hidden = true;
-      markResultsCurrent(panel, []);
-      copyButton.disabled = true;
-      latestCopy = null;
-    }
-
-    function parseTax(): bigint {
-      const value = requireHtmlInput("taxIncluded").value.trim();
-
-      return value.length === 0 ? 0n : usdToCents(value, "taxIncluded");
-    }
-
-    function calc(activePreset: FeePreset, trigger: CalculationTrigger): void {
-      const mode = currentMode();
-
-      try {
-        const amount = usdToCents(requireHtmlInput("amount").value, "amount");
-        const tax = parseTax();
-
-        if (tax > amount) {
-          throw new InputProblem("taxIncluded", "Sales tax cannot be larger than the amount.");
-        }
-
-        const result =
-          mode === "received"
-            ? calculateFees({ preset: activePreset, grossCents: amount, taxCents: tax })
-            : grossUpFees({ preset: activePreset, targetProceedsCents: amount, taxCents: tax });
-
-        setResult(
-          "fee-result",
-          formatUsdGrouped(mode === "received" ? result.sellerProceedsCents : result.grossCents),
-        );
-        setResult("fee-total-result", formatUsdGrouped(result.feeCents));
-        setResult("net-result", formatUsdGrouped(result.netAfterFeesCents));
-
-        const taxRow = requireHtmlElement("tax-row");
-
-        if (result.taxCents > 0n) {
-          taxRow.hidden = false;
-          setResult("tax-result", formatUsdGrouped(result.taxCents));
-        } else {
-          taxRow.hidden = true;
-        }
-
-        const reviewed = result.checkedOn ?? "date not recorded";
-
-        if (mode === "net") {
-          setResult("keep-result", formatUsdGrouped(result.sellerProceedsCents));
-        }
-
-        latestCopy =
-          mode === "received"
-            ? `PayPal Checkout (PayPal payment) on ${formatUsdGrouped(result.grossCents)}: ${formatUsdGrouped(result.feeCents)} fee, you keep ${formatUsdGrouped(result.sellerProceedsCents)} (estimate; source reviewed ${reviewed}).`
-            : `To keep ${formatUsdGrouped(amount)} from a PayPal Checkout PayPal payment, charge ${formatUsdGrouped(result.grossCents)} (estimate; source reviewed ${reviewed}).`;
-
-        markResultsCurrent(panel, [copyButton]);
-        requireHtmlElement("fee-message").textContent = "";
-        setFieldState(form);
-      } catch (error) {
-        const problem =
-          error instanceof InputProblem
-            ? error
-            : new InputProblem(
-                "amount",
-                mode === "received"
-                  ? "Enter an amount above zero."
-                  : "This target cannot be reached. Try a smaller amount.",
-              );
-
-        if (shouldDeferProblem(form, trigger)) {
-          markResultsStale(panel, [copyButton]);
-
-          return;
-        }
-
-        clear();
-        setFieldState(form, problem);
-
-        if (trigger === "submit") focusProblemField(form, problem);
-      }
-    }
-
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      calc(preset, "submit");
-    });
-
-    requireHtmlButton("paypal-fee-update").addEventListener("click", () => calc(preset, "submit"));
-
-    form.querySelectorAll('input[name="feeMode"]').forEach((element) => {
-      element.addEventListener("change", () => {
-        applyModeText(currentMode());
-        calc(preset, "commit");
-      });
-    });
-
-    watchCalculatorFields(form, (trigger) => calc(preset, trigger));
-
-    requireHtmlButton("paypal-fee-reset").addEventListener("click", () => {
-      form.reset();
-      applyModeText(currentMode());
-      calc(preset, "commit");
-    });
-
-    copyButton.addEventListener("click", async () => {
-      if (latestCopy === null) return;
-
-      try {
-        await navigator.clipboard.writeText(latestCopy);
-        requireHtmlElement("fee-message").textContent = "Result copied.";
-      } catch {
-        requireHtmlElement("fee-message").textContent =
-          "Copy was unavailable. Select the result to copy it manually.";
-      }
-    });
-
-    applyModeText(currentMode());
-
-    calc(preset, "commit");
-  </script>
 </Layout>

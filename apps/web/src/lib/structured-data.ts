@@ -65,6 +65,15 @@ export interface BreadcrumbListNode {
   }[];
 }
 
+/**
+ * A question and answer shown visibly on a page. Google stopped showing FAQ rich
+ * results on May 7, 2026, so these are not emitted as FAQPage structured data.
+ */
+export interface FaqEntry {
+  readonly question: string;
+  readonly answer: string;
+}
+
 export type StructuredDataNode =
   | OrganizationNode
   | WebSiteNode

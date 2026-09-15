@@ -29,6 +29,8 @@ describe("calculator registry", () => {
       "paypal-fees",
       "gumroad-fees",
       "lemon-squeezy-fees",
+      "stripe-vs-paypal",
+      "gumroad-vs-lemon-squeezy",
       "hourly-rate",
       "project-rate",
     ]);

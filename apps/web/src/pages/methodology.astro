@@ -1,4 +1,5 @@
 ---
+import { issuesUrl } from "../data/site";
 import Layout from "../layouts/Layout.astro";
 ---
 <Layout title="Methodology | MathMyRate" description="How MathMyRate calculates rates and fees: integer-cent arithmetic, rounding, official sources, review dates, inverse checks, and corrections.">
@@ -26,7 +27,7 @@ import Layout from "../layouts/Layout.astro";
       </div>
       <div>
         <h2 class="display text-2xl font-bold">Review and corrections</h2>
-        <p class="mt-3 leading-relaxed text-ink/70">Every fee page shows the date its source was last reviewed. When a provider changes published pricing, the rule's revision is updated independently of that review date, and the change is visible in the page's assumptions and exclusions. If you find a result that disagrees with its own stated assumptions, that is a bug: the correct behavior is to fix the rule and record the correction, not to explain the number away.</p>
+        <p class="mt-3 leading-relaxed text-ink/70">Every fee page shows the date its source was last reviewed. When a provider changes published pricing, the rule's revision is updated independently of that review date, and the change is visible in the page's assumptions and exclusions. If you find a result that disagrees with its own stated assumptions, that is a bug: the correct behavior is to fix the rule and record the correction, not to explain the number away. Report one by <a class="underline" href={issuesUrl}>opening an issue on GitHub</a>, and see the <a class="underline" href="/changelog/">changelog</a> for past rule changes.</p>
       </div>
     </section>
   </main>

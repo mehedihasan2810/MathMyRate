@@ -1,7 +1,7 @@
 import { getFeePreset, type FeeComponent } from "@MathMyRate/calculators";
 import { describe, expect, it } from "vitest";
 
-import { formatFeeRate } from "./fee-labels";
+import { formatCombinedRate, formatFeeRate } from "./fee-labels";
 
 function firstComponent(presetId: string): FeeComponent {
   const component = getFeePreset(presetId)?.components[0];
@@ -17,7 +17,7 @@ describe("formatFeeRate", () => {
     ["paypal-us-checkout-paypal-payment", "3.49% + 49¢"],
     ["gumroad-us-direct-card", "10% + 50¢"],
     ["gumroad-us-discover", "30%"],
-    ["lemon-squeezy-us-card-single-no-tax", "5% + 50¢"],
+    ["lemon-squeezy-us-domestic-card", "5% + 50¢"],
   ])("labels %s as %j", (presetId, label) => {
     expect(formatFeeRate(firstComponent(presetId))).toBe(label);
   });
@@ -33,5 +33,21 @@ describe("formatFeeRate", () => {
         rounding: "half-up",
       }),
     ).toBe("1.5% + $1.25");
+  });
+});
+
+describe("formatCombinedRate", () => {
+  it.each([
+    ["stripe-us-online-domestic-card", "2.9% + 30¢"],
+    ["stripe-us-online-international-card", "4.4% + 30¢"],
+    ["paypal-us-checkout-international", "4.99% + 49¢"],
+    ["gumroad-us-direct-card", "12.9% + 80¢"],
+    ["lemon-squeezy-us-subscription", "5.5% + 50¢"],
+  ])("labels every component of %s as %j", (presetId, label) => {
+    const preset = getFeePreset(presetId);
+
+    if (!preset) throw new Error(`Missing preset ${presetId}`);
+
+    expect(formatCombinedRate(preset.components)).toBe(label);
   });
 });

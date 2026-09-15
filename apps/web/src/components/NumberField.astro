@@ -11,7 +11,9 @@ interface Props {
   placeholder?: string;
   /** Lets a page script rewrite the label text without removing the required marker. */
   labelTextId?: string;
-  /** Lets a page script rewrite the help text. */
+  /** Identifies the whole field so a script can hide or show it. */
+  wrapperId?: string;
+  hidden?: boolean;
   class?: string;
 }
 
@@ -25,6 +27,8 @@ const {
   inputMode = "decimal",
   placeholder,
   labelTextId,
+  wrapperId,
+  hidden = false,
   class: className,
 } = Astro.props;
 
@@ -33,7 +37,7 @@ const describedBy = help ? `${id}-help ${id}-error` : `${id}-error`;
 const padding = unit === "usd" ? "pl-7 pr-3" : unit === "percent" ? "pl-3 pr-9" : "px-3";
 ---
 
-<div class:list={["text-sm", className]}>
+<div id={wrapperId} hidden={hidden} class:list={["text-sm", className]}>
   <label for={id} class="font-semibold">
     <span id={labelTextId}>{label}</span>{required ? <span class="text-[#a44631]" aria-hidden="true"> *</span> : null}
   </label>

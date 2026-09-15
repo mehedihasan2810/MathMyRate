@@ -34,37 +34,34 @@ convert money or select a tax jurisdiction. Taxes are user-entered planning
 assumptions, not a tax-return calculation. Unknown fees and undocumented
 conditions are excluded or clearly labeled unsupported; they are not guessed.
 
-Phase two may add Stripe–PayPal and Gumroad–Lemon Squeezy comparisons after the
-underlying engines and substantive comparison content are ready. Etsy, live FX,
+Stripe–PayPal and Gumroad–Lemon Squeezy comparison pages were added on 2026-09-15, once the underlying engines and sourced comparison content were ready. Etsy, live FX,
 account dashboards, subscriptions, saved cloud histories, AI tools,
 profession-specific landing-page expansion, and automated fee ingestion are
 outside launch scope.
 
 ## Planned information architecture
 
-| Route                                 | Purpose                                                   |
-| ------------------------------------- | --------------------------------------------------------- |
-| `/`                                   | Product promise and tool selection                        |
-| `/freelance/`                         | Freelance pricing hub                                     |
-| `/freelance/hourly-rate-calculator/`  | Sustainable hourly/day-rate planning                      |
-| `/freelance/project-rate-calculator/` | Scope-based project quotation                             |
-| `/fees/`                              | Supported platform-fee hub                                |
-| `/fees/stripe-fee-calculator/`        | Stripe gross/net calculation                              |
-| `/fees/paypal-fee-calculator/`        | Product-specific PayPal calculation                       |
-| `/fees/gumroad-fee-calculator/`       | Gumroad direct/Discover take-home                         |
-| `/fees/lemon-squeezy-fee-calculator/` | Order fees and separate payout estimate                   |
-| `/methodology/`                       | Calculations, sourcing, rounding, review, and corrections |
-| `/about/`                             | Truthful product/operator information                     |
-| `/privacy/`                           | Actual data collection and storage disclosures            |
-| `/terms/`                             | Estimates, exclusions, permitted use, and limitations     |
-| `/404`                                | Useful navigation for unavailable URLs                    |
+| Route                                  | Purpose                                                   |
+| -------------------------------------- | --------------------------------------------------------- |
+| `/`                                    | Product promise and tool selection                        |
+| `/freelance/`                          | Freelance pricing hub                                     |
+| `/freelance/hourly-rate-calculator/`   | Sustainable hourly/day-rate planning                      |
+| `/freelance/project-rate-calculator/`  | Scope-based project quotation                             |
+| `/fees/`                               | Supported platform-fee hub                                |
+| `/fees/stripe-fee-calculator/`         | Stripe gross/net calculation                              |
+| `/fees/paypal-fee-calculator/`         | Product-specific PayPal calculation                       |
+| `/fees/gumroad-fee-calculator/`        | Gumroad direct/Discover take-home                         |
+| `/fees/lemon-squeezy-fee-calculator/`  | Order fees and separate payout estimate                   |
+| `/fees/stripe-vs-paypal-fees/`         | Stripe and PayPal fees on the same sale                   |
+| `/fees/gumroad-vs-lemon-squeezy-fees/` | Gumroad and Lemon Squeezy fees on the same sale           |
+| `/methodology/`                        | Calculations, sourcing, rounding, review, and corrections |
+| `/about/`                              | Truthful product/operator information                     |
+| `/privacy/`                            | Actual data collection and storage disclosures            |
+| `/terms/`                              | Estimates, exclusions, permitted use, and limitations     |
+| `/changelog/`                          | Dated record of fee rule changes and their sources        |
+| `/404`                                 | Useful navigation for unavailable URLs                    |
 
-The route table is the target, not a statement that these pages exist today.
-The current public frontend is `/`, `/freelance/`,
-`/freelance/hourly-rate-calculator/`,
-`/freelance/project-rate-calculator/`, `/fees/`,
-`/fees/stripe-fee-calculator/`, and `/fees/paypal-fee-calculator/`. There are
-no account pages.
+Every route in the table exists as of 2026-09-15. There are no account pages.
 
 ## Product behavior
 
@@ -121,9 +118,6 @@ Results should say **net receipts before expenses and income tax**, not
 
 ## Current product boundary
 
-The math package is implemented, and the freelance and Stripe fee pages consume
-its real results; this is still not six launched tools. The PayPal, Gumroad,
-and Lemon Squeezy pages, the trust/content pages, and any deployment remain
-future work. Preact remains intentionally deferred: the calculators use native
+The math package is implemented, and all six calculators, both comparison pages, and the trust and content pages consume its real results. Deployment remains future work: the owner will choose the production domain before a release. Preact remains intentionally deferred: the calculators use native
 controls and page scripts, and a framework island must be checked against the
 locked Astro/Alchemy versions before it is added.

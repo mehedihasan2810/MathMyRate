@@ -112,6 +112,8 @@ FinanceApplication`, `offers.price: 0`, `browserRequirements`), plus
 
 ### P0.7 Content depth on every calculator page (L)
 
+**Status: done 2026-09-15** (branch `feat/content-trust-growth`). All six calculators now carry the page template: a plain answer, how to use it, a worked example produced by the calculator code, reference tables computed at build time, a section on what the result leaves out or what other provider fees apply, visible FAQs, related calculators, sources, and updated and reviewed dates. Every provider fact was checked against the provider's own pages on 2026-09-15. Deviation: FAQs are not marked up as `FAQPage`, because Google stopped showing FAQ rich results on May 7, 2026.
+
 Use the page template in the playbook. Per tool, write the sections in this
 order, in plain language, with real numbers taken from the engine:
 
@@ -139,6 +141,8 @@ page. Accept: every calculator page has all eight sections, an FAQ with
 
 ### P0.8 Truthful policy pages for the ads plan (S)
 
+**Status: done 2026-09-15** (branch `feat/content-trust-growth`). About states that the site is independent and unaffiliated, how numbers are sourced, how to report corrections through the public GitHub issue tracker, and that no ads run today. Privacy and Terms carry last-updated dates, a public contact route, and a commitment to update before any analytics or advertising goes live. Still open for the owner: About does not name a person or company, because that is the owner's decision.
+
 - About: name the operator (person or entity), how to contact, and the
   editorial process (official sources, review dates, corrections).
 - Privacy: keep the strong promise for calculator inputs; add a section that
@@ -152,6 +156,8 @@ page. Accept: every calculator page has all eight sections, an FAQ with
 ## P1: first month after launch
 
 ### P1.1 Sourced fee scenarios the code already names (M each)
+
+**Status: done 2026-09-15** (branch `feat/content-trust-growth`). Added Stripe international and manually entered cards; PayPal standard card payments, invoices paid through PayPal or by card, international Checkout, and QR codes; and Lemon Squeezy international card, PayPal, and subscription orders with tax-inclusive totals, tested against the worked examples on Lemon Squeezy's own pages. Still unsupported, with reasons on the pages: Stripe ACH Direct Debit (its $5.00 cap is not modeled) and currency conversion; PayPal Pay Later, Advanced card payments, and micropayments; Gumroad PayPal sales (Gumroad does not publish the rate); and Lemon Squeezy fee combinations its fee page does not document.
 
 Extend the presets from the same official pages already cited, with their own
 assumptions, exclusions, and inverse tests:
@@ -171,6 +177,8 @@ assumptions, exclusions, and inverse tests:
 
 ### P1.2 Volume mode on every fee tool (M)
 
+**Status: done 2026-09-15** (branch `feat/content-trust-growth`). Every fee calculator has an optional sales-per-month field that adds fees per month, what you keep per month, fees per year, and fees as a share of sales. The engine's `repeatSale` multiplies one evaluated sale, so every sale pays its own fixed charge.
+
 - Inputs: average sale and transactions per month. Outputs: fee per sale,
   monthly fees, annual fees, monthly net, effective rate. Keep the single-sale
   mode as the default.
@@ -179,6 +187,8 @@ assumptions, exclusions, and inverse tests:
 
 ### P1.3 Comparison pages (M each)
 
+**Status: done 2026-09-15** (branch `feat/content-trust-growth`). `/fees/stripe-vs-paypal-fees/` and `/fees/gumroad-vs-lemon-squeezy-fees/` each price one live sale under every relevant preset, mark the lowest fee, and explain refunds, disputes, payouts, and tax from sourced facts.
+
 - `/fees/stripe-vs-paypal-fees/` and `/fees/gumroad-vs-lemon-squeezy-fees/`:
   a two-column live calculator using the existing presets, a table at common
   amounts, and an explanation of when each wins. Only sourced scenarios.
@@ -186,6 +196,8 @@ assumptions, exclusions, and inverse tests:
   to the four underlying tools.
 
 ### P1.4 Trust and freshness signals (S)
+
+**Status: done 2026-09-15** (branch `feat/content-trust-growth`). Every calculator page shows a byline linking to About, an updated date, and, for fee pages, the fee source review date. `/changelog/` records every fee rule change with sources.
 
 - "Reviewed on" and "Last updated" lines on every calculator page, including
   freelance pages (model revision date).

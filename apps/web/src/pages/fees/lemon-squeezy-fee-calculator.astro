@@ -1,324 +1,120 @@
 ---
-import { calculateFees, getFeePreset } from "@MathMyRate/calculators";
+import { calculateFees, grossUpFees } from "@MathMyRate/calculators";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
-import NumberField from "../../components/NumberField.astro";
+import DataTable from "../../components/DataTable.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
 import RelatedTools from "../../components/RelatedTools.astro";
-import ResultRow from "../../components/ResultRow.astro";
-import StickyResult from "../../components/StickyResult.astro";
+import { findFeeCalculator } from "../../data/fee-calculators";
 import { findTool, toolBreadcrumbs } from "../../data/tools";
 import Layout from "../../layouts/Layout.astro";
-import { formatFeeRate } from "../../lib/fee-labels";
+import { formatCombinedRate } from "../../lib/fee-labels";
+import { commonSaleAmounts, feeRowsByAmount, requireOfficialPreset, scenarioRowsAt } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
 import { formatUsdGrouped } from "../../scripts/calculator-form";
-
-function requirePreset(id: string) {
-  const preset = getFeePreset(id);
-
-  if (!preset) {
-    throw new Error(`The ${id} fee preset is missing from the registry.`);
-  }
-
-  return preset;
-}
-
-const preset = requirePreset("lemon-squeezy-us-card-single-no-tax");
-
-const internationalPreset = requirePreset("lemon-squeezy-us-international-card");
-
-const paypalPreset = requirePreset("lemon-squeezy-us-paypal");
-
-const subscriptionPreset = requirePreset("lemon-squeezy-us-subscription");
-
-const payoutPreset = requirePreset("lemon-squeezy-payout");
-
-const blockedScenarios = [
-  { label: "International card", preset: internationalPreset },
-  { label: "PayPal order", preset: paypalPreset },
-  { label: "Subscription payment", preset: subscriptionPreset },
-  { label: "Payout costs", preset: payoutPreset },
-];
-
-const exampleSale = calculateFees({ preset, grossCents: 10000n });
-
-const component = preset.components[0];
-
-if (!component) {
-  throw new Error("The Lemon Squeezy fee preset has no fee components.");
-}
-
-const ratePercent = component.rateBps;
-
-const fixedFee = formatUsdGrouped(BigInt(component.fixedCents));
-
-const rate = formatFeeRate(component);
 
 const tool = findTool("lemon-squeezy-fees");
 
 const breadcrumbs = toolBreadcrumbs(tool.id);
 
-const description = `Estimate Lemon Squeezy's ${rate} order fee on US card sales, what you keep, and what to charge to net a target, using its published fee rules.`;
+const config = findFeeCalculator("lemon-squeezy");
 
-const lineItemRow = "mt-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 text-sm text-paper/70";
+const domestic = requireOfficialPreset("lemon-squeezy-us-domestic-card");
 
-const reviewedOn = preset.checkedOn ?? "date not recorded";
+const international = requireOfficialPreset("lemon-squeezy-us-international-card");
+
+const rate = formatCombinedRate(domestic.components);
+
+const sale = calculateFees({ preset: domestic, grossCents: 10000n });
+
+const target = grossUpFees({ preset: domestic, targetProceedsCents: 10000n });
+
+const workedExample = calculateFees({ preset: international, grossCents: 2400n, taxCents: 400n });
+
+const amountRows = feeRowsByAmount(domestic, commonSaleAmounts);
+
+const scenarioRows = scenarioRowsAt(config.scenarios, 10000n);
+
+const updatedOn = "2026-09-15";
+
+const title = `${tool.name} (${rate}) | MathMyRate`;
+
+const description = `Estimate Lemon Squeezy's ${rate} fee on the order total, plus international, PayPal, and subscription fees, what you keep, and what to charge.`;
+
+const guideSources = [
+  { title: "Docs: Fees • Lemon Squeezy", url: "https://docs.lemonsqueezy.com/help/getting-started/fees" },
+  { title: "Docs: Sales Tax and VAT • Lemon Squeezy", url: "https://docs.lemonsqueezy.com/help/payments/sales-tax-vat" },
+  { title: "Docs: Getting Paid • Lemon Squeezy", url: "https://docs.lemonsqueezy.com/help/getting-started/getting-paid" },
+  { title: "Docs: Refunds and Chargebacks • Lemon Squeezy", url: "https://docs.lemonsqueezy.com/help/payments/refunds-chargebacks" },
+  { title: "Lemon Squeezy pricing", url: "https://www.lemonsqueezy.com/pricing" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "What are Lemon Squeezy's fees?", answer: `Lemon Squeezy charges ${rate} per transaction, calculated on the total order value. Its fee page adds 1.5% for buyers outside the US, 1.5% for PayPal transactions, and 0.5% for subscription payments. A $100 US card order with no tax pays ${formatUsdGrouped(sale.feeCents)}.` },
+  { question: "Is the Lemon Squeezy fee charged on tax?", answer: `Yes. The platform fee is calculated on the total order value, which includes the tax Lemon Squeezy adds. In its own example, a $20.00 product with $4.00 of VAT and an international card pays $0.50 plus 6.5% of $24.00, or ${formatUsdGrouped(workedExample.feeCents)}.` },
+  { question: "Do Lemon Squeezy's additional fees combine?", answer: "The fee page lists the international, PayPal, and subscription fees separately and does not say whether they combine on one order, for example an international PayPal subscription. This calculator supports each one on its own and does not guess combinations." },
+  { question: "Does Lemon Squeezy return its fee when I refund an order?", answer: "No. When you refund an order, the refunded amount minus Lemon Squeezy's platform fee is deducted from your next payout, so the fee stays with Lemon Squeezy." },
+  { question: "What happens when a customer files a chargeback?", answer: "Lemon Squeezy usually refunds the customer on your behalf and deducts the refunded amount, minus its platform fee, plus a $15 dispute fee from your next payout." },
+  { question: "How much does a Lemon Squeezy payout cost?", answer: "Payouts through Stripe are free for bank accounts in the US and 1% for bank accounts outside the US. PayPal payouts cost a flat $0.50 in the US and 3%, capped at $30, outside the US." },
+  { question: "When does Lemon Squeezy pay out?", answer: "Payouts are created on the 1st and 15th of each month. Net sales are held for 13 days and paid on the 14th and 28th, and payouts need at least $50. Smaller balances roll over to the next payout." },
+  { question: "Do I need to handle sales tax myself?", answer: "Lemon Squeezy is the merchant of record, so it collects and remits sales tax and VAT on your sales and deducts that tax from your payout. You may still owe income tax on the payouts you receive." },
+  { question: "How do I charge enough to cover Lemon Squeezy's fee?", answer: `Choose I want to keep a target and enter the amount you want to receive. To keep $100.00 from a US card order with no tax, charge ${formatUsdGrouped(target.grossCents)}.` },
+];
 ---
-<Layout title={`${tool.name} (${rate}) | MathMyRate`} description={description} ogImage="/og/lemon-squeezy.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+<Layout title={title} description={description} ogImage="/og/lemon-squeezy.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
     <Breadcrumbs items={breadcrumbs} />
     <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
-    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Lemon Squeezy's fee, down to the cent, for single US card orders at {rate}.</p>
-    <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
-      <form id="lemon-squeezy-fee-form" data-calculator-form class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate>
-        <div class="flex items-baseline justify-between gap-3"><h2 class="display text-2xl font-bold">Order details</h2><span class="shrink-0 text-xs text-ink/50">USD / per transaction</span></div>
-        <p class="mt-2 text-sm text-ink/60">Supported scenario: US Lemon Squeezy account, USD domestic card order, single non-subscription payment, with no sales tax collected.</p>
-        <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
-        <fieldset class="mt-6">
-          <legend class="text-sm font-semibold">What do you want to work out?</legend>
-          <div class="mt-3 grid gap-2 sm:grid-cols-2">
-            <label class="flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium"><input type="radio" name="feeMode" value="received" class="mt-1" checked /><span>Customer paid an amount<span class="mt-1 block text-xs font-normal text-ink/55">See the fee and what you keep.</span></span></label>
-            <label class="flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium"><input type="radio" name="feeMode" value="net" class="mt-1" /><span>I want to keep a target<span class="mt-1 block text-xs font-normal text-ink/55">Find what to charge for it.</span></span></label>
-          </div>
-        </fieldset>
-        <NumberField class="mt-6" id="amount" label="Amount the customer paid" labelTextId="amount-label" value="100.00" unit="usd" required help="The order total, which for this scenario contains no collected sales tax." />
-        <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="lemon-squeezy-fee-update">Update fees</button><button id="lemon-squeezy-fee-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
-      </form>
-      <aside id="fee-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-navy p-7 text-paper shadow-[0_16px_45px_rgba(19,31,51,.16)] md:p-9">
-        <p class="eyebrow !text-[#c3d2ea]" id="primary-label" data-primary-label>You keep from this sale</p>
-        <p id="fee-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(exampleSale.sellerProceedsCents)}</p>
-        <p class="mt-1 text-paper/70">before expenses and income tax</p>
-        <div class="my-7 border-t border-paper/25"></div>
-        <div class="[&>:first-child]:mt-0">
-          <ResultRow label="Lemon Squeezy fee" valueId="fee-total-result" value={formatUsdGrouped(exampleSale.feeCents)} />
-          <div id="line-items" class="mt-1">{exampleSale.lineItems.map((item) => <div class={lineItemRow}><span>{item.label}</span><strong class="ml-auto text-right text-paper">{formatUsdGrouped(item.feeCents)}</strong></div>)}</div>
-          <ResultRow label="Net after fees" valueId="net-result" value={formatUsdGrouped(exampleSale.netAfterFeesCents)} />
-          <ResultRow label="You keep from that charge" valueId="keep-result" value="—" rowId="keep-row" hidden />
-        </div>
-        <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-fee" type="button" class="rounded-full bg-paper px-4 py-2.5 text-sm font-bold text-ink">Copy result</button><button type="button" data-print class="rounded-full border border-paper/35 px-4 py-2.5 text-sm font-bold">Print</button></div>
-        <ul class="mt-6 list-disc space-y-1 pl-5 text-sm text-[#ccd8ec]">{exampleSale.warnings.map((warning) => <li>{warning}</li>)}</ul>
-        <p id="fee-message" class="mt-4 text-sm text-[#ccd8ec]" aria-live="polite"></p>
-      </aside>
-    </div>
-    <StickyResult />
-    <noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The worked example above uses a $100.00 card order with no collected sales tax; enable JavaScript to calculate your own amounts locally.</p></noscript>
-    <section class="mt-14 max-w-3xl border-t border-line pt-10">
-      <h2 class="display text-3xl font-bold">Where this rate comes from</h2>
-      <p class="mt-4 leading-relaxed text-ink/70">This tool covers exactly one documented scenario: a US Lemon Squeezy account receiving a USD domestic card order, paid once (not a subscription), with no sales tax collected. The fee is one platform component: {ratePercent / 100}% of the total order value plus {fixedFee} per order. Results are estimates rounded to the nearest cent; Lemon Squeezy's published pages do not establish a universal component-rounding policy.</p>
-      <p class="mt-4 leading-relaxed text-ink/70">Sales tax is never calculated here. This baseline covers orders with no collected sales tax, which is why no tax input is offered and no tax row appears. Lemon Squeezy acts as a merchant of record that collects and remits tax on many orders; that flow needs tax-inclusive order totals and is not modeled by this tool yet.</p>
-      <p class="mt-4 leading-relaxed text-ink/70">Payout costs are not order fees. Lemon Squeezy documents payout amounts by payout method, region, and settlement currency, so they belong to a separate per-payout estimate rather than a per-order line item.</p>
-      <h3 class="display mt-8 text-xl font-bold">Documented gaps this tool refuses to guess</h3>
-      <p class="mt-3 text-sm leading-relaxed text-ink/70">Lemon Squeezy's fee page documents additional charges for the cases below. Because each needs order state this calculator does not receive, they are refused instead of estimated:</p>
-      <ul class="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-ink/70">{blockedScenarios.map((scenario) => <li><strong>{scenario.label}:</strong> {scenario.preset.blockedReason}</li>)}</ul>
-      <h3 class="display mt-8 text-xl font-bold">Stated assumptions</h3>
-      <ul class="mt-3 list-disc space-y-1 pl-5 text-sm leading-relaxed text-ink/70">{preset.assumptions.map((assumption) => <li>{assumption}</li>)}</ul>
-      <h3 class="display mt-8 text-xl font-bold">Not covered by this calculator</h3>
-      <ul class="mt-3 list-disc space-y-1 pl-5 text-sm leading-relaxed text-ink/70">{preset.exclusions.map((exclusion) => <li>{exclusion}</li>)}</ul>
-      <p class="mt-8 text-sm text-ink/60">Official sources: {preset.sources.map((source, index) => <span>{index > 0 && " "}<a class="underline" href={source.url} rel="noopener">{source.title}</a></span>)}. Reviewed {reviewedOn}. Rates can change; unsupported cases are refused rather than estimated.</p>
-    </section>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Lemon Squeezy's fee, down to the cent, for US and international card orders, PayPal orders, and subscription payments, with tax included.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={domestic.checkedOn} />
+    <FeeCalculator calculatorId="lemon-squeezy" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The Lemon Squeezy fee calculator shows what Lemon Squeezy keeps from an order and what reaches you. It charges <strong>{rate}</strong> per transaction on the total order value, so a $100 US card order with no tax pays <strong>{formatUsdGrouped(sale.feeCents)}</strong> and leaves <strong>{formatUsdGrouped(sale.sellerProceedsCents)}</strong>. International buyers, PayPal, and subscriptions each add a percentage, and any tax on the order is part of the amount the fee is calculated on.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Choose the kind of order: a US card order, an international card order, a PayPal order, or a subscription payment.</li>
+        <li>Choose whether you know the order total, or what you want to keep.</li>
+        <li>Enter the amount. If Lemon Squeezy added tax, use the total including tax and enter the tax separately.</li>
+        <li>To see monthly and yearly totals, enter how many same-size orders you make a month.</li>
+      </ol>
+
+      <h2>How the fee is built</h2>
+      <p>Lemon Squeezy's fee page works through an example, and the calculator reproduces it exactly: a buyer in France buys a $20.00 product by card, and 20% VAT adds $4.00.</p>
+      <ol>
+        <li><strong>Total order value.</strong> $20.00 plus $4.00 of VAT is $24.00.</li>
+        <li><strong>Platform fee.</strong> 5% of $24.00 is $1.20, and the international fee of 1.5% is $0.36. Adding the fixed $0.50 gives {formatUsdGrouped(workedExample.feeCents)}.</li>
+        <li><strong>What you keep.</strong> $24.00 minus $4.00 of tax minus the fee is {formatUsdGrouped(workedExample.sellerProceedsCents)}.</li>
+      </ol>
+
+      <h2>Lemon Squeezy fees at common order amounts</h2>
+      <p>US card orders with no tax collected. The fixed 50¢ weighs more on small orders.</p>
+      <DataTable caption={`Lemon Squeezy fee (${rate}) by order total`} headers={["Order total", "Lemon Squeezy fee", "You keep", "Fee share"]} rows={amountRows} />
+
+      <h2>The same $100 order in every scenario</h2>
+      <DataTable caption="Lemon Squeezy fee on a $100 order by order type, with no tax" headers={["Scenario", "Rate", "Lemon Squeezy fee", "You keep"]} rows={scenarioRows} />
+
+      <h2>Tax, refunds, payouts, and marketing fees</h2>
+      <ul>
+        <li><strong>Merchant of record:</strong> Lemon Squeezy collects and remits sales tax and VAT. Tax is added on top of your price unless you turn on tax-inclusive pricing, which applies to every product in the store.</li>
+        <li><strong>Refunds:</strong> the refunded amount minus the platform fee comes out of your next payout, so the fee is not returned.</li>
+        <li><strong>Chargebacks:</strong> the refunded amount minus the platform fee, plus a $15 dispute fee, comes out of your next payout.</li>
+        <li><strong>Payouts:</strong> through Stripe, free for US bank accounts and 1% outside the US. Through PayPal, $0.50 in the US and 3% capped at $30 outside the US. Payouts are paid on the 14th and 28th, with a $50 minimum.</li>
+        <li><strong>Marketing features:</strong> 5% of payments recovered through abandoned cart emails, and 3% of each order referred by an affiliate.</li>
+        <li><strong>Custom pricing:</strong> Lemon Squeezy offers it to large or fast-growing businesses, high-volume businesses, and stores selling products under $10.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="lemon-squeezy" blockedPresetIds={["lemon-squeezy-payout"]} />
+
+      <FaqSection entries={faq} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{guideSources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Lemon Squeezy's pages were reviewed on the date shown at the top of this page. Store-specific plans can differ. MathMyRate is not affiliated with Lemon Squeezy. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
     <RelatedTools current={tool.id} />
   </main>
-  <script>
-    import {
-      calculateFees,
-      getFeePreset,
-      grossUpFees,
-      type FeePreset,
-    } from "@MathMyRate/calculators";
-    import {
-      type CalculationTrigger,
-      formatUsdGrouped,
-      focusProblemField,
-      InputProblem,
-      markResultsCurrent,
-      markResultsStale,
-      requireHtmlButton,
-      requireHtmlElement,
-      requireHtmlForm,
-      requireHtmlInput,
-      setFieldState,
-      shouldDeferProblem,
-      usdToCents,
-      watchCalculatorFields,
-    } from "../../scripts/calculator-form";
-
-    function requirePreset(id: string): FeePreset {
-      const found = getFeePreset(id);
-
-      if (!found) {
-        throw new Error(`The ${id} fee preset is missing from the registry.`);
-      }
-
-      return found;
-    }
-
-    const preset = requirePreset("lemon-squeezy-us-card-single-no-tax");
-
-    const form = requireHtmlForm("lemon-squeezy-fee-form");
-
-    const panel = requireHtmlElement("fee-panel");
-
-    const copyButton = requireHtmlButton("copy-fee");
-
-    const MODE_TEXT = {
-      received: {
-        amountLabel: "Amount the customer paid",
-        amountHelp: "The order total, which for this scenario contains no collected sales tax.",
-        primaryLabel: "You keep from this sale",
-      },
-      net: {
-        amountLabel: "Amount you want to keep",
-        amountHelp: "What should reach you after Lemon Squeezy's fee.",
-        primaryLabel: "Charge the customer",
-      },
-    } as const;
-
-    type FeeMode = keyof typeof MODE_TEXT;
-
-    let latestCopy: string | null = null;
-
-    function currentMode(): FeeMode {
-      const checked = form.querySelector('input[name="feeMode"]:checked');
-
-      return checked instanceof HTMLInputElement && checked.value === "net" ? "net" : "received";
-    }
-
-    function setResult(id: string, text: string): void {
-      requireHtmlElement(id).textContent = text;
-    }
-
-    function applyModeText(mode: FeeMode): void {
-      const text = MODE_TEXT[mode];
-
-      requireHtmlElement("amount-label").textContent = text.amountLabel;
-      requireHtmlElement("amount-help").textContent = text.amountHelp;
-      requireHtmlElement("primary-label").textContent = text.primaryLabel;
-      requireHtmlElement("keep-row").hidden = mode !== "net";
-    }
-
-    function renderLineItems(items: ReadonlyArray<{ label: string; feeCents: bigint }>): void {
-      const container = requireHtmlElement("line-items");
-
-      container.replaceChildren();
-
-      for (const item of items) {
-        const row = document.createElement("div");
-        row.className = "mt-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 text-sm text-paper/70";
-
-        const label = document.createElement("span");
-        label.textContent = item.label;
-
-        const value = document.createElement("strong");
-        value.className = "ml-auto text-right text-paper";
-        value.textContent = formatUsdGrouped(item.feeCents);
-
-        row.appendChild(label);
-        row.appendChild(value);
-        container.appendChild(row);
-      }
-    }
-
-    function clear(): void {
-      for (const id of ["fee-result", "fee-total-result", "net-result", "keep-result"]) {
-        setResult(id, "—");
-      }
-
-      renderLineItems([]);
-      markResultsCurrent(panel, []);
-      copyButton.disabled = true;
-      latestCopy = null;
-    }
-
-    function calc(trigger: CalculationTrigger): void {
-      const mode = currentMode();
-
-      try {
-        const amount = usdToCents(requireHtmlInput("amount").value, "amount");
-
-        const result =
-          mode === "received"
-            ? calculateFees({ preset, grossCents: amount })
-            : grossUpFees({ preset, targetProceedsCents: amount });
-
-        setResult(
-          "fee-result",
-          formatUsdGrouped(mode === "received" ? result.sellerProceedsCents : result.grossCents),
-        );
-        setResult("fee-total-result", formatUsdGrouped(result.feeCents));
-        setResult("net-result", formatUsdGrouped(result.netAfterFeesCents));
-        renderLineItems(result.lineItems);
-
-        const reviewed = result.checkedOn ?? "date not recorded";
-
-        if (mode === "net") {
-          setResult("keep-result", formatUsdGrouped(result.sellerProceedsCents));
-        }
-
-        latestCopy =
-          mode === "received"
-            ? `Lemon Squeezy card order on ${formatUsdGrouped(result.grossCents)}: ${formatUsdGrouped(result.feeCents)} fee, you keep ${formatUsdGrouped(result.sellerProceedsCents)} (estimate; source reviewed ${reviewed}).`
-            : `To keep ${formatUsdGrouped(amount)} from a Lemon Squeezy card order, charge ${formatUsdGrouped(result.grossCents)} (estimate; source reviewed ${reviewed}).`;
-
-        markResultsCurrent(panel, [copyButton]);
-        requireHtmlElement("fee-message").textContent = "";
-        setFieldState(form);
-      } catch (error) {
-        const problem =
-          error instanceof InputProblem
-            ? error
-            : new InputProblem(
-                "amount",
-                mode === "received"
-                  ? "Enter an amount above zero."
-                  : "This target cannot be reached. Try a smaller amount.",
-              );
-
-        if (shouldDeferProblem(form, trigger)) {
-          markResultsStale(panel, [copyButton]);
-
-          return;
-        }
-
-        clear();
-        setFieldState(form, problem);
-
-        if (trigger === "submit") focusProblemField(form, problem);
-      }
-    }
-
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      calc("submit");
-    });
-
-    requireHtmlButton("lemon-squeezy-fee-update").addEventListener("click", () => calc("submit"));
-
-    form.querySelectorAll('input[name="feeMode"]').forEach((element) => {
-      element.addEventListener("change", () => {
-        applyModeText(currentMode());
-        calc("commit");
-      });
-    });
-
-    watchCalculatorFields(form, calc);
-
-    requireHtmlButton("lemon-squeezy-fee-reset").addEventListener("click", () => {
-      form.reset();
-      applyModeText(currentMode());
-      calc("commit");
-    });
-
-    copyButton.addEventListener("click", async () => {
-      if (latestCopy === null) return;
-
-      try {
-        await navigator.clipboard.writeText(latestCopy);
-        requireHtmlElement("fee-message").textContent = "Result copied.";
-      } catch {
-        requireHtmlElement("fee-message").textContent =
-          "Copy was unavailable. Select the result to copy it manually.";
-      }
-    });
-
-    applyModeText(currentMode());
-
-    calc("commit");
-  </script>
 </Layout>

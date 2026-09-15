@@ -12,7 +12,9 @@ export type ToolId =
   | "stripe-fees"
   | "paypal-fees"
   | "gumroad-fees"
-  | "lemon-squeezy-fees";
+  | "lemon-squeezy-fees"
+  | "stripe-vs-paypal"
+  | "gumroad-vs-lemon-squeezy";
 
 export interface Crumb {
   readonly name: string;
@@ -98,10 +100,30 @@ export const tools: readonly Tool[] = [
     summary: "Order fees for domestic card sales, with payout costs kept separate.",
     searchTerms: "lemon squeezy digital products order fee merchant of record",
   },
+  {
+    id: "stripe-vs-paypal",
+    hub: "fees",
+    href: "/fees/stripe-vs-paypal-fees/",
+    name: "Stripe vs PayPal Fees",
+    menuLabel: "Stripe vs PayPal",
+    summary: "Compare Stripe and PayPal fees on the same sale, side by side.",
+    searchTerms: "stripe paypal compare comparison cheaper card checkout fees",
+  },
+  {
+    id: "gumroad-vs-lemon-squeezy",
+    hub: "fees",
+    href: "/fees/gumroad-vs-lemon-squeezy-fees/",
+    name: "Gumroad vs Lemon Squeezy Fees",
+    menuLabel: "Gumroad vs Lemon Squeezy",
+    summary: "Compare what Gumroad and Lemon Squeezy keep from a digital product sale.",
+    searchTerms:
+      "gumroad lemon squeezy compare comparison digital products merchant of record fees",
+  },
 ];
 
 export const infoLinks: readonly Crumb[] = [
   { name: "Methodology", href: "/methodology/" },
+  { name: "Changelog", href: "/changelog/" },
   { name: "About", href: "/about/" },
   { name: "Privacy", href: "/privacy/" },
   { name: "Terms", href: "/terms/" },
