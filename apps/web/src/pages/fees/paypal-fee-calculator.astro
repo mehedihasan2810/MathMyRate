@@ -28,7 +28,7 @@ const reviewedOn = preset.checkedOn ?? "date not recorded";
     <p class="eyebrow">Platform fees / 02</p>
     <h1 class="display mt-2 text-2xl font-bold md:text-3xl">PayPal's fee, out in the open.</h1>
     <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
-      <form id="paypal-fee-form" class="print-card rounded-[1.5rem] border border-line bg-[#faf8f1] p-6 shadow-[0_16px_45px_rgba(56,71,61,.08)] md:p-8" novalidate onsubmit="return false">
+      <form id="paypal-fee-form" class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate onsubmit="return false">
         <div class="flex items-baseline justify-between"><h2 class="display text-2xl font-bold">Payment details</h2><span class="text-xs text-ink/50">USD / per transaction</span></div>
         <p class="mt-2 text-sm text-ink/60">Supported scenario: US PayPal Business account, USD, PayPal Checkout paid with the buyer's PayPal payment method.</p>
         <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
@@ -40,13 +40,13 @@ const reviewedOn = preset.checkedOn ?? "date not recorded";
           </div>
         </fieldset>
         <div class="mt-6 grid gap-5 sm:grid-cols-2">
-          <label class="text-sm font-semibold"><span id="amount-label">Amount the customer paid</span> <span class="text-clay" aria-hidden="true">*</span> <input id="amount" data-field="amount" aria-required="true" aria-describedby="amount-help amount-error" inputmode="decimal" value="100.00" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" /><span id="amount-help" class="mt-1 block text-xs font-normal text-ink/55">The full amount processed, including any sales tax you collected.</span><span id="amount-error" class="field-error" role="alert"></span></label>
+          <label class="text-sm font-semibold"><span id="amount-label">Amount the customer paid</span> <span class="text-[#a44631]" aria-hidden="true">*</span> <input id="amount" data-field="amount" aria-required="true" aria-describedby="amount-help amount-error" inputmode="decimal" value="100.00" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" /><span id="amount-help" class="mt-1 block text-xs font-normal text-ink/55">The full amount processed, including any sales tax you collected.</span><span id="amount-error" class="field-error" role="alert"></span></label>
           <label class="text-sm font-semibold">Sales tax collected (optional) <input id="taxIncluded" data-field="taxIncluded" aria-describedby="taxIncluded-help taxIncluded-error" inputmode="decimal" value="" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" placeholder="0.00" /><span id="taxIncluded-help" class="mt-1 block text-xs font-normal text-ink/55">A pass-through you enter; this calculator never computes tax. The fee applies to the amount that includes it.</span><span id="taxIncluded-error" class="field-error" role="alert"></span></label>
         </div>
         <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="paypal-fee-update">Update fees</button><button id="paypal-fee-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
       </form>
-      <aside aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-ink p-7 text-paper shadow-[0_16px_45px_rgba(56,71,61,.16)] md:p-9">
-        <p class="eyebrow !text-[#c6d9c6]" id="primary-label">You keep from this sale</p>
+      <aside aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-ink p-7 text-paper shadow-[0_16px_45px_rgba(19,31,51,.16)] md:p-9">
+        <p class="eyebrow !text-[#c3d2ea]" id="primary-label">You keep from this sale</p>
         <p id="fee-result" class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(exampleSale.sellerProceedsCents)}</p>
         <p class="mt-1 text-paper/70">before expenses and income tax</p>
         <div class="my-7 border-t border-paper/25"></div>
@@ -55,8 +55,8 @@ const reviewedOn = preset.checkedOn ?? "date not recorded";
         <div class="mt-4 flex justify-between" id="tax-row" hidden><span class="text-paper/70">Sales tax collected</span><strong id="tax-result">—</strong></div>
         <div class="mt-4 flex justify-between" id="keep-row" hidden><span class="text-paper/70">You keep after fees and tax</span><strong id="keep-result">—</strong></div>
         <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-fee" type="button" class="rounded-full bg-paper px-4 py-2.5 text-sm font-bold text-ink">Copy result</button><button type="button" onclick="window.print()" class="rounded-full border border-paper/35 px-4 py-2.5 text-sm font-bold">Print</button></div>
-        <ul class="mt-6 list-disc space-y-1 pl-5 text-sm text-[#d6e6d5]">{exampleSale.warnings.map((warning) => <li>{warning}</li>)}</ul>
-        <p id="fee-message" class="mt-4 text-sm text-[#d6e6d5]" aria-live="polite"></p>
+        <ul class="mt-6 list-disc space-y-1 pl-5 text-sm text-[#ccd8ec]">{exampleSale.warnings.map((warning) => <li>{warning}</li>)}</ul>
+        <p id="fee-message" class="mt-4 text-sm text-[#ccd8ec]" aria-live="polite"></p>
       </aside>
     </div>
     <noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The worked example above uses a $100.00 PayPal payment; enable JavaScript to calculate your own amounts locally.</p></noscript>

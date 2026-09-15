@@ -6,12 +6,12 @@
 
 @theme {
   --font-sans: "Inter", sans-serif;
-  --color-ink: #23302a;
-  --color-paper: #f5f1e7;
-  --color-mist: #e7eee6;
-  --color-moss: #426455;
-  --color-clay: #c86c4e;
-  --color-line: #d6d7cc;
+  --color-ink: #131f33;
+  --color-paper: #f4f5f7;
+  --color-mist: #e9edf3;
+  --color-navy: #1f3a5f;
+  --color-gold: #b98d2f;
+  --color-line: #d9dce4;
 }
 
 :root {
@@ -25,13 +25,13 @@ html {
 }
 body {
   margin: 0;
-  background: #f5f1e7;
-  color: #23302a;
+  background: #f4f5f7;
+  color: #131f33;
   font-family: "Inter", sans-serif;
 }
 ::selection {
-  background: #c9d9c8;
-  color: #23302a;
+  background: #cdd9ee;
+  color: #131f33;
 }
 .display {
   letter-spacing: -0.02em;
@@ -54,7 +54,7 @@ body {
     sans-serif;
   letter-spacing: 0.11em;
   text-transform: uppercase;
-  color: #567465;
+  color: #5c6f95;
 }
 .page-enter {
   animation: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
@@ -72,7 +72,7 @@ body {
 input:focus,
 button:focus,
 a:focus {
-  outline: 3px solid #b4cbb6;
+  outline: 3px solid #b7c7e4;
   outline-offset: 3px;
 }
 input[type="number"]::-webkit-inner-spin-button {

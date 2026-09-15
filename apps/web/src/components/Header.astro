@@ -6,10 +6,10 @@ const links = [{ to: "/freelance/hourly-rate-calculator/", label: "Hourly rate" 
 
 <header class="border-b border-line bg-paper/90 backdrop-blur-sm">
   <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4 md:px-8">
-    <a href="/" class="display flex items-center gap-2 text-xl font-bold tracking-tight"><img src="/favicon.svg" alt="" width="24" height="24" class="h-6 w-6" />MathMyRate<span class="text-clay">.</span></a>
+    <a href="/" class="display flex items-center gap-2 text-xl font-bold tracking-tight"><img src="/favicon.svg" alt="" width="24" height="24" class="h-6 w-6" />MathMyRate<span class="text-gold">.</span></a>
     <nav aria-label="Main navigation" class="hidden items-center gap-6 text-sm font-medium md:flex">
       {links.map((link) => (
-        <a href={link.to} aria-current={path === link.to ? "page" : undefined} class:list={["transition-colors hover:text-moss", path === link.to ? "text-moss" : "text-ink/70"]}>
+        <a href={link.to} aria-current={path === link.to ? "page" : undefined} class:list={["transition-colors hover:text-navy", path === link.to ? "text-navy" : "text-ink/70"]}>
           {link.label}
         </a>
       ))}

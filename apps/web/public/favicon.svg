@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- MathMyRate mark: moss tile, paper percent slash, clay rate dots. -->
-  <rect width="100" height="100" rx="22" fill="#426455" />
-  <line x1="67" y1="27" x2="33" y2="73" stroke="#f5f1e7" stroke-width="9" stroke-linecap="round" />
-  <circle cx="34" cy="35" r="9.5" fill="#c86c4e" />
-  <circle cx="66" cy="65" r="9.5" fill="#c86c4e" />
+  <!-- MathMyRate mark: navy tile, paper percent slash, gold rate dots. -->
+  <rect width="100" height="100" rx="22" fill="#1f3a5f" />
+  <line x1="67" y1="27" x2="33" y2="73" stroke="#f4f5f7" stroke-width="9" stroke-linecap="round" />
+  <circle cx="34" cy="35" r="9.5" fill="#b98d2f" />
+  <circle cx="66" cy="65" r="9.5" fill="#b98d2f" />
 </svg>

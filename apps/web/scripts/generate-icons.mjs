@@ -1,6 +1,6 @@
 /**
  * Generates the site icons and web manifest into public/ from the shared
- * MathMyRate mark (moss tile, paper percent slash, clay rate dots):
+ * MathMyRate mark (navy tile, paper percent slash, gold rate dots):
  *
  * - favicon.ico              16/32/48 PNG-in-ICO fallback for Google and Safari
  * - apple-touch-icon.png     180x180, square corners (iOS applies its own mask)
@@ -20,9 +20,9 @@ const OUT_DIR = fileURLToPath(new URL("../public/", import.meta.url));
 
 /** Palette mirrors the --color-* tokens in src/styles/global.css. */
 const palette = {
-  moss: "#426455",
-  paper: "#f5f1e7",
-  clay: "#c86c4e",
+  navy: "#1f3a5f",
+  paper: "#f4f5f7",
+  gold: "#b98d2f",
 };
 
 const manifest = {
@@ -32,8 +32,8 @@ const manifest = {
   description: "Practical pricing calculators for independent work.",
   start_url: "/",
   display: "standalone",
-  background_color: palette.moss,
-  theme_color: palette.moss,
+  background_color: palette.navy,
+  theme_color: palette.navy,
   icons: [
     { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
     { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
@@ -47,11 +47,11 @@ function markSvg({ radius = 22, scale = 1 }) {
   const p = (value) => Number((50 + (value - 50) * scale).toFixed(2));
 
   const dot = ([cx, cy]) =>
-    `<circle cx="${p(cx)}" cy="${p(cy)}" r="${Number((9.5 * scale).toFixed(2))}" fill="${palette.clay}" />`;
+    `<circle cx="${p(cx)}" cy="${p(cy)}" r="${Number((9.5 * scale).toFixed(2))}" fill="${palette.gold}" />`;
 
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`,
-    `<rect width="100" height="100" rx="${radius}" fill="${palette.moss}" />`,
+    `<rect width="100" height="100" rx="${radius}" fill="${palette.navy}" />`,
     `<line x1="${p(67)}" y1="${p(27)}" x2="${p(33)}" y2="${p(73)}" stroke="${palette.paper}" stroke-width="${Number((9 * scale).toFixed(2))}" stroke-linecap="round" />`,
     dot([34, 35]),
     dot([66, 65]),
@@ -112,26 +112,26 @@ const square = markSvg({ radius: 0 });
 
 const maskable = markSvg({ radius: 0, scale: 0.6 });
 
-// Center lands on the slash, dot samples sit in the clay circles, and a
+// Center lands on the slash, dot samples sit in the gold circles, and a
 // near-corner sample separates the rounded tile from the full-bleed variants.
 const roundedSamples = [
   [0.5, 0.5, palette.paper, "slash center"],
-  [0.34, 0.35, palette.clay, "top dot"],
-  [0.66, 0.65, palette.clay, "bottom dot"],
-  [0.5, 0.1, palette.moss, "tile top"],
+  [0.34, 0.35, palette.gold, "top dot"],
+  [0.66, 0.65, palette.gold, "bottom dot"],
+  [0.5, 0.1, palette.navy, "tile top"],
   [0.02, 0.02, "000000", "rounded corner transparency"],
 ];
 
 const squareSamples = [
   [0.5, 0.5, palette.paper, "slash center"],
-  [0.34, 0.35, palette.clay, "top dot"],
-  [0.02, 0.02, palette.moss, "square corner fill"],
+  [0.34, 0.35, palette.gold, "top dot"],
+  [0.02, 0.02, palette.navy, "square corner fill"],
 ];
 
 const maskableSamples = [
   [0.5, 0.5, palette.paper, "slash center"],
-  [0.404, 0.41, palette.clay, "scaled top dot"],
-  [0.02, 0.02, palette.moss, "full-bleed corner"],
+  [0.404, 0.41, palette.gold, "scaled top dot"],
+  [0.02, 0.02, palette.navy, "full-bleed corner"],
 ];
 
 expectPixels(renderPng(rounded, 512), 512, roundedSamples);

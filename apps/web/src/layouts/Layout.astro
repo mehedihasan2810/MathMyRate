@@ -40,7 +40,7 @@ const footerLinks = [
     <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="32x32" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#426455" />
+    <meta name="theme-color" content="#1f3a5f" />
     <meta name="description" content={description} />
     <title>{title}</title>
     {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : <meta name="robots" content="noindex, nofollow" />}
@@ -70,12 +70,12 @@ const footerLinks = [
     <footer class="site-footer border-t border-line px-5 py-10 text-sm text-ink/60 md:px-8">
       <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-6">
         <div>
-          <p class="display text-base font-bold text-ink">MathMyRate<span class="text-clay">.</span></p>
+          <p class="display text-base font-bold text-ink">MathMyRate<span class="text-gold">.</span></p>
           <p class="mt-1">Planning tools, not financial advice.</p>
         </div>
         <nav aria-label="Site information" class="flex flex-wrap gap-5">
           {footerLinks.map((link) => (
-            <a href={link.to} class="transition-colors hover:text-moss">{link.label}</a>
+            <a href={link.to} class="transition-colors hover:text-navy">{link.label}</a>
           ))}
         </nav>
       </div>

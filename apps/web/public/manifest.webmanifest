@@ -5,8 +5,8 @@
   "description": "Practical pricing calculators for independent work.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#426455",
-  "theme_color": "#426455",
+  "background_color": "#1f3a5f",
+  "theme_color": "#1f3a5f",
   "icons": [
     {
       "src": "/icon-192.png",

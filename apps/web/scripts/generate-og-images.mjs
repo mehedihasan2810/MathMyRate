@@ -19,14 +19,14 @@ const OUT_DIR = fileURLToPath(new URL("../public/og/", import.meta.url));
 
 /** Palette mirrors the --color-* tokens in src/styles/global.css. */
 const palette = {
-  ink: "#23302a",
-  paper: "#f5f1e7",
-  mist: "#e7eee6",
-  moss: "#426455",
-  clay: "#c86c4e",
-  line: "#d6d7cc",
-  eyebrow: "#567465",
-  inkSoft: "rgba(35, 48, 42, 0.68)",
+  ink: "#131f33",
+  paper: "#f4f5f7",
+  mist: "#e9edf3",
+  navy: "#1f3a5f",
+  gold: "#b98d2f",
+  line: "#d9dce4",
+  eyebrow: "#5c6f95",
+  inkSoft: "rgba(19, 31, 51, 0.68)",
 };
 
 const font = (pkg, file) =>
@@ -47,7 +47,7 @@ const cards = [
   {
     file: "default",
     eyebrow: "MathMyRate",
-    accent: palette.moss,
+    accent: palette.navy,
     title: "Practical pricing calculators for independent work.",
     description: "Planning tools, not financial advice.",
     path: "/",
@@ -55,7 +55,7 @@ const cards = [
   {
     file: "home",
     eyebrow: "Price your independent work",
-    accent: palette.moss,
+    accent: palette.navy,
     title: "Every calculator, one page.",
     description: "Practical, transparent rate planning for independent work.",
     path: "/",
@@ -63,7 +63,7 @@ const cards = [
   {
     file: "hourly-rate",
     eyebrow: "Freelance / Hourly & day rate",
-    accent: palette.moss,
+    accent: palette.navy,
     title: "Freelance hourly rate calculator",
     description: "Turn an annual take-home target into a practical floor rate.",
     path: "/freelance/hourly-rate-calculator/",
@@ -71,7 +71,7 @@ const cards = [
   {
     file: "project-rate",
     eyebrow: "Freelance / Project quote",
-    accent: palette.moss,
+    accent: palette.navy,
     title: "Project rate calculator",
     description: "Turn scope, contingency, and expenses into a clear project quote.",
     path: "/freelance/project-rate-calculator/",
@@ -79,7 +79,7 @@ const cards = [
   {
     file: "fees",
     eyebrow: "Payment fees",
-    accent: palette.clay,
+    accent: palette.gold,
     title: "Platform fee calculators",
     description:
       "Estimate platform and processing fees for a sale, and what the sale really pays you.",
@@ -88,7 +88,7 @@ const cards = [
   {
     file: "stripe",
     eyebrow: "Payment fees / Stripe",
-    accent: palette.clay,
+    accent: palette.gold,
     title: "Stripe fee calculator",
     description: "What you keep from a sale, and what to charge to net a target amount.",
     path: "/fees/stripe-fee-calculator/",
@@ -96,7 +96,7 @@ const cards = [
   {
     file: "paypal",
     eyebrow: "Payment fees / PayPal",
-    accent: palette.clay,
+    accent: palette.gold,
     title: "PayPal fee calculator",
     description: "What you keep from a sale, and what to charge to net a target amount.",
     path: "/fees/paypal-fee-calculator/",
@@ -104,7 +104,7 @@ const cards = [
   {
     file: "gumroad",
     eyebrow: "Payment fees / Gumroad",
-    accent: palette.clay,
+    accent: palette.gold,
     title: "Gumroad fee calculator",
     description: "What you keep from a sale, and what to charge to net a target amount.",
     path: "/fees/gumroad-fee-calculator/",
@@ -112,7 +112,7 @@ const cards = [
   {
     file: "lemon-squeezy",
     eyebrow: "Payment fees / Lemon Squeezy",
-    accent: palette.clay,
+    accent: palette.gold,
     title: "Lemon Squeezy fee calculator",
     description: "What you keep from a sale, and what to charge to net a target amount.",
     path: "/fees/lemon-squeezy-fee-calculator/",
@@ -226,7 +226,7 @@ function cardToElement({ eyebrow, accent, title, description, path }) {
               },
             },
             h("div", {}, "MathMyRate"),
-            h("div", { style: { color: palette.clay } }, "."),
+            h("div", { style: { color: palette.gold } }, "."),
           ),
           h(
             "div",
