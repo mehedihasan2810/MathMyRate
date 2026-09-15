@@ -38,7 +38,7 @@ const fixedFee = formatUsdGrouped(BigInt(preset.components[0]?.fixedCents ?? 0))
 
 const reviewedOn = preset.checkedOn ?? "date not recorded";
 ---
-<Layout title="Lemon Squeezy Fee Calculator | MathMyRate" description="Estimate Lemon Squeezy's US domestic card order fee, what you keep from a sale, and what to charge to net a target amount.">
+<Layout title="Lemon Squeezy Fee Calculator | MathMyRate" description="Estimate Lemon Squeezy's US domestic card order fee, what you keep from a sale, and what to charge to net a target amount." ogImage="/og/lemon-squeezy.png">
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-12 md:px-8 md:py-16">
     <div class="max-w-2xl"><p class="eyebrow">Platform fees / 04</p><h1 class="display mt-4 text-5xl font-bold leading-none md:text-6xl">Lemon Squeezy's fee, down to the cent.</h1><p class="mt-5 text-lg leading-relaxed text-ink/70">Lemon Squeezy's documented single-order card pricing, applied with exact cents: see what a sale costs, or work backwards from what you want to keep.</p></div>
     <div class="mt-10 grid gap-8 lg:grid-cols-[1fr_.85fr]">

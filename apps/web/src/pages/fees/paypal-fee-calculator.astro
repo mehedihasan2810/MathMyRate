@@ -23,7 +23,7 @@ const fixedFee = formatUsdGrouped(BigInt(component.fixedCents));
 
 const reviewedOn = preset.checkedOn ?? "date not recorded";
 ---
-<Layout title="PayPal Fee Calculator | MathMyRate" description="Estimate PayPal Checkout's PayPal payment fee, what you keep from a sale, and what to charge to net a target amount.">
+<Layout title="PayPal Fee Calculator | MathMyRate" description="Estimate PayPal Checkout's PayPal payment fee, what you keep from a sale, and what to charge to net a target amount." ogImage="/og/paypal.png">
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-12 md:px-8 md:py-16">
     <div class="max-w-2xl"><p class="eyebrow">Platform fees / 02</p><h1 class="display mt-4 text-5xl font-bold leading-none md:text-6xl">PayPal's fee, out in the open.</h1><p class="mt-5 text-lg leading-relaxed text-ink/70">PayPal Checkout's PayPal payment pricing, applied with exact cents: see what a sale costs, or work backwards from what you want to keep.</p></div>
     <div class="mt-10 grid gap-8 lg:grid-cols-[1fr_.85fr]">
