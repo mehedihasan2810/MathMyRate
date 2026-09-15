@@ -1,0 +1,87 @@
+---
+import { calculateFees, grossUpFees } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import GuideTools from "../../components/GuideTools.astro";
+import PageByline from "../../components/PageByline.astro";
+import { findGuide, guideBreadcrumbs } from "../../data/guides";
+import Layout from "../../layouts/Layout.astro";
+import { formatCombinedRate } from "../../lib/fee-labels";
+import { formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const guide = findGuide("cover-payment-fees");
+
+const breadcrumbs = guideBreadcrumbs(guide.id);
+
+const stripe = requireOfficialPreset("stripe-us-online-domestic-card");
+
+const stripeRate = formatCombinedRate(stripe.components);
+
+const feeOnTarget = calculateFees({ preset: stripe, grossCents: 10_000n });
+
+const naive = calculateFees({ preset: stripe, grossCents: 10_000n + feeOnTarget.feeCents });
+
+const exact = grossUpFees({ preset: stripe, targetProceedsCents: 10_000n });
+
+const etsy = requireOfficialPreset("etsy-us-order-fees-only");
+
+const etsyTaxed = grossUpFees({ preset: etsy, targetProceedsCents: 10_000n, taxCents: 800n });
+
+const providers = [
+  { label: "Stripe, US card online", presetId: "stripe-us-online-domestic-card" },
+  { label: "PayPal Checkout", presetId: "paypal-us-checkout-paypal-payment" },
+  { label: "Square Free, in person", presetId: "square-us-free-in-person-card" },
+  { label: "Square Free, online", presetId: "square-us-free-online-card" },
+  { label: "Etsy order, with listing fee", presetId: "etsy-us-order-with-listing-fee" },
+  { label: "Lemon Squeezy, US card", presetId: "lemon-squeezy-us-domestic-card" },
+];
+
+const providerRows = providers.map(({ label, presetId }) => {
+  const preset = requireOfficialPreset(presetId);
+  const quote = grossUpFees({ preset, targetProceedsCents: 10_000n });
+
+  return [label, formatCombinedRate(preset.components), formatUsdGrouped(quote.grossCents), formatUsdGrouped(quote.feeCents)];
+});
+
+const targetRows = [2_500n, 5_000n, 10_000n, 50_000n, 100_000n].map((targetCents) => {
+  const quote = grossUpFees({ preset: stripe, targetProceedsCents: targetCents });
+
+  return [formatSaleLabel(targetCents), formatUsdGrouped(quote.grossCents), formatUsdGrouped(quote.feeCents)];
+});
+---
+<Layout title="How to Cover Payment Processing Fees in Your Price | MathMyRate" description={guide.description} ogImage="/og/cover-payment-fees.png" breadcrumbs={breadcrumbs} article={{ headline: guide.title, publishedOn: guide.publishedOn, updatedOn: guide.updatedOn }}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 max-w-3xl text-3xl font-bold md:text-4xl">{guide.title}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Adding the fee to your price almost works. The few cents it misses come from a fee that grows with the price.</p>
+    <PageByline updatedOn={guide.updatedOn} reviewedOn={stripe.checkedOn} />
+    <article class="guide mt-8">
+      <h2>Why adding the fee falls short</h2>
+      <p>Say you want to receive $100.00 from a card payment through Stripe, which charges {stripeRate} for a US card online. The fee on $100.00 is {formatUsdGrouped(feeOnTarget.feeCents)}, so it is tempting to charge {formatUsdGrouped(naive.grossCents)}.</p>
+      <p>But the percentage now applies to {formatUsdGrouped(naive.grossCents)}, not $100.00. The fee becomes <strong>{formatUsdGrouped(naive.feeCents)}</strong>, and you receive <strong>{formatUsdGrouped(naive.sellerProceedsCents)}</strong>. The fee on the extra amount is the part you did not cover.</p>
+
+      <h2>The formula that works</h2>
+      <p>Divide what you want to keep, plus any fixed charge, by what is left after the percentage:</p>
+      <p><strong>Price = (amount to keep + fixed fee) ÷ (1 − percentage fee)</strong></p>
+      <p>For Stripe, that is ($100.00 + $0.30) ÷ 0.971, or about $103.296. Fees are rounded to the cent, so the calculators check each cent from there and pick the smallest price that still leaves you the full amount: <strong>{formatUsdGrouped(exact.grossCents)}</strong>, with a fee of {formatUsdGrouped(exact.feeCents)}.</p>
+
+      <h2>What to charge to keep $100</h2>
+      <p>The same calculation for other providers' published US rates, for a sale with no sales tax.</p>
+      <DataTable caption="Price to charge to keep $100.00 after fees" headers={["Provider and payment", "Published rate", "Charge", "Fee"]} rows={providerRows} />
+
+      <h2>Stripe at different amounts</h2>
+      <DataTable caption={`Price to charge to keep each amount after Stripe's ${stripeRate}`} headers={["To keep", "Charge", "Stripe fee"]} rows={targetRows} />
+
+      <h2>When sales tax is involved</h2>
+      <p>Sales tax you collect is not yours to keep, so leave it out of the amount you want to keep and enter it separately. Some fees include the tax and some do not. Etsy's 6.5% transaction fee leaves sales tax out, while its 3% + 25¢ processing fee includes it. With $8.00 of tax on an order, keeping $100.00 through Etsy's per-order fees takes an order total of <strong>{formatUsdGrouped(etsyTaxed.grossCents)}</strong>, including the tax. The fee calculators handle both kinds of fee for you.</p>
+
+      <h2>Build the fee into the price</h2>
+      <p>The simplest approach is to set your price with the fee already covered, so the customer sees one number. If you would rather show a separate charge for paying by card, check your payment provider's terms and the rules where you sell first, because card surcharges can be restricted.</p>
+      <p>Every fee calculator has an <em>I want to keep a target</em> mode that does this in cents: <a href="/fees/stripe-fee-calculator/">Stripe</a>, <a href="/fees/paypal-fee-calculator/">PayPal</a>, <a href="/fees/square-fee-calculator/">Square</a>, and <a href="/fees/etsy-fee-calculator/">Etsy</a>. To choose between two providers, <a href="/fees/stripe-vs-paypal-fees/">compare Stripe and PayPal</a> on the same sale.</p>
+
+      <p class="text-sm text-ink/60">Estimates from official published rates, reviewed on the date shown above. Custom or negotiated pricing can differ. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <GuideTools guide={guide.id} />
+  </main>
+</Layout>

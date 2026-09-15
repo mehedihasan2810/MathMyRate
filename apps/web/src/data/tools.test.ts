@@ -22,18 +22,19 @@ describe("calculator registry", () => {
     }
   });
 
-  it("lists sibling calculators first and never the tool itself", () => {
+  it("lists up to four siblings, then other hubs, up to six, never the tool itself", () => {
     const related = relatedTools("stripe-fees");
 
-    expect(related.map((tool) => tool.id)).toEqual([
-      "paypal-fees",
-      "gumroad-fees",
-      "lemon-squeezy-fees",
-      "stripe-vs-paypal",
-      "gumroad-vs-lemon-squeezy",
-      "hourly-rate",
-      "project-rate",
-    ]);
+    expect(related).toHaveLength(6);
+    expect(related.map((tool) => tool.id)).not.toContain("stripe-fees");
+    expect(related.slice(0, 4).every((tool) => tool.hub === "fees")).toBe(true);
+    expect(related.slice(4).every((tool) => tool.hub === "freelance")).toBe(true);
+  });
+
+  it("links every calculator to at least one tool in the other hub", () => {
+    for (const tool of tools) {
+      expect(relatedTools(tool.id).some((related) => related.hub !== tool.hub)).toBe(true);
+    }
   });
 
   it("builds a home, hub, tool breadcrumb trail", () => {

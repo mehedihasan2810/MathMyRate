@@ -9,8 +9,13 @@ export type HubId = "freelance" | "fees";
 export type ToolId =
   | "hourly-rate"
   | "project-rate"
+  | "retainer"
+  | "markup-margin"
+  | "salary-to-hourly"
   | "stripe-fees"
   | "paypal-fees"
+  | "square-fees"
+  | "etsy-fees"
   | "gumroad-fees"
   | "lemon-squeezy-fees"
   | "stripe-vs-paypal"
@@ -65,6 +70,33 @@ export const tools: readonly Tool[] = [
     searchTerms: "project quote fixed price flat fee scope estimate contingency",
   },
   {
+    id: "retainer",
+    hub: "freelance",
+    href: "/freelance/retainer-calculator/",
+    name: "Freelance Retainer Calculator",
+    menuLabel: "Retainer",
+    summary: "Price a monthly retainer from your hourly rate, included hours, and discount.",
+    searchTerms: "retainer monthly fee hours discount contract client agreement",
+  },
+  {
+    id: "markup-margin",
+    hub: "freelance",
+    href: "/freelance/markup-margin-calculator/",
+    name: "Markup and Margin Calculator",
+    menuLabel: "Markup & margin",
+    summary: "Set a price from a markup or a margin, or check the markup and margin of a price.",
+    searchTerms: "markup margin profit price cost percentage gross margin resale",
+  },
+  {
+    id: "salary-to-hourly",
+    hub: "freelance",
+    href: "/freelance/salary-to-hourly-calculator/",
+    name: "Salary to Hourly Calculator",
+    menuLabel: "Salary to hourly",
+    summary: "Convert a salary or wage into hourly, daily, weekly, monthly, and yearly pay.",
+    searchTerms: "salary hourly wage annual monthly weekly biweekly pay convert paycheck job offer",
+  },
+  {
     id: "stripe-fees",
     hub: "fees",
     href: "/fees/stripe-fee-calculator/",
@@ -83,6 +115,27 @@ export const tools: readonly Tool[] = [
     searchTerms: "paypal wallet checkout fee net sale",
   },
   {
+    id: "square-fees",
+    hub: "fees",
+    href: "/fees/square-fee-calculator/",
+    name: "Square Fee Calculator",
+    menuLabel: "Square fees",
+    summary:
+      "In-person, online, keyed-in, and Afterpay fees on each Square plan, and what you keep.",
+    searchTerms:
+      "square pos in person tap card reader online invoice afterpay processing fee plus premium",
+  },
+  {
+    id: "etsy-fees",
+    hub: "fees",
+    href: "/fees/etsy-fee-calculator/",
+    name: "Etsy Fee Calculator",
+    menuLabel: "Etsy fees",
+    summary: "Etsy's transaction, processing, and listing fees on an order, and what you keep.",
+    searchTerms:
+      "etsy seller fees transaction fee listing fee etsy payments processing shop handmade shipping",
+  },
+  {
     id: "gumroad-fees",
     hub: "fees",
     href: "/fees/gumroad-fee-calculator/",
@@ -97,7 +150,8 @@ export const tools: readonly Tool[] = [
     href: "/fees/lemon-squeezy-fee-calculator/",
     name: "Lemon Squeezy Fee Calculator",
     menuLabel: "Lemon Squeezy fees",
-    summary: "Order fees for domestic card sales, with payout costs kept separate.",
+    summary:
+      "Order fees for US, international, PayPal, and subscription orders, and what you keep.",
     searchTerms: "lemon squeezy digital products order fee merchant of record",
   },
   {
@@ -122,6 +176,7 @@ export const tools: readonly Tool[] = [
 ];
 
 export const infoLinks: readonly Crumb[] = [
+  { name: "Guides", href: "/guides/" },
   { name: "Methodology", href: "/methodology/" },
   { name: "Changelog", href: "/changelog/" },
   { name: "About", href: "/about/" },
@@ -153,13 +208,21 @@ export function toolAtPath(pathname: string): Tool | undefined {
   return tools.find((tool) => tool.href === pathname);
 }
 
-/** Sibling calculators in the same hub first, then every other calculator; never the tool itself. */
+const RELATED_LIMIT = 6;
+
+const SIBLING_LIMIT = 4;
+
+/**
+ * Up to six related calculators: siblings from the same hub first, then tools
+ * from the other hub, so every page links across hubs; never the tool itself.
+ */
 export function relatedTools(id: ToolId): readonly Tool[] {
   const current = findTool(id);
   const siblings = tools.filter((tool) => tool.hub === current.hub && tool.id !== id);
   const others = tools.filter((tool) => tool.hub !== current.hub);
+  const chosenSiblings = siblings.slice(0, Math.max(SIBLING_LIMIT, RELATED_LIMIT - others.length));
 
-  return [...siblings, ...others];
+  return [...chosenSiblings, ...others].slice(0, RELATED_LIMIT);
 }
 
 export function hubBreadcrumbs(id: HubId): readonly Crumb[] {

@@ -1,0 +1,27 @@
+---
+import { findGuide, type GuideId } from "../data/guides";
+import { findHub, findTool } from "../data/tools";
+
+interface Props {
+  guide: GuideId;
+}
+
+const guide = findGuide(Astro.props.guide);
+
+const guideTools = guide.tools.map((id) => findTool(id));
+---
+
+<section aria-labelledby="guide-calculators" class="no-print mt-14 border-t border-line pt-10">
+  <h2 id="guide-calculators" class="display text-3xl font-bold">Calculators for this guide</h2>
+  <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {guideTools.map((tool) => (
+      <li>
+        <a href={tool.href} class="block h-full rounded-2xl border border-line bg-white p-5 transition-colors hover:border-ink/30">
+          <span class="eyebrow block">{findHub(tool.hub).name}</span>
+          <span class="display mt-2 block text-lg font-bold text-ink">{tool.name}</span>
+          <span class="mt-1 block text-sm leading-relaxed text-ink/65">{tool.summary}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</section>

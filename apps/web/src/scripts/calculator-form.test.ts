@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatPercentBps,
   formatUsdInput,
+  hoursToHundredths,
   hoursToMinutes,
   percentToBps,
   usdToCents,
@@ -61,6 +62,50 @@ describe("percentToBps", () => {
     ["12.345", "Use a percentage with up to 2 decimal places."],
   ])("rejects %j", (text, message) => {
     expect(() => percentToBps(text, "tax", 9_999)).toThrow(message);
+  });
+});
+
+describe("percentToBps above 100%", () => {
+  it("reads markups over 100% when the maximum allows them", () => {
+    expect(percentToBps("250", "markup", 1_000_000)).toBe(25_000);
+    expect(percentToBps("1,000.5%", "markup", 1_000_000)).toBe(100_050);
+  });
+
+  it("names a grouped maximum", () => {
+    expect(() => percentToBps("10001", "markup", 1_000_000)).toThrow(
+      "Enter a value no higher than 10,000%.",
+    );
+  });
+});
+
+describe("hoursToHundredths", () => {
+  it.each([
+    ["40", 4_000],
+    ["37.5", 3_750],
+    ["37.33", 3_733],
+    ["0.01", 1],
+  ])("reads %j as %s hundredths", (text, hundredths) => {
+    expect(hoursToHundredths(text, "hours", 16_800)).toBe(hundredths);
+  });
+
+  it.each([
+    ["", "Enter a number of hours."],
+    ["0", "Enter from 0.01 to 168 hours."],
+    ["168.01", "Enter from 0.01 to 168 hours."],
+    ["1.234", "Use hours with up to 2 decimal places."],
+  ])("rejects %j", (text, message) => {
+    expect(() => hoursToHundredths(text, "hours", 16_800)).toThrow(message);
+  });
+});
+
+describe("formatPercentBps", () => {
+  it.each([
+    [292n, "2.92%"],
+    [-3_333n, "-33.33%"],
+    [-2_500n, "-25.00%"],
+    [100_000n, "1,000.00%"],
+  ])("formats %s basis points as %s", (bps, text) => {
+    expect(formatPercentBps(bps)).toBe(text);
   });
 });
 

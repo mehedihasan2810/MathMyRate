@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  articleNode,
   breadcrumbListNode,
   serializeStructuredData,
   webApplicationNode,
@@ -44,6 +45,26 @@ describe("structured data", () => {
     expect(webSiteNode(site).potentialAction.target).toBe(
       "https://calculators.example/?q={search_term_string}",
     );
+  });
+
+  it("describes a guide as an article with its printed dates and absolute URLs", () => {
+    const node = articleNode(site, {
+      headline: "Markup vs Margin",
+      description: "The difference, with examples.",
+      path: "/guides/markup-vs-margin/",
+      image: "/og/markup-vs-margin.png",
+      publishedOn: "2026-09-15",
+      updatedOn: "2026-09-15",
+    });
+
+    expect(node.url).toBe("https://calculators.example/guides/markup-vs-margin/");
+    expect(node.image).toBe("https://calculators.example/og/markup-vs-margin.png");
+    expect(node.author).toEqual({
+      "@type": "Organization",
+      name: "MathMyRate",
+      url: "https://calculators.example/",
+    });
+    expect(node.dateModified).toBe("2026-09-15");
   });
 
   it("escapes angle brackets so text cannot close the script element", () => {

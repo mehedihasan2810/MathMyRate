@@ -1,0 +1,294 @@
+---
+import { convertPay } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import NumberField from "../../components/NumberField.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import ResultRow from "../../components/ResultRow.astro";
+import StickyResult from "../../components/StickyResult.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatSaleLabel } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("salary-to-hourly");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const fullTime = { hoursPerWeekHundredths: 4_000, daysPerWeek: 5, weeksPerYear: 52 };
+
+const example = convertPay({ amountCents: 5_200_000n, period: "year", ...fullTime });
+
+const workedWeeks = convertPay({ amountCents: 5_200_000n, period: "year", ...fullTime, weeksPerYear: 48 });
+
+const shorterWeek = convertPay({ amountCents: 5_200_000n, period: "year", ...fullTime, hoursPerWeekHundredths: 3_750 });
+
+const rowLabel = "text-[#f3f5fa]/80";
+
+const salaryRows = [3_000_000n, 4_000_000n, 5_000_000n, 6_000_000n, 7_500_000n, 10_000_000n, 15_000_000n].map((amountCents) => {
+  const pay = convertPay({ amountCents, period: "year", ...fullTime });
+
+  return [formatSaleLabel(amountCents), formatUsdGrouped(pay.hourlyCents), formatUsdGrouped(pay.weeklyCents), formatUsdGrouped(pay.monthlyCents)];
+});
+
+const hourlyRows = [1_500n, 2_000n, 2_500n, 3_000n, 4_000n, 5_000n, 7_500n].map((amountCents) => {
+  const pay = convertPay({ amountCents, period: "hour", ...fullTime });
+
+  return [formatUsdGrouped(amountCents), formatUsdGrouped(pay.weeklyCents), formatUsdGrouped(pay.monthlyCents), formatUsdGrouped(pay.yearlyCents)];
+});
+
+const updatedOn = "2026-09-15";
+
+const faq: readonly FaqEntry[] = [
+  { question: "How do I convert a salary to an hourly rate?", answer: `Divide the yearly salary by the hours you work in a year. A 40-hour week for 52 weeks is 2,080 hours, so a $52,000 salary is ${formatUsdGrouped(example.hourlyCents)} an hour.` },
+  { question: "How many working hours are in a year?", answer: `40 hours a week for 52 weeks is 2,080 hours. A 37.5-hour week is 1,950 hours, which turns the same $52,000 salary into ${formatUsdGrouped(shorterWeek.hourlyCents)} an hour.` },
+  { question: "Is paid every two weeks the same as twice a month?", answer: `No. Every two weeks is 26 paychecks a year; twice a month is 24. On a $52,000 salary, that is ${formatUsdGrouped(example.biweeklyCents)} against ${formatUsdGrouped(example.semimonthlyCents)} a paycheck.` },
+  { question: "Why isn't monthly pay four times weekly pay?", answer: `A year has 52 weeks but 12 months, so an average month has about 4.33 weeks. Monthly pay is yearly pay divided by 12: ${formatUsdGrouped(example.monthlyCents)} for $52,000, not four times ${formatUsdGrouped(example.weeklyCents)}.` },
+  { question: "Should I use 52 weeks if I get paid time off?", answer: `Yes, to compare paychecks, because paid leave is still paid. To value each hour you actually work, enter the weeks you work instead: $52,000 over 48 weeks of 40 hours is ${formatUsdGrouped(workedWeeks.hourlyCents)} an hour.` },
+  { question: "Is this pay before or after tax?", answer: "Before. Every figure is gross pay, before income tax, payroll deductions, and benefits contributions." },
+  { question: "Can I compare this hourly figure with a freelance rate?", answer: "Not directly. A freelancer bills fewer hours than they work and pays for time off and business costs, so a freelance rate that replaces a salary has to be higher. The freelance hourly rate calculator works out that rate." },
+  { question: "Is my information saved or sent anywhere?", answer: "No. Everything is calculated in your browser, and nothing is stored." },
+];
+---
+<Layout title="Salary to Hourly Calculator: Convert Any Pay | MathMyRate" description="Convert a salary or hourly wage into hourly, daily, weekly, biweekly, monthly, and yearly pay, using your own hours and weeks. Free, exact to the cent." ogImage="/og/salary-to-hourly.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Enter pay for any period and see it per hour, day, week, paycheck, month, and year, based on the hours and weeks you really work.</p>
+    <PageByline updatedOn={updatedOn} />
+    <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
+      <form id="pay-form" data-calculator-form class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate>
+        <div class="flex items-baseline justify-between gap-3"><h2 class="display text-2xl font-bold">Your pay</h2><span class="shrink-0 text-xs text-ink/50">USD, before tax</span></div>
+        <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
+        <div class="mt-7 grid gap-5 sm:grid-cols-2">
+          <NumberField id="payAmount" label="Pay amount" value="52,000.00" unit="usd" required />
+          <div class="text-sm">
+            <label for="payPeriod" class="font-semibold">Paid per<span class="text-[#a44631]" aria-hidden="true"> *</span></label>
+            <select id="payPeriod" data-field="payPeriod" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium">
+              <option value="hour">Hour</option>
+              <option value="day">Day</option>
+              <option value="week">Week</option>
+              <option value="biweekly">Every two weeks</option>
+              <option value="semimonthly">Twice a month</option>
+              <option value="month">Month</option>
+              <option value="year" selected>Year</option>
+            </select>
+          </div>
+          <NumberField id="hoursPerWeek" label="Hours per week" value="40" required help="Up to 2 decimal places, such as 37.5." />
+          <NumberField id="daysPerWeek" label="Days per week" value="5" inputMode="numeric" required />
+          <NumberField id="weeksPerYear" label="Weeks per year" value="52" inputMode="numeric" required help="52 to compare paychecks. Enter weeks worked to value each hour worked." />
+        </div>
+        <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="pay-update">Update pay</button><button id="pay-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
+      </form>
+      <aside id="pay-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
+        <p class="eyebrow !text-[#f2e3bd]" id="primary-label" data-primary-label>Hourly pay</p><p id="primary-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.hourlyCents)}</p><p class="mt-1 text-[#f3f5fa]/80">gross, before tax and deductions</p>
+        <div class="my-7 border-t border-[#f3f5fa]/30"></div>
+        <div class="[&>:first-child]:mt-0">
+          <ResultRow label="Hourly" valueId="hourly-result" value={formatUsdGrouped(example.hourlyCents)} labelClass={rowLabel} />
+          <ResultRow label="Daily" valueId="daily-result" value={formatUsdGrouped(example.dailyCents)} labelClass={rowLabel} />
+          <ResultRow label="Weekly" valueId="weekly-result" value={formatUsdGrouped(example.weeklyCents)} labelClass={rowLabel} />
+          <ResultRow label="Every two weeks" valueId="biweekly-result" value={formatUsdGrouped(example.biweeklyCents)} labelClass={rowLabel} />
+          <ResultRow label="Twice a month" valueId="semimonthly-result" value={formatUsdGrouped(example.semimonthlyCents)} labelClass={rowLabel} />
+          <ResultRow label="Monthly" valueId="monthly-result" value={formatUsdGrouped(example.monthlyCents)} labelClass={rowLabel} />
+          <ResultRow label="Yearly" valueId="yearly-result" value={formatUsdGrouped(example.yearlyCents)} labelClass={rowLabel} />
+          <ResultRow label="Hours per year" valueId="hours-result" value="2,080" labelClass={rowLabel} />
+        </div>
+        <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-pay" type="button" class="rounded-full bg-[#f3f5fa] px-4 py-2.5 text-sm font-bold text-ink">Copy result</button><button type="button" data-print class="rounded-full border border-[#f3f5fa]/45 px-4 py-2.5 text-sm font-bold">Print</button></div><p id="pay-message" class="mt-4 text-sm text-[#f2e3bd]"></p>
+      </aside>
+    </div>
+    <StickyResult />
+    <noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The example shows a $52,000 salary over 40-hour, 52-week years; enable JavaScript to convert your own pay locally.</p></noscript>
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The salary to hourly calculator shows the same pay over every common period. A $52,000 salary over 40-hour weeks and 52 weeks a year is <strong>{formatUsdGrouped(example.hourlyCents)}</strong> an hour, <strong>{formatUsdGrouped(example.weeklyCents)}</strong> a week, and <strong>{formatUsdGrouped(example.monthlyCents)}</strong> a month. It works the other way too: enter an hourly wage to see the yearly total.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Enter the pay amount and choose the period it covers: an hour, a day, a week, a paycheck, a month, or a year.</li>
+        <li>Enter the hours you work each week and the days they are spread over.</li>
+        <li>Keep 52 weeks to compare paychecks, or enter the weeks you actually work to value each hour worked.</li>
+      </ol>
+
+      <h2>How the conversion works</h2>
+      <p>Every amount is turned into yearly pay first, and each result is divided from that exact total and rounded to the cent.</p>
+      <ul>
+        <li><strong>Hourly</strong> = yearly pay ÷ (hours per week × weeks per year)</li>
+        <li><strong>Daily</strong> = yearly pay ÷ (days per week × weeks per year)</li>
+        <li><strong>Weekly</strong> = yearly pay ÷ weeks per year</li>
+        <li><strong>Every two weeks</strong> = yearly pay ÷ 26, and <strong>twice a month</strong> = yearly pay ÷ 24</li>
+        <li><strong>Monthly</strong> = yearly pay ÷ 12</li>
+      </ul>
+      <p>Paychecks every two weeks, twice a month, and monthly follow the calendar, so they do not change with the weeks you enter. Hourly, daily, and weekly figures do.</p>
+
+      <h2>Common salaries as hourly pay</h2>
+      <p>40 hours a week, 52 weeks a year: 2,080 hours.</p>
+      <DataTable caption="Hourly, weekly, and monthly pay for common yearly salaries" headers={["Salary", "Hourly", "Weekly", "Monthly"]} rows={salaryRows} />
+
+      <h2>Common hourly wages as yearly pay</h2>
+      <p>40 hours a week, 52 weeks a year.</p>
+      <DataTable caption="Weekly, monthly, and yearly pay for common hourly wages" headers={["Hourly", "Weekly", "Monthly", "Yearly"]} rows={hourlyRows} />
+
+      <h2>Paid time off and the hours you really work</h2>
+      <p>Paid holidays and vacation are still paid, so 52 weeks is right for comparing paychecks. If you want to know what each hour of work is worth, enter the weeks you work. The same $52,000 over 48 working weeks is <strong>{formatUsdGrouped(workedWeeks.hourlyCents)}</strong> an hour.</p>
+
+      <h2>A salary is not a freelance rate</h2>
+      <p>If you are weighing a job offer against freelancing, the hourly figure here is a starting point, not a rate to quote. Freelancers bill only part of the hours they work, go unpaid between projects, and pay for their own equipment and time off. Read <a href="/guides/salary-vs-freelance-rate/">how to compare a salary with a freelance rate</a>, then use the <a href="/freelance/hourly-rate-calculator/">freelance hourly rate calculator</a> to set a rate that covers it.</p>
+
+      <FaqSection entries={faq} />
+
+      <p class="text-sm text-ink/60">Planning estimate only; not tax, payroll, or legal advice. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+  <script>
+    import { convertPay, type PayConversionResult, type PayPeriod } from "@MathMyRate/calculators";
+    import {
+      type CalculationTrigger,
+      focusProblemField,
+      formatUsdGrouped,
+      hoursToHundredths,
+      InputProblem,
+      markResultsCurrent,
+      markResultsStale,
+      requireHtmlButton,
+      requireHtmlElement,
+      requireHtmlForm,
+      requireHtmlInput,
+      requireHtmlSelect,
+      setFieldState,
+      shouldDeferProblem,
+      usdToCents,
+      watchCalculatorFields,
+      wholeNumber,
+    } from "../../scripts/calculator-form";
+
+    const periodNames: Readonly<Record<PayPeriod, string>> = {
+      hour: "hour",
+      day: "day",
+      week: "week",
+      biweekly: "two weeks",
+      semimonthly: "half month",
+      month: "month",
+      year: "year",
+    };
+
+    const form = requireHtmlForm("pay-form");
+
+    const panel = requireHtmlElement("pay-panel");
+
+    const copyButton = requireHtmlButton("copy-pay");
+
+    const periodSelect = requireHtmlSelect("payPeriod");
+
+    let latest: { readonly amountCents: bigint; readonly period: PayPeriod; readonly pay: PayConversionResult } | null = null;
+
+    function setText(id: string, text: string): void {
+      requireHtmlElement(id).textContent = text;
+    }
+
+    function currentPeriod(): PayPeriod {
+      const value = periodSelect.value;
+
+      if (value === "hour" || value === "day" || value === "week" || value === "biweekly" || value === "semimonthly" || value === "month") {
+        return value;
+      }
+
+      return "year";
+    }
+
+    function formatHours(hours: number): string {
+      return hours.toLocaleString("en-US", { maximumFractionDigits: 2 });
+    }
+
+    function clear(): void {
+      for (const id of ["primary-result", "hourly-result", "daily-result", "weekly-result", "biweekly-result", "semimonthly-result", "monthly-result", "yearly-result", "hours-result"]) {
+        setText(id, "—");
+      }
+
+      latest = null;
+      markResultsCurrent(panel, []);
+      copyButton.disabled = true;
+    }
+
+    function calculate(trigger: CalculationTrigger): void {
+      const period = currentPeriod();
+
+      try {
+        const amountCents = usdToCents(requireHtmlInput("payAmount").value, "payAmount");
+        const hoursPerWeekHundredths = hoursToHundredths(requireHtmlInput("hoursPerWeek").value, "hoursPerWeek", 16_800);
+        const daysPerWeek = wholeNumber(requireHtmlInput("daysPerWeek").value, "daysPerWeek", 1, 7);
+        const weeksPerYear = wholeNumber(requireHtmlInput("weeksPerYear").value, "weeksPerYear", 1, 52);
+
+        if (hoursPerWeekHundredths > daysPerWeek * 2_400) {
+          throw new InputProblem("hoursPerWeek", `That is more than 24 hours a day over ${daysPerWeek} ${daysPerWeek === 1 ? "day" : "days"}.`);
+        }
+
+        const pay = convertPay({ amountCents, period, hoursPerWeekHundredths, daysPerWeek, weeksPerYear });
+
+        setText("primary-label", period === "hour" ? "Yearly pay" : "Hourly pay");
+        setText("primary-result", formatUsdGrouped(period === "hour" ? pay.yearlyCents : pay.hourlyCents));
+        setText("hourly-result", formatUsdGrouped(pay.hourlyCents));
+        setText("daily-result", formatUsdGrouped(pay.dailyCents));
+        setText("weekly-result", formatUsdGrouped(pay.weeklyCents));
+        setText("biweekly-result", formatUsdGrouped(pay.biweeklyCents));
+        setText("semimonthly-result", formatUsdGrouped(pay.semimonthlyCents));
+        setText("monthly-result", formatUsdGrouped(pay.monthlyCents));
+        setText("yearly-result", formatUsdGrouped(pay.yearlyCents));
+        setText("hours-result", formatHours(pay.hoursPerYear));
+        latest = { amountCents, period, pay };
+        markResultsCurrent(panel, [copyButton]);
+        setText("pay-message", "");
+        setFieldState(form);
+      } catch (error) {
+        const problem = error instanceof InputProblem ? error : new InputProblem("payAmount", "Check your inputs.");
+
+        if (shouldDeferProblem(form, trigger)) {
+          markResultsStale(panel, [copyButton]);
+
+          return;
+        }
+
+        clear();
+        setFieldState(form, problem);
+
+        if (trigger === "submit") focusProblemField(form, problem);
+        setText("pay-message", "");
+      }
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      calculate("submit");
+    });
+
+    requireHtmlButton("pay-update").addEventListener("click", () => calculate("submit"));
+
+    periodSelect.addEventListener("change", () => calculate("commit"));
+
+    watchCalculatorFields(form, calculate);
+
+    requireHtmlButton("pay-reset").addEventListener("click", () => {
+      form.reset();
+      calculate("commit");
+    });
+
+    copyButton.addEventListener("click", async () => {
+      if (latest === null) return;
+
+      const { amountCents, period, pay } = latest;
+      const text = `${formatUsdGrouped(amountCents)} per ${periodNames[period]} is ${formatUsdGrouped(pay.hourlyCents)} an hour, ${formatUsdGrouped(pay.monthlyCents)} a month, and ${formatUsdGrouped(pay.yearlyCents)} a year (${formatHours(pay.hoursPerYear)} hours a year, before tax).`;
+
+      try {
+        await navigator.clipboard.writeText(text);
+        setText("pay-message", "Result copied.");
+      } catch {
+        setText("pay-message", "Copy was unavailable. Select the result to copy it manually.");
+      }
+    });
+
+    calculate("commit");
+  </script>
+</Layout>

@@ -41,25 +41,32 @@ outside launch scope.
 
 ## Planned information architecture
 
-| Route                                  | Purpose                                                   |
-| -------------------------------------- | --------------------------------------------------------- |
-| `/`                                    | Product promise and tool selection                        |
-| `/freelance/`                          | Freelance pricing hub                                     |
-| `/freelance/hourly-rate-calculator/`   | Sustainable hourly/day-rate planning                      |
-| `/freelance/project-rate-calculator/`  | Scope-based project quotation                             |
-| `/fees/`                               | Supported platform-fee hub                                |
-| `/fees/stripe-fee-calculator/`         | Stripe gross/net calculation                              |
-| `/fees/paypal-fee-calculator/`         | Product-specific PayPal calculation                       |
-| `/fees/gumroad-fee-calculator/`        | Gumroad direct/Discover take-home                         |
-| `/fees/lemon-squeezy-fee-calculator/`  | Order fees and separate payout estimate                   |
-| `/fees/stripe-vs-paypal-fees/`         | Stripe and PayPal fees on the same sale                   |
-| `/fees/gumroad-vs-lemon-squeezy-fees/` | Gumroad and Lemon Squeezy fees on the same sale           |
-| `/methodology/`                        | Calculations, sourcing, rounding, review, and corrections |
-| `/about/`                              | Truthful product/operator information                     |
-| `/privacy/`                            | Actual data collection and storage disclosures            |
-| `/terms/`                              | Estimates, exclusions, permitted use, and limitations     |
-| `/changelog/`                          | Dated record of fee rule changes and their sources        |
-| `/404`                                 | Useful navigation for unavailable URLs                    |
+| Route                                     | Purpose                                                    |
+| ----------------------------------------- | ---------------------------------------------------------- |
+| `/`                                       | Product promise and tool selection                         |
+| `/freelance/`                             | Freelance pricing hub                                      |
+| `/freelance/hourly-rate-calculator/`      | Sustainable hourly/day-rate planning                       |
+| `/freelance/project-rate-calculator/`     | Scope-based project quotation                              |
+| `/freelance/retainer-calculator/`         | Monthly retainer fee, discount, and effective rates        |
+| `/freelance/markup-margin-calculator/`    | Price from a markup or margin, or both from a price        |
+| `/freelance/salary-to-hourly-calculator/` | Pay converted across hours, days, weeks, months, and years |
+| `/fees/`                                  | Supported platform-fee hub                                 |
+| `/fees/stripe-fee-calculator/`            | Stripe gross/net calculation                               |
+| `/fees/paypal-fee-calculator/`            | Product-specific PayPal calculation                        |
+| `/fees/square-fee-calculator/`            | Square fees by plan and payment channel                    |
+| `/fees/etsy-fee-calculator/`              | Etsy transaction, processing, and listing fees             |
+| `/fees/gumroad-fee-calculator/`           | Gumroad direct/Discover take-home                          |
+| `/fees/lemon-squeezy-fee-calculator/`     | Order fees and separate payout estimate                    |
+| `/fees/stripe-vs-paypal-fees/`            | Stripe and PayPal fees on the same sale                    |
+| `/fees/gumroad-vs-lemon-squeezy-fees/`    | Gumroad and Lemon Squeezy fees on the same sale            |
+| `/methodology/`                           | Calculations, sourcing, rounding, review, and corrections  |
+| `/about/`                                 | Truthful product/operator information                      |
+| `/privacy/`                               | Actual data collection and storage disclosures             |
+| `/terms/`                                 | Estimates, exclusions, permitted use, and limitations      |
+| `/changelog/`                             | Dated record of fee rule changes and their sources         |
+| `/guides/`                                | Worked guides that hand off to calculators                 |
+| `/embed/<fee calculator>/`                | Noindex iframe copies of the fee calculators               |
+| `/404`                                    | Useful navigation for unavailable URLs                     |
 
 Every route in the table exists as of 2026-09-15. There are no account pages.
 

@@ -269,3 +269,65 @@ test("effective fee rate is basis points of the amount charged, rounded half up"
   assert.equal(effectiveFeeRateBps(1n, 20_000n), 1n);
   assert.throws(() => effectiveFeeRateBps(1n, 0n));
 });
+
+test("a percentage charged before tax skips the tax, and grossing up finds the least charge", () => {
+  const preset: FeePreset = {
+    id: "custom:before-tax",
+    label: "Custom fee charged before tax",
+    provider: "custom",
+    origin: "custom",
+    currency: "USD",
+    accountCountry: "US",
+    taxMode: "caller-supplied",
+    paymentProduct: "Custom",
+    channel: "online",
+    combinationPolicy: "exact-scenario-only",
+    effectiveFrom: null,
+    tierPolicy: "not-applicable",
+    capsPolicy: "none-modeled",
+    customPricingPolicy: "user-supplied",
+    revision: 1,
+    components: [
+      {
+        id: "before-tax",
+        label: "Before tax",
+        rateBps: 650,
+        fixedCents: 0,
+        base: "gross-excluding-tax",
+        rounding: "half-up",
+      },
+      {
+        id: "on-total",
+        label: "On total",
+        rateBps: 300,
+        fixedCents: 25,
+        base: "gross",
+        rounding: "half-up",
+      },
+    ],
+    sources: [],
+    checkedOn: null,
+    assumptions: ["Test rule."],
+    exclusions: ["None."],
+    status: "supported",
+  };
+
+  // $54.00 with $4.00 tax: 6.5% of 5,000 is 325; 3% of 5,400 is 162, + 25 = 187; 5,400 - 400 - 512 = 4,488.
+  const sale = calculateFees({ preset, grossCents: 5_400n, taxCents: 400n });
+
+  assert.equal(sale.feeCents, 512n);
+  assert.equal(sale.sellerProceedsCents, 4_488n);
+
+  for (const tax of [0n, 400n, 12_345n]) {
+    const quote = grossUpFees({ preset, targetProceedsCents: 5_000n, taxCents: tax });
+
+    assert.ok(quote.sellerProceedsCents >= 5_000n);
+
+    const oneLess = quote.grossCents - 1n;
+
+    const fee =
+      ((oneLess - tax) * 650n + 5_000n) / 10_000n + (oneLess * 300n + 5_000n) / 10_000n + 25n;
+
+    assert.ok(oneLess - tax - fee < 5_000n, "One cent less must miss the target");
+  }
+});

@@ -189,6 +189,31 @@ On branch `feat/content-trust-growth`, based on `b645576`:
   and `/changelog/`. About, Privacy, and Terms now give a public GitHub issue
   tracker as the contact and correction route, and state that no ads run today.
 
+### Growth calculators, guides, and embeds (2026-09-15)
+
+On branch `feat/growth-calculators-guides`, based on `9143e2d`:
+
+- Three freelance calculators: the retainer, markup and margin, and salary
+  to hourly calculators. They use the new `packages/calculators/src/pricing.ts`
+  (`analyzePrice`, `priceFromMarkup`, `priceFromMargin`, `convertPay`, and
+  `calculateRetainer`). Prices and retainer fees round up to the cent;
+  percentages and pay figures round half away from zero.
+- Two fee calculators, from official pages read on 2026-09-15. Square has
+  eight scenarios across Free, Plus, and Premium; invoices paid by ACH are a
+  blocked preset, because of their minimum and cap. Etsy has two scenarios;
+  Offsite Ads are a blocked preset, because of their $100 cap. A fee component
+  can now use the base `gross-excluding-tax`, for Etsy's transaction fee, and
+  `grossUpFees` subtracts that share of the tax from its inverse. Shopify
+  Payments was not built: its official pricing pages show no card rate.
+- `/fees/` and `/freelance/` have registry-driven summary tables and content.
+  `/guides/` has three guides with `Article` JSON-LD, and calculator pages
+  list the guides that name them.
+- Each fee calculator has a noindex `/embed/<calculator>/` copy. Fee pages
+  show a copyable embed snippet when `PUBLIC_SITE_URL` is set.
+- Related calculators are capped at six, with at least one from the other
+  hub. The menu panel scrolls on short screens. Percentage fields accept
+  digit grouping and values above 100% where a calculator allows them.
+
 ### Infrastructure and deployment
 
 Alchemy remains the infrastructure owner for the existing Cloudflare Workers,
@@ -504,6 +529,69 @@ Browser evidence:
 - Not verified: menu and form activation by Enter or Space (a limitation of
   the in-app browser), a successful clipboard copy, print preview, and iOS
   Safari's on-screen keyboard.
+
+Local checks on 2026-09-15 for growth calculators, guides, and embeds
+(branch `feat/growth-calculators-guides`, based on `9143e2d`; browser work on
+the dev server at `:4399`, in-app Chromium at desktop width and 375×812):
+
+| Check                                                      | Observed result                                                                                                                                                                                                                                                                                                               |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run lint`                                            | Passed with 0 findings                                                                                                                                                                                                                                                                                                        |
+| `pnpm run format:check`                                    | Passed                                                                                                                                                                                                                                                                                                                        |
+| `pnpm run check-types`                                     | Passed: 7 of 7 tasks; `astro check` 0 errors, 0 warnings, 0 hints                                                                                                                                                                                                                                                             |
+| Vitest                                                     | Passed: 71 calculator tests (Square and Etsy fixtures, tax-excluded fee bases and their gross-up, markup, margin, pay, and retainer) and 100 web tests                                                                                                                                                                        |
+| Guard build (`REQUIRE_SITE_URL=true`, no site)             | Failed as intended                                                                                                                                                                                                                                                                                                            |
+| Site build (`PUBLIC_SITE_URL=https://calculators.example`) | Passed; 32 pages. Audit: one H1 and no skipped heading level per page, no inline handlers, canonical links and existing OG images on every indexable page, `WebApplication` on all 13 calculator and comparison pages, `Article` on the three guides, 25 sitemap URLs with no embed pages, and noindex on the six embed pages |
+| Preview build                                              | Passed; every page noindex, `Disallow: /`, no sitemap, no canonical links, no JSON-LD, and no embed snippet                                                                                                                                                                                                                   |
+
+Titles on calculator, hub, and guide pages are 47 to 63 characters, and every
+indexable page has a 120 to 160 character description. The About, Methodology,
+Privacy, and Terms titles stay short. Page text: Square 2,786 words, Etsy
+2,034, the three new freelance calculators 1,032 to 1,084, and the guides 499
+to 643.
+
+Browser evidence (each value hand-checked):
+
+- Square: $100 on Square Free in person pays $2.75 and keeps $97.25. Afterpay
+  on $108.00 with $8.00 tax pays $6.78 and keeps $93.22. An international card
+  on the same payment pays $4.58 ($2.96 plus $1.62). Keeping $100 with an
+  international card charges $104.44, and one cent less keeps $99.99. At 250
+  sales a month the fees are $1,110.00, or $13,320.00 a year, 4.25% of sales.
+- Etsy: a $100 order pays $9.95 ($6.50, $3.25, and $0.20). A $54.00 order
+  with $4.00 tax pays $5.32 ($3.25, $1.87, and $0.20) and keeps $44.68, or
+  $5.12 and $44.88 without the listing fee. Keeping $50 charges $55.74, and
+  $55.73 keeps $49.99.
+- Markup and margin: $40 at a 50% markup is $60.00 (33.33% margin), and at a
+  50% margin $80.00 (100.00% markup). A 100% margin shows "Enter a value no
+  higher than 99.99%." A $30 price on a $40 cost shows -$10.00, -25.00%, and
+  -33.33% with a below-cost note. A zero cost shows the markup as Not defined.
+  A 1,000.5% markup on $12.34 is $135.81. With real key presses at 375 px,
+  typing `$1,250` updated the price to $1,875.00, Tab tidied the field to
+  1,250.00, and typing `abc` dimmed the result, then showed the error on
+  leaving the field.
+- Salary to hourly: $52,000 a year is $25.00 an hour, $2,166.67 twice a
+  month, and $4,333.33 a month. $25 an hour over 37.5 hours and 48 weeks is
+  $45,000.00. 37.33 hours gives 1,791.84 hours and $44,796.00. 40 hours over
+  one day and 53 weeks show errors, and Reset restores the yearly period.
+- Retainer: the example is $1,800.00 a month, $90.00 per included hour,
+  $120.00 per hour used, and $5,400.00 in total. With no hours used, the used
+  rate shows a dash. 25 used hours give $72.00 and an overage note. 800 hours,
+  0 months, and 0.33 hours show errors. $112.50 for 7.5 hours at 15% off is
+  $717.19, $95.63 per included hour, and $8,606.28 over 12 months.
+- The payment fees guide shows the naive $103.20 charge keeping $99.91, the
+  correct $103.30, and $119.04 to keep $100 through Etsy with $8.00 tax.
+- The freelance hub examples are $3,570.00, $855.00, $750.00, and $187,200.00.
+  The fees hub lists all eight fee tools and both tables.
+- The Square embed page is noindex, with no header, footer, or pinned bar. Its
+  credit link opens the full page in a new tab, and $50 computes $1.45.
+- At 375 px, the markup, Square, and guide pages do not scroll sideways, and
+  wide tables scroll inside their own box. A real click opens the menu, which
+  lists all 13 tools and ends 102 px above the bottom of the screen; Escape
+  closes it. A real scroll past the title shows the pinned result bar.
+- No console errors on any page visited.
+- Not verified: Enter and Space activation (a limitation of the in-app
+  browser), a successful clipboard copy, print preview, iOS Safari's on-screen
+  keyboard, and the embed snippet inside an iframe on another site.
 
 For every future status update, record:
 

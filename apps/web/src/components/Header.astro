@@ -36,7 +36,7 @@ const callToAction =
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h11" /></svg>
           <span class="md:hidden">Menu</span><span class="hidden md:inline">All calculators</span>
         </summary>
-        <div class="absolute right-0 top-full mt-2 w-[min(22rem,calc(100vw-2.5rem))] rounded-2xl border border-line bg-white p-5 shadow-[0_16px_45px_rgba(19,31,51,.14)]">
+        <div class="absolute right-0 top-full mt-2 max-h-[calc(100dvh-6rem)] w-[min(22rem,calc(100vw-2.5rem))] overflow-y-auto overscroll-contain rounded-2xl border border-line bg-white p-5 shadow-[0_16px_45px_rgba(19,31,51,.14)]">
           {hubs.map((hub, index) => (
             <div class:list={[index > 0 && "mt-5"]}>
               <a href={hub.href} class="eyebrow block py-1 hover:text-navy">{hub.name}</a>

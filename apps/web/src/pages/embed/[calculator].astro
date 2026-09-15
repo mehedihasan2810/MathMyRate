@@ -1,0 +1,27 @@
+---
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import { feeCalculators, type FeeCalculatorId } from "../../data/fee-calculators";
+import { findTool, type ToolId } from "../../data/tools";
+import EmbedLayout from "../../layouts/EmbedLayout.astro";
+import { embedPath } from "../../lib/embed";
+
+export function getStaticPaths() {
+  return feeCalculators.map((config) => {
+    const slug = embedPath(findTool(config.toolId)).split("/").filter(Boolean).at(-1) ?? config.id;
+
+    return { params: { calculator: slug }, props: { calculatorId: config.id, toolId: config.toolId } };
+  });
+}
+
+interface Props {
+  calculatorId: FeeCalculatorId;
+  toolId: ToolId;
+}
+
+const { calculatorId, toolId } = Astro.props;
+
+const tool = findTool(toolId);
+---
+<EmbedLayout title={`${tool.name} | MathMyRate`} toolHref={tool.href} toolName={tool.name}>
+  <FeeCalculator calculatorId={calculatorId} stickyResult={false} />
+</EmbedLayout>

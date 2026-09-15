@@ -8,6 +8,8 @@ import StickyResult from "./StickyResult.astro";
 
 interface Props {
   calculatorId: FeeCalculatorId;
+  /** Embedded copies leave out the pinned result bar, which suits a full page rather than an iframe. */
+  stickyResult?: boolean;
 }
 
 function requirePreset(id: string): FeePreset {
@@ -18,7 +20,9 @@ function requirePreset(id: string): FeePreset {
   return preset;
 }
 
-const config = findFeeCalculator(Astro.props.calculatorId);
+const { calculatorId, stickyResult = true } = Astro.props;
+
+const config = findFeeCalculator(calculatorId);
 
 const [defaultScenario] = config.scenarios;
 
@@ -99,8 +103,8 @@ const scenarioColumns = config.scenarios.length === 3 ? "sm:grid-cols-3" : "sm:g
     <p id="fee-message" class="mt-4 text-sm text-[#ccd8ec]" aria-live="polite"></p>
   </aside>
 </div>
-<StickyResult />
-<noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The example above is a $100.00 {defaultScenario.label.toLowerCase()}; enable JavaScript to calculate your own amounts locally.</p></noscript>
+{stickyResult ? <StickyResult /> : null}
+<noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The example above is a $100.00 {defaultScenario.copyName}; enable JavaScript to calculate your own amounts locally.</p></noscript>
 
 <script>
   import { mountFeeCalculator } from "../scripts/fee-calculator";
