@@ -1,6 +1,10 @@
 /** Side-by-side fee comparisons. Every option points at one official preset. */
 
-export type FeeComparisonId = "stripe-vs-paypal" | "gumroad-vs-lemon-squeezy" | "digital-products";
+export type FeeComparisonId =
+  | "stripe-vs-paypal"
+  | "gumroad-vs-lemon-squeezy"
+  | "digital-products"
+  | "patreon-vs-kofi";
 
 export interface ComparisonOption {
   readonly id: string;
@@ -135,6 +139,40 @@ export const feeComparisons: readonly FeeComparisonConfig[] = [
         label: "PayPal Checkout (payment only)",
         shortLabel: "PayPal Checkout",
         href: "/fees/paypal-fee-calculator/",
+      },
+    ],
+  },
+  {
+    id: "patreon-vs-kofi",
+    caption: "Patreon and Ko-fi fees on the same card payment, USD, no tax",
+    options: [
+      {
+        id: "patreon-web",
+        presetId: "patreon-us-standard-web",
+        label: "Patreon, standard plan on the web",
+        shortLabel: "Patreon (web)",
+        href: "/fees/patreon-fee-calculator/",
+      },
+      {
+        id: "patreon-ios",
+        presetId: "patreon-us-standard-ios-first-year",
+        label: "Patreon, iOS app purchase",
+        shortLabel: "Patreon (iOS app)",
+        href: "/fees/patreon-fee-calculator/",
+      },
+      {
+        id: "kofi-5",
+        presetId: "kofi-us-stripe-5-percent",
+        label: "Ko-fi, 5% fee, card through Stripe",
+        shortLabel: "Ko-fi 5%",
+        href: "/fees/ko-fi-fee-calculator/",
+      },
+      {
+        id: "kofi-0",
+        presetId: "kofi-us-stripe-no-fee",
+        label: "Ko-fi, no Ko-fi fee, card through Stripe",
+        shortLabel: "Ko-fi, no fee",
+        href: "/fees/ko-fi-fee-calculator/",
       },
     ],
   },

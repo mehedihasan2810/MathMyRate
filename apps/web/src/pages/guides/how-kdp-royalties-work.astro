@@ -1,0 +1,110 @@
+---
+import { calculateEbookRoyalty, calculateFees, calculatePrintRoyalty } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import GuideTools from "../../components/GuideTools.astro";
+import PageByline from "../../components/PageByline.astro";
+import { findGuide, guideBreadcrumbs } from "../../data/guides";
+import Layout from "../../layouts/Layout.astro";
+import { requireOfficialPreset } from "../../lib/fee-tables";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const guide = findGuide("kdp-royalties-explained");
+
+const breadcrumbs = guideBreadcrumbs(guide.id);
+
+const price = 499n;
+
+function ebook(option: "35" | "70", fileSizeHundredthsMb: number) {
+  return calculateEbookRoyalty({ listPriceCents: price, option, fileSizeHundredthsMb });
+}
+
+const small = ebook("70", 100);
+
+// The smallest file, in hundredths of a MB, where the 35% option pays at least as much as 70% at this price.
+const crossover = Array.from({ length: 65_000 }, (_, index) => index + 1).find(
+  (size) => ebook("35", size).royaltyCents >= ebook("70", size).royaltyCents,
+) ?? 65_000;
+
+const fileRows = [100, 500, 1_000, 1_500, 2_000].map((size) => [
+  `${size / 100} MB`,
+  formatUsdGrouped(ebook("70", size).deliveryCostCents),
+  formatUsdGrouped(ebook("70", size).royaltyCents),
+  formatUsdGrouped(ebook("35", size).royaltyCents),
+]);
+
+function paperback(pages: number, listPriceCents: bigint, ink: "black" | "premium-color" = "black") {
+  return calculatePrintRoyalty({ format: "paperback", ink, trim: "regular", pages, listPriceCents });
+}
+
+const at998 = paperback(300, 998n);
+
+const at999 = paperback(300, 999n);
+
+const cliffRows = [950n, 998n, 999n, 1_299n, 1_499n].map((listPriceCents) => {
+  const result = paperback(300, listPriceCents);
+
+  return [formatUsdGrouped(listPriceCents), `${result.royaltyRateBps / 100}%`, result.priceInRange ? formatUsdGrouped(result.royaltyCents) : "Below KDP's minimum"];
+});
+
+const pageRows = [100, 200, 300, 400, 500].map((pages) => {
+  const result = paperback(pages, 1_499n);
+
+  return [`${pages} pages`, formatUsdGrouped(result.printingCostCents), formatUsdGrouped(result.minimumAtFiftyCents), formatUsdGrouped(result.royaltyCents)];
+});
+
+const color = paperback(120, 1_499n, "premium-color");
+
+const colorHigher = paperback(120, 1_999n, "premium-color");
+
+const direct = calculateFees({ preset: requireOfficialPreset("lemon-squeezy-us-domestic-card"), grossCents: price });
+
+const sources = [
+  { title: "eBook Royalties", url: "https://kdp.amazon.com/en_US/help/topic/G200644210" },
+  { title: "eBook List Price Requirements", url: "https://kdp.amazon.com/en_US/help/topic/G200634560" },
+  { title: "Digital Book Pricing Page", url: "https://kdp.amazon.com/en_US/help/topic/G200634500" },
+  { title: "Paperback Royalty", url: "https://kdp.amazon.com/en_US/help/topic/G201834330" },
+  { title: "Paperback Printing Cost", url: "https://kdp.amazon.com/en_US/help/topic/G201834340" },
+  { title: "Print Book Pricing Page", url: "https://kdp.amazon.com/en_US/help/topic/G8BKPU9AGVZSF9QF" },
+];
+---
+<Layout title="How KDP Royalties Work, With Examples | MathMyRate" description={guide.description} ogImage="/og/kdp-royalties-explained.png" breadcrumbs={breadcrumbs} article={{ headline: guide.title, publishedOn: guide.publishedOn, updatedOn: guide.updatedOn }}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 max-w-3xl text-3xl font-bold md:text-4xl">{guide.title}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">KDP's royalty rates look simple: 70% or 35% for eBooks, 60% for paperbacks. The costs taken out first are what change your earnings.</p>
+    <PageByline updatedOn={guide.updatedOn} />
+    <article class="guide mt-8">
+      <h2>eBooks: 70% after delivery, or 35%</h2>
+      <p>On Amazon.com, the 70% option pays 70% of the list price after a delivery cost of $0.15 per MB, and needs a list price from $2.99 to $12.99. The 35% option pays 35% of the list price with no delivery cost. A $4.99 eBook of 1 MB earns <strong>{formatUsdGrouped(small.royaltyCents)}</strong> at 70%.</p>
+
+      <h2>When 35% pays more than 70%</h2>
+      <p>The delivery cost grows with the file, so image-heavy books lose part of the 70% advantage. At $4.99, the 35% option pays at least as much once the file reaches about <strong>{(crossover / 100).toLocaleString("en-US")} MB</strong>.</p>
+      <DataTable caption="Royalty on a $4.99 eBook by file size" headers={["File size", "Delivery cost", "70% option", "35% option"]} rows={fileRows} />
+
+      <h2>Paperbacks: the $9.99 threshold</h2>
+      <p>Print royalties are (royalty rate × list price) − printing cost, and the rate is 50% at $9.98 or less but 60% at $9.99 or more. One cent can change the royalty a lot: a 300-page black-ink paperback earns {formatUsdGrouped(at998.royaltyCents)} at $9.98 and <strong>{formatUsdGrouped(at999.royaltyCents)}</strong> at $9.99.</p>
+      <DataTable caption="Royalty on a 300-page black-ink paperback, regular trim" headers={["List price", "Rate", "Royalty"]} rows={cliffRows} />
+
+      <h2>Printing costs set your lowest price</h2>
+      <p>Black-ink paperbacks cost $1.00 plus $0.012 a page to print in a regular trim, once they pass 110 pages. KDP will not accept a list price below the printing cost divided by the royalty rate, so longer books need higher prices.</p>
+      <DataTable caption="Printing cost, minimum price at 50%, and royalty at $14.99" headers={["Length", "Printing cost", "Minimum at 50%", "Royalty at $14.99"]} rows={pageRows} />
+      <p>Color is far more expensive. A 120-page premium-color paperback costs {formatUsdGrouped(color.printingCostCents)} to print, so at $14.99 it earns {formatUsdGrouped(color.royaltyCents)}, and at $19.99 it earns {formatUsdGrouped(colorHigher.royaltyCents)}.</p>
+
+      <h2>What these numbers leave out</h2>
+      <ul>
+        <li><strong>Expanded Distribution</strong> pays 40% minus printing costs, but KDP does not state the printing cost it uses there.</li>
+        <li><strong>Kindle Unlimited</strong> pays a share of a monthly fund by pages read, with no published rate per page.</li>
+        <li><strong>Other marketplaces</strong> have their own prices, VAT, and delivery costs.</li>
+      </ul>
+
+      <h2>Selling the eBook yourself</h2>
+      <p>KDP brings Amazon's shoppers. If you already have readers, selling the file directly costs a platform fee instead: a $4.99 sale through Lemon Squeezy pays {formatUsdGrouped(direct.feeCents)} and leaves {formatUsdGrouped(direct.sellerProceedsCents)}. The <a href="/fees/digital-product-platform-fees/">digital product comparison</a> prices the same sale on other platforms, and the <a href="/fees/kdp-royalty-calculator/">KDP royalty calculator</a> works out any price, file size, or page count.</p>
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">KDP's help pages were reviewed on 2026-09-15. Some KDP pages disagree on whether trim size changes printing cost; these numbers follow the printing cost tables. MathMyRate is not affiliated with Amazon.</p>
+    </article>
+    <GuideTools guide={guide.id} />
+  </main>
+</Layout>

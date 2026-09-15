@@ -258,6 +258,31 @@ On branch `feat/creator-platform-fees`, based on `b043b00`:
 - The fee calculator's volume field takes per-calculator wording, so
   Kickstarter totals a campaign and Patreon totals members.
 
+### Substack, Payhip, and creator guides (2026-09-16)
+
+On branch `feat/creator-guides-more-platforms`, based on `49a749d`:
+
+- Substack: web subscription payments with Substack's 10%, Stripe's 2.9% +
+  $0.30 card fee, and Stripe's 0.7% Billing fee, for a US card or a card from
+  outside the US paying in USD. One older Substack page still lists a 0.5%
+  Billing fee; Substack's cost page says that rate ended June 30, 2025, and
+  Stripe's Billing pricing page lists 0.7%. Substack's $150 annual example
+  ($130.35) matches once the Billing fee is added. iOS in-app purchases and
+  local-currency prices are not estimated.
+- Payhip: one-time sales by US card through Stripe on the Free Forever (5%),
+  Plus (2%), and Pro (0%) plans, with the monthly plan price excluded and the
+  plan break-even sales computed on the page. Subscriptions, PayPal, and
+  Square are not estimated.
+- Buy Me a Coffee was researched and not built, because its pages do not say
+  how its extra processing fees combine or what amount its 5% is charged on.
+- `/fees/patreon-vs-ko-fi-fees/` compares the two platforms on one payment;
+  two guides cover KDP royalties and pricing Kickstarter rewards for fees; the
+  methodology page explains embedding and citing.
+- KDP: a list price outside the range for the chosen royalty option or format
+  is now a field error, not a warning beside a royalty KDP would not pay.
+- The fee calculator and the comparisons say when fees are at least as large
+  as the payment.
+
 ### Infrastructure and deployment
 
 Alchemy remains the infrastructure owner for the existing Cloudflare Workers,
@@ -735,6 +760,71 @@ Browser evidence (each value hand-checked):
 - Not verified: Enter and Space activation (a limitation of the in-app
   browser), a successful clipboard copy, print preview, iOS Safari's on-screen
   keyboard, and an embed on another site.
+
+Local checks on 2026-09-16 for Substack, Payhip, the creator guides, and the
+battle-test pass (branch `feat/creator-guides-more-platforms`, based on
+`49a749d`; browser work on the preview build at `:4321`, in Chrome 153 driven
+over the DevTools protocol and in iOS Safari on the iPhone 17 simulator, iOS
+26.5, driven with Argent):
+
+| Check                                                      | Observed result                                                                                                                                                                                                                            |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pnpm run lint`                                            | Passed with 0 findings                                                                                                                                                                                                                     |
+| `pnpm run format:check`                                    | Passed                                                                                                                                                                                                                                     |
+| `pnpm run check-types`                                     | Passed: 7 of 7 tasks; `astro check` 0 errors, 0 warnings, 0 hints                                                                                                                                                                          |
+| `pnpm run test`                                            | Passed: 109 calculator tests (including Substack's $150 example with the Billing fee added) and 110 web tests                                                                                                                              |
+| Guard build (`REQUIRE_SITE_URL=true`, no site)             | Failed as intended                                                                                                                                                                                                                         |
+| Site build (`PUBLIC_SITE_URL=https://calculators.example`) | Passed; 62 pages. Audit: canonical links, OG images, and `WebApplication` on the new pages, and 41 sitemap URLs with none of the 20 embed pages. The only findings are the existing short titles on About, Methodology, Privacy, and Terms |
+| Preview build                                              | Passed; 62 pages                                                                                                                                                                                                                           |
+
+Official sources were rechecked on 2026-09-16: Substack's Help Center articles
+through its public Help Center API, Stripe's pricing and Billing pricing pages,
+Payhip's Help Center articles, and Payhip's pricing page in the in-app browser.
+
+Browser evidence (each value checked against an independent calculation from
+the published rates):
+
+- Substack: $100 pays $13.90 and keeps $86.10; $10 keeps $8.34, or $8.19 by
+  international card; keeping $100 charges $116.09; 250 subscribers at $8 pay
+  $347.50 a month. In iOS Safari, $8 by international card shows $6.49 while
+  typing.
+- Payhip: $25 keeps $22.72 on Free Forever, $23.47 on Plus, and $23.97 on Pro;
+  keeping $50 charges $54.61, $52.89, and $51.80. The break-evens read $966.67
+  and $3,500 a month.
+- KDP: $13.00 and $2.98 at 70% are field errors naming the $2.99 to $12.99
+  range, with the royalty shown as "—" and copy disabled; $13.00 at 35% earns
+  $4.55; $0.98 at 35% names $0.99 to $200.00; a 300-page paperback at $1.00
+  names the $9.20 minimum and at $250.01 the $250.00 maximum. In iOS Safari the
+  error shows under the price field and the sticky bar shows "—".
+- Losses: $0.01 on Stripe keeps -$0.29 and says the fees are more than the
+  payment; $0.31 keeps $0.00 and says the fees take the whole payment; $0.32
+  shows no message. The Patreon vs Ko-fi comparison shows its message at $0.01
+  and clears it for an invalid amount.
+- Keyboard in Chrome: Tab reaches the skip link first and Enter follows it;
+  Enter and Space open the menu, Escape closes it and returns focus to the
+  button; arrow keys change scenario radios; Enter in a field holding "abc"
+  shows the field error and summary and focuses the field on six calculators.
+- Clipboard in Chrome: all nine copy buttons put the result on the clipboard;
+  after an invalid amount the button is disabled; with clipboard permission
+  denied, the manual-copy message appears.
+- Print: the Print buttons call `window.print`. Under print media the header,
+  footer, related tools, sticky bar, and action buttons are hidden, results
+  remain, the background is white, and nothing overflows on nine pages.
+  `Page.printToPDF` hung in this environment even for a plain control page, so
+  no PDF was produced.
+- iOS Safari: amount fields open the decimal keypad, the focused field stays
+  above the keyboard, results update while typing, and radio taps change the
+  scenario note.
+- Cross-origin embeds: the Stripe, Substack, Payhip, and KDP embeds at 420 px
+  inside a page on `127.0.0.1:8765` calculate from typed input ($9.41, $8.34,
+  $8.91, and $6.73), open the credit link in a new tab with `rel="noopener"`,
+  show no sticky bar, and fit their suggested heights. This pass found and
+  fixed a 32 px inner scroll: the embed body's `min-height: 100dvh` plus a
+  collapsed top margin always overflowed the frame.
+- At 360 px every embed's default height fits its suggested height; entering a
+  sales count makes a fee embed 176 to 242 px taller, which scrolls inside the
+  frame. The Substack, Payhip, and KDP pages do not scroll sideways.
+- No console errors on the tested pages.
 
 For every future status update, record:
 

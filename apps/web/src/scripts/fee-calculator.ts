@@ -205,7 +205,15 @@ export function mountFeeCalculator(): void {
 
       latestCopy = `${saleText}${volumeText} Estimate; source reviewed ${reviewed}.`;
       markResultsCurrent(panel, [copyButton]);
-      setText("fee-message", "");
+
+      const lossNote =
+        mode !== "received" || result.sellerProceedsCents > 0n
+          ? ""
+          : result.sellerProceedsCents === 0n
+            ? "The fees take this whole payment, so nothing reaches you."
+            : "The fees are more than this payment, so you would lose money on it.";
+
+      setText("fee-message", lossNote);
       setFieldState(form);
     } catch (error) {
       const outOfRange = error instanceof GrossOutOfRangeError ? error : null;

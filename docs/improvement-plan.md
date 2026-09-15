@@ -248,6 +248,8 @@ assumptions, exclusions, and inverse tests:
 
 **Update 2026-09-16** (branch `feat/creator-platform-fees`). Added the Kickstarter, Patreon, and Ko-fi fee calculators, a KDP royalty calculator, and an Upwork vs Fiverr comparison. A scenario range can now be open-ended, for Kickstarter's $10 and Patreon's legacy $3 thresholds. Kickstarter's Pledge Manager, Patreon's one-time purchases, and Ko-fi's PayPal processing fee are left out because the providers do not state them consistently or at all. KDP royalties use a new engine module with KDP's Amazon.com royalty rates and printing cost tables; Expanded Distribution and Kindle Unlimited are not estimated.
 
+**Update 2026-09-16** (branch `feat/creator-guides-more-platforms`). Added the Substack and Payhip fee calculators, a Patreon vs Ko-fi comparison, and guides to KDP royalties and to pricing Kickstarter rewards; the methodology page now explains embedding and citing. Substack uses Stripe's 0.7% Billing fee, the rate on Substack's cost page and Stripe's Billing pricing page, although one older Substack page still says 0.5%. Substack's iOS in-app purchases and local-currency prices, and Payhip's subscriptions, PayPal, and Square payments, are left out because the providers give only ranges or leave the fee unstated. Buy Me a Coffee was researched but not built: its pages give a 5% fee and Stripe's card fee without saying how its extra processing fees combine or what amount the 5% is charged on. A KDP list price outside KDP's range is now an input error, and the fee calculator says when fees are at least as large as the payment.
+
 Add tools inside the niche so topical authority compounds. Verify demand in
 Search Console and Keyword Planner before building; do not publish a tool
 without the eight content sections. Candidates, grouped by hub:
@@ -266,7 +268,7 @@ Platform and marketplace fees (all from official pricing pages)
 
 - Etsy fees, eBay fees, Shopify Payments fees, Square fees.
 - Upwork freelancer fee, Fiverr seller fee.
-- Patreon, Ko-fi, Buy Me a Coffee, Substack, Payhip, Podia, Whop.
+- Patreon, Ko-fi, Buy Me a Coffee (blocked: fee combination unstated), Substack, Payhip, Podia, Whop.
 - Kickstarter and Indiegogo fees.
 - Amazon KDP royalty.
 - Payout estimators where a provider documents them (Lemon Squeezy, Gumroad,

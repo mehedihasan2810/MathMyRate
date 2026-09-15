@@ -11,7 +11,9 @@ export type GuideId =
   | "salary-vs-freelance-rate"
   | "cover-payment-fees"
   | "stripe-fees-explained"
-  | "gumroad-threshold";
+  | "gumroad-threshold"
+  | "kdp-royalties-explained"
+  | "kickstarter-reward-pricing";
 
 export interface Guide {
   readonly id: GuideId;
@@ -89,6 +91,30 @@ export const guides: readonly Guide[] = [
     publishedOn: "2026-09-15",
     updatedOn: "2026-09-15",
     tools: ["gumroad-fees", "gumroad-vs-lemon-squeezy", "digital-product-fees"],
+  },
+  {
+    id: "kdp-royalties-explained",
+    href: "/guides/how-kdp-royalties-work/",
+    title: "How KDP Royalties Work: eBooks, Paperbacks, and Printing Costs",
+    summary:
+      "When 35% beats 70% on a large eBook file, why $9.99 matters for paperbacks, and how printing costs set your lowest price.",
+    description:
+      "How Amazon KDP pays authors: the 70% and 35% eBook options, delivery costs on large files, the $9.99 paperback threshold, and printing costs.",
+    publishedOn: "2026-09-16",
+    updatedOn: "2026-09-16",
+    tools: ["kdp-royalties", "digital-product-fees"],
+  },
+  {
+    id: "kickstarter-reward-pricing",
+    href: "/guides/price-kickstarter-rewards-for-fees/",
+    title: "How to Price Kickstarter Rewards to Cover Fees",
+    summary:
+      "What each pledge leaves after Kickstarter's fees, what a reward must cost to keep a target, and how many backers it takes to net your goal.",
+    description:
+      "Price Kickstarter rewards after the 5% fee and 3% + 30¢ processing: what each pledge leaves you, what to charge, and how many backers net your goal.",
+    publishedOn: "2026-09-16",
+    updatedOn: "2026-09-16",
+    tools: ["kickstarter-fees", "markup-margin"],
   },
 ];
 

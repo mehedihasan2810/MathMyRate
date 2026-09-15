@@ -61,6 +61,8 @@ outside launch scope.
 | `/fees/kickstarter-fee-calculator/`       | Kickstarter and processing fees per pledge and per campaign |
 | `/fees/patreon-fee-calculator/`           | Patreon platform, processing, and iOS fees on a membership  |
 | `/fees/ko-fi-fee-calculator/`             | Ko-fi's service fee and Stripe processing                   |
+| `/fees/substack-fee-calculator/`          | Substack's 10% fee and Stripe card and Billing fees         |
+| `/fees/payhip-fee-calculator/`            | Payhip plan fees and Stripe processing on a sale            |
 | `/fees/kdp-royalty-calculator/`           | Amazon KDP eBook, paperback, and hardcover royalties        |
 | `/fees/gumroad-fee-calculator/`           | Gumroad direct/Discover take-home                           |
 | `/fees/lemon-squeezy-fee-calculator/`     | Order fees and separate payout estimate                     |
@@ -68,6 +70,7 @@ outside launch scope.
 | `/fees/gumroad-vs-lemon-squeezy-fees/`    | Gumroad and Lemon Squeezy fees on the same sale             |
 | `/fees/digital-product-platform-fees/`    | Digital product platform fees compared on one sale          |
 | `/fees/upwork-vs-fiverr-fees/`            | Upwork and Fiverr freelancer fees on the same job           |
+| `/fees/patreon-vs-ko-fi-fees/`            | Patreon and Ko-fi fees on the same payment                  |
 | `/methodology/`                           | Calculations, sourcing, rounding, review, and corrections   |
 | `/about/`                                 | Truthful product/operator information                       |
 | `/privacy/`                               | Actual data collection and storage disclosures              |

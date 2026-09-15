@@ -159,6 +159,31 @@ const kofiStripe = {
   title: "Connect your Stripe account and start earning ✨",
 };
 
+const substackCost = {
+  url: "https://support.substack.com/hc/en-us/articles/360037607131-How-much-does-Substack-cost",
+  title: "How much does Substack cost?",
+};
+
+const stripeBillingPricing = {
+  url: "https://stripe.com/billing/pricing",
+  title: "Stripe Billing | Pricing",
+};
+
+const payhipPricing = {
+  url: "https://payhip.com/pricing",
+  title: "Pricing - Payhip",
+};
+
+const payhipBilling = {
+  url: "https://help.payhip.com/article/102-billing-and-upgrading",
+  title: "Billing and Upgrading - Help Center",
+};
+
+const payhipStripe = {
+  url: "https://help.payhip.com/article/65-connecting-your-stripe-account",
+  title: "Connect Your Stripe Account - Help Center",
+};
+
 const lemonGettingPaid = {
   url: "https://docs.lemonsqueezy.com/help/getting-started/getting-paid",
   title: "Docs: Getting Paid • Lemon Squeezy",
@@ -1794,6 +1819,205 @@ const officialPresetRecords: FeePreset[] = [
     ],
     exclusions: [
       "PayPal's transaction fee, currency conversion, PayPal holds, disputes, and refunds.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "substack-us-web-domestic-card",
+    label: "Substack paid subscription on the web, domestic card",
+    provider: "substack",
+    taxMode: "zero-only",
+    paymentProduct: "Substack paid subscription",
+    channel: "web",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "substack-platform",
+        label: "Substack fee",
+        rateBps: 1000,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "stripe-processing",
+        label: "Stripe card processing",
+        rateBps: 290,
+        fixedCents: 30,
+        base: "gross",
+      },
+      {
+        id: "stripe-billing",
+        label: "Stripe Billing fee",
+        rateBps: 70,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    sources: [substackCost, stripePricing, stripeBillingPricing],
+    assumptions: [
+      "US writer with a US Stripe account, charging a reader in USD on the web with a card issued in the US and no currency conversion.",
+      "Substack takes 10% of each paid transaction. Stripe charges its standard 2.9% + 30¢ card fee and its Billing fee on recurring subscription payments: 0.7% on Substack's cost page and on Stripe's Billing pricing page. An older Substack page still says 0.5%, a rate Substack's cost page says ended June 30, 2025.",
+      "No sales tax is collected: Substack collects tax only when a writer turns on Stripe Tax, and does not say whether its fee applies to tax.",
+      "The estimator rounds each component to cents; Substack's and Stripe's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "iOS in-app purchases, where Apple charges 15-30%, and local-currency prices with Stripe's 1% to 2% conversion fee.",
+      "Stripe Tax, Radar, disputes, refunds, the $50 custom domain fee, and Stripe's custom pricing.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "substack-us-web-international-card",
+    label: "Substack paid subscription on the web, international card in USD",
+    provider: "substack",
+    taxMode: "zero-only",
+    paymentProduct: "Substack paid subscription",
+    channel: "web",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "substack-platform",
+        label: "Substack fee",
+        rateBps: 1000,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "stripe-processing",
+        label: "Stripe card processing",
+        rateBps: 290,
+        fixedCents: 30,
+        base: "gross",
+      },
+      {
+        id: "stripe-international-card",
+        label: "Stripe international card fee",
+        rateBps: 150,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "stripe-billing",
+        label: "Stripe Billing fee",
+        rateBps: 70,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    sources: [substackCost, stripePricing, stripeBillingPricing],
+    assumptions: [
+      "US writer with a US Stripe account, charging a reader in USD on the web with a card issued outside the US and no currency conversion, for example with localized pricing turned off.",
+      "Substack takes 10% of each paid transaction. Stripe charges its standard 2.9% + 30¢ card fee, 1.5% more for international cards, and its 0.7% Billing fee on recurring subscription payments.",
+      "No sales tax is collected: Substack collects tax only when a writer turns on Stripe Tax, and does not say whether its fee applies to tax.",
+      "The estimator rounds each component to cents; Substack's and Stripe's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Local-currency prices, which Substack turns on by default and which add Stripe's 1% to 2% conversion fee, and iOS in-app purchases.",
+      "Stripe Tax, Radar, disputes, refunds, the $50 custom domain fee, and Stripe's custom pricing.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "payhip-us-free-stripe-card",
+    label: "Payhip Free Forever plan, domestic card through Stripe",
+    provider: "payhip",
+    taxMode: "zero-only",
+    paymentProduct: "Payhip one-time sale",
+    channel: "Stripe",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "payhip-transaction",
+        label: "Payhip transaction fee",
+        rateBps: 500,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "stripe-processing",
+        label: "Stripe card processing",
+        rateBps: 290,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    sources: [payhipPricing, payhipBilling, payhipStripe, stripePricing],
+    assumptions: [
+      "US seller in USD on Payhip's Free Forever plan, which costs nothing a month and adds a 5% transaction fee, with the buyer paying by US card through the seller's own Stripe account.",
+      "Stripe charges its standard 2.9% + 30¢ domestic card fee, which Payhip's Stripe article also quotes and says goes to Stripe, not Payhip.",
+      "A one-time sale with no sales tax, VAT, shipping, or discount. Payhip's VAT example charges its fee on the price before VAT, but Payhip does not say how its fee treats US sales tax, shipping, or coupons.",
+      "The estimator rounds each component to cents; Payhip's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Subscriptions and payment plans, which Payhip bills through Stripe without saying whether Stripe's Billing fee applies.",
+      "PayPal and Square payments, international cards, currency conversion, refunds, disputes, and video hosting.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "payhip-us-plus-stripe-card",
+    label: "Payhip Plus plan, domestic card through Stripe",
+    provider: "payhip",
+    taxMode: "zero-only",
+    paymentProduct: "Payhip one-time sale",
+    channel: "Stripe",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "payhip-transaction",
+        label: "Payhip transaction fee",
+        rateBps: 200,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "stripe-processing",
+        label: "Stripe card processing",
+        rateBps: 290,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    sources: [payhipPricing, payhipBilling, payhipStripe, stripePricing],
+    assumptions: [
+      "US seller in USD on Payhip's Plus plan, which costs $29 a month (not included here) and lowers the transaction fee to 2%, with the buyer paying by US card through the seller's own Stripe account.",
+      "Stripe charges its standard 2.9% + 30¢ domestic card fee, which Payhip's Stripe article also quotes and says goes to Stripe, not Payhip.",
+      "A one-time sale with no sales tax, VAT, shipping, or discount. Payhip's VAT example charges its fee on the price before VAT, but Payhip does not say how its fee treats US sales tax, shipping, or coupons.",
+      "The estimator rounds each component to cents; Payhip's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "The $29 monthly plan price, and subscriptions and payment plans, which Payhip bills through Stripe without saying whether Stripe's Billing fee applies.",
+      "PayPal and Square payments, international cards, currency conversion, refunds, disputes, and video hosting.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "payhip-us-pro-stripe-card",
+    label: "Payhip Pro plan, domestic card through Stripe",
+    provider: "payhip",
+    taxMode: "zero-only",
+    paymentProduct: "Payhip one-time sale",
+    channel: "Stripe",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "stripe-processing",
+        label: "Stripe card processing",
+        rateBps: 290,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    sources: [payhipPricing, payhipBilling, payhipStripe, stripePricing],
+    assumptions: [
+      "US seller in USD on Payhip's Pro plan, which costs $99 a month (not included here) and has no Payhip transaction fee, with the buyer paying by US card through the seller's own Stripe account.",
+      "Stripe charges its standard 2.9% + 30¢ domestic card fee, which Payhip's Stripe article also quotes and says goes to Stripe, not Payhip.",
+      "A one-time sale with no sales tax, VAT, shipping, or discount.",
+      "The estimator rounds each component to cents; Stripe's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "The $99 monthly plan price, and subscriptions and payment plans, which Payhip bills through Stripe without saying whether Stripe's Billing fee applies.",
+      "PayPal and Square payments, international cards, currency conversion, refunds, disputes, and video hosting.",
     ],
     status: "supported",
   }),

@@ -20,7 +20,7 @@ const { title, toolHref, toolName } = Astro.props;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
   </head>
-  <body class="min-h-[100dvh] px-4 pb-6">
+  <body class="flow-root px-4 pb-6">
     <main id="main-content">
       <h1 class="sr-only">{toolName}</h1>
       <slot />

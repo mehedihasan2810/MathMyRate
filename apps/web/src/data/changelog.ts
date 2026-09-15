@@ -13,6 +13,27 @@ export interface ChangelogEntry {
 export const changelog: readonly ChangelogEntry[] = [
   {
     date: "2026-09-16",
+    title: "Substack and Payhip calculators added",
+    changes: [
+      "Substack: added paid subscription payments on the web with Substack's 10% fee, Stripe's 2.9% + $0.30 card fee, and Stripe's 0.7% Billing fee on recurring payments, plus Stripe's 1.5% fee for a card issued outside the US paying in USD. One older Substack page still lists a 0.5% Billing fee; Substack's cost page says that rate ended June 30, 2025, and Stripe's Billing pricing page lists 0.7%. iOS in-app purchases and local-currency prices are not estimated, because Substack gives Apple's fee as 15-30% and the conversion fee as 1% to 2%.",
+      "Payhip: added one-time sales paid by card through Stripe on the Free Forever plan (5% fee), Plus plan (2% fee, $29 a month), and Pro plan (no fee, $99 a month), with Stripe's 2.9% + $0.30 card fee. Subscriptions, PayPal, and Square payments are not estimated, because Payhip does not say whether Stripe's Billing fee applies or publish PayPal's fixed fee.",
+      "Amazon KDP: a list price outside KDP's range for the chosen royalty option or format is now an error instead of a warning beside a royalty KDP would not pay.",
+    ],
+    sources: [
+      {
+        title: "How much does Substack cost?",
+        url: "https://support.substack.com/hc/en-us/articles/360037607131-How-much-does-Substack-cost",
+      },
+      { title: "Stripe Billing | Pricing", url: "https://stripe.com/billing/pricing" },
+      { title: "Pricing - Payhip", url: "https://payhip.com/pricing" },
+      {
+        title: "Billing and Upgrading - Help Center",
+        url: "https://help.payhip.com/article/102-billing-and-upgrading",
+      },
+    ],
+  },
+  {
+    date: "2026-09-16",
     title: "Patreon, Ko-fi, and KDP calculators added",
     changes: [
       "Patreon: added membership payments on the standard 10% plan with 2.9% + $0.30 processing (3.9% + $0.30 for PayPal or Venmo from outside the US), the 2.5% currency conversion fee, iOS in-app purchases with Apple's 30% or 15% App Store fee, and the legacy 8% Pro plan with its $3-or-less micropayment rate. The web and iOS results match Patreon's own $10 and $14.50 examples. One-time purchases are not included, because Patreon's pages state their fee three different ways.",

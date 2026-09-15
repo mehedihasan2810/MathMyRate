@@ -1,0 +1,122 @@
+---
+import { calculateFees } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { feeRowsByAmount, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("substack-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const domestic = requireOfficialPreset("substack-us-web-domestic-card");
+
+const international = requireOfficialPreset("substack-us-web-international-card");
+
+const ten = calculateFees({ preset: domestic, grossCents: 1_000n });
+
+const tenInternational = calculateFees({ preset: international, grossCents: 1_000n });
+
+const monthlyRows = feeRowsByAmount(domestic, [500n, 700n, 1_000n, 1_500n, 2_500n]);
+
+const annualRows = feeRowsByAmount(domestic, [3_000n, 5_000n, 8_000n, 15_000n, 25_000n]);
+
+// Substack's local-currency article: a $150 annual plan pays out $130.35 after Substack's 10% and Stripe's card fee.
+const substackExamplePayoutCents = 13_035n;
+
+const annualExample = calculateFees({ preset: domestic, grossCents: 15_000n });
+
+const billingGapCents = substackExamplePayoutCents - annualExample.sellerProceedsCents;
+
+const fiveMonthly = calculateFees({ preset: domestic, grossCents: 500n });
+
+const fiftyAnnual = calculateFees({ preset: domestic, grossCents: 5_000n });
+
+const updatedOn = "2026-09-16";
+
+const guideSources = [
+  { title: "How much does Substack cost?", url: "https://support.substack.com/hc/en-us/articles/360037607131-How-much-does-Substack-cost" },
+  { title: "Can readers pay for subscriptions using their local currency on Substack?", url: "https://support.substack.com/hc/en-us/articles/16523703337108-Can-readers-pay-for-subscriptions-using-their-local-currency-on-Substack" },
+  { title: "Can my subscribers pay on the Substack iOS app?", url: "https://support.substack.com/hc/en-us/articles/19718129670420-Can-my-subscribers-pay-on-the-Substack-iOS-app" },
+  { title: "How do I set up a paid publication?", url: "https://support.substack.com/hc/en-us/articles/360037459952-How-do-I-set-up-a-paid-publication" },
+  { title: "Does Substack integrate with Stripe Tax?", url: "https://support.substack.com/hc/en-us/articles/12282257442580-Does-Substack-integrate-with-Stripe-Tax" },
+  { title: "How do payouts work on Substack?", url: "https://support.substack.com/hc/en-us/articles/360037833691-How-do-payouts-work-on-Substack" },
+  { title: "How do I set up my Stripe account on Substack to start receiving payments?", url: "https://support.substack.com/hc/en-us/articles/4405482746132-How-do-I-set-up-my-Stripe-account-on-Substack-to-start-receiving-payments" },
+  { title: "How do I cancel a subscription and issue a refund for a paid subscriber on Substack?", url: "https://support.substack.com/hc/en-us/articles/360059896552-How-do-I-cancel-a-subscription-and-issue-a-refund-for-a-paid-subscriber-on-Substack" },
+  { title: "What happens when a subscriber disputes a paid subscription on Substack?", url: "https://support.substack.com/hc/en-us/articles/21908957302292-What-happens-when-a-subscriber-disputes-a-paid-subscription-on-Substack" },
+  { title: "How do I set up my custom domain on Substack?", url: "https://support.substack.com/hc/en-us/articles/360051222571-How-do-I-set-up-my-custom-domain-on-Substack" },
+  { title: "Pricing & Fees | Stripe", url: "https://stripe.com/pricing" },
+  { title: "Stripe Billing | Pricing", url: "https://stripe.com/billing/pricing" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Substack take from a paid subscription?", answer: `Substack keeps 10% of each paid transaction, and Stripe charges 2.9% + 30¢ for the card plus a 0.7% Billing fee on recurring payments. A $10 monthly subscription paid by a US card pays ${formatUsdGrouped(ten.feeCents)} in fees and leaves ${formatUsdGrouped(ten.sellerProceedsCents)}.` },
+  { question: "What is Stripe's Billing fee on Substack?", answer: "Stripe charges a Billing fee on recurring subscription payments, on top of its card fee. Substack's cost page gives 0.7% as of July 2024, and Stripe's Billing pricing page lists 0.7% of Billing volume. One older Substack page still says 0.5%, a rate Substack says ended June 30, 2025 for accounts that had it. Stripe shows the Billing fee apart from its processing fee." },
+  { question: "Does Substack take more on the iOS app?", answer: "Yes. Apple's in-app purchase fee comes out of your revenue along with Substack's fee, and Substack describes it only as 15-30%, so this calculator does not estimate it. By default Substack raises in-app prices to cover Apple's fee, and in-app payment cannot be turned off while payments are connected." },
+  { question: "How long do Substack payouts take?", answer: "Money goes to your own Stripe account. Substack says payments usually reach your bank within 48 hours of each transaction, and the first payout on a new Stripe account takes 7-14 days." },
+  { question: "What happens to fees on a refund or dispute?", answer: "Substack asks writers to refund through the Substack Subscribers dashboard, because refunds issued in Stripe include Substack's 10% fee. For disputes, Stripe charges $15 for each dispute received and another $15 if you counter it manually; Smart Disputes waives the counter fee but takes 30% of any amount it recovers." },
+  { question: "Does Substack collect sales tax?", answer: "Not by default. Substack collects sales tax only after you turn on Stripe Tax, and only in places where you added a tax registration in Stripe. Substack does not say whether its fee applies to tax, so this calculator covers payments without it." },
+  { question: "What is the lowest price I can charge on Substack?", answer: "Substack's paid publication setup page lists a minimum of $5 a month and $30 a year for US-dollar Stripe accounts." },
+];
+---
+<Layout title="Substack Fee Calculator: 10% Fee and Stripe Costs | MathMyRate" description="Estimate Substack's 10% fee plus Stripe's 2.9% + 30¢ card fee and 0.7% Billing fee on a paid subscription, and see what you keep at common prices." ogImage="/og/substack.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Substack's 10% fee and Stripe's card and Billing fees take from a paid subscription, and what reaches your Stripe account.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={domestic.checkedOn} />
+    <FeeCalculator calculatorId="substack" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The Substack fee calculator shows what you keep from one subscription payment. A <strong>$10</strong> monthly subscription paid on the web with a US card pays <strong>{formatUsdGrouped(ten.feeCents)}</strong> in fees and leaves <strong>{formatUsdGrouped(ten.sellerProceedsCents)}</strong>. Paid with a card from outside the US in US dollars, it leaves {formatUsdGrouped(tenInternational.sellerProceedsCents)}.</p>
+
+      <h2>The three fees on a Substack payment</h2>
+      <ul>
+        <li><strong>Substack:</strong> 10% of each paid transaction.</li>
+        <li><strong>Stripe card processing:</strong> 2.9% + 30¢ for a US card, and 1.5% more for a card issued outside the US.</li>
+        <li><strong>Stripe Billing:</strong> 0.7% of each recurring subscription payment. Stripe lists it separately from the processing fee, so check both lines in your Stripe dashboard.</li>
+      </ul>
+      <p>Substack's own pages disagree about the Billing fee: its cost page says 0.7% as of July 2024, while an older page still says 0.5%. The cost page says the 0.5% rate ended on June 30, 2025, and Stripe's Billing pricing page lists 0.7%, so this calculator uses 0.7%.</p>
+
+      <h2>What you keep at common prices</h2>
+      <p>Web payments by US card, with no sales tax.</p>
+      <DataTable caption="Substack monthly prices: fees and what you keep" headers={["Monthly price", "Fees", "You keep", "Fee share"]} rows={monthlyRows} />
+      <DataTable caption="Substack annual prices: fees and what you keep" headers={["Annual price", "Fees", "You keep", "Fee share"]} rows={annualRows} />
+
+      <h2>Monthly or annual plans</h2>
+      <p>The 30¢ card fee is charged on every payment, so small monthly plans lose the biggest share. A $5 monthly subscription pays {formatUsdGrouped(fiveMonthly.feeCents)} each month, or {formatUsdGrouped(fiveMonthly.feeCents * 12n)} over twelve payments, and you keep {formatUsdGrouped(fiveMonthly.sellerProceedsCents * 12n)} of $60. A $50 annual plan pays {formatUsdGrouped(fiftyAnnual.feeCents)} once and you keep {formatUsdGrouped(fiftyAnnual.sellerProceedsCents)}.</p>
+
+      <h2>Checking against Substack's own example</h2>
+      <p>Substack's local-currency article shows a $150 annual plan paying out $130.35 after Substack's 10% and Stripe's card fee. That example leaves out Stripe's Billing fee. Adding the 0.7% Billing fee of {formatUsdGrouped(billingGapCents)} gives the <strong>{formatUsdGrouped(annualExample.sellerProceedsCents)}</strong> this calculator shows for a $150 payment.</p>
+
+      <h2>What the calculator leaves out</h2>
+      <ul>
+        <li><strong>iOS in-app purchases:</strong> Apple's fee comes out along with Substack's, and Substack gives it only as 15-30%. Substack raises in-app prices to cover it unless you keep prices the same.</li>
+        <li><strong>Local-currency prices:</strong> Substack shows readers prices in their own currency by default, and Stripe charges 1% to 2% for the conversion.</li>
+        <li><strong>Sales tax:</strong> collected only after you turn on Stripe Tax and add tax registrations in Stripe.</li>
+        <li><strong>Refunds and disputes:</strong> refund through the Substack Subscribers dashboard, because a refund made in Stripe includes Substack's 10%. Stripe charges $15 for each dispute, and $15 more to counter one yourself.</li>
+        <li><strong>Custom domain:</strong> a one-time $50 fee, with no sales tax or VAT.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="substack" />
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId="substack-fees" />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{guideSources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Substack's and Stripe's pages were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Substack or Stripe. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

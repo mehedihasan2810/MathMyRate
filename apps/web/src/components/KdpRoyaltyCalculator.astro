@@ -195,7 +195,6 @@ const hint = "mt-1 block text-xs font-normal text-ink/55";
         const listPriceCents = usdToCents(requireHtmlInput("kdpPrice").value, "kdpPrice");
         const copies = readCopies();
         let royaltyCents: bigint;
-        let warning = "";
 
         if (format === "ebook") {
           const option = currentOption();
@@ -210,7 +209,12 @@ const hint = "mt-1 block text-xs font-normal text-ink/55";
           setText("kdp-cost", formatUsdGrouped(result.deliveryCostCents));
           setText("kdp-range", range);
 
-          if (!result.priceInRange) warning = `KDP's ${option}% option needs a list price from ${range}${option === "35" ? " for this file size" : ""}.`;
+          if (!result.priceInRange) {
+            const otherOption = option === "70" ? "35%" : "70%";
+
+            throw new InputProblem("kdpPrice", `KDP's ${option}% option needs a list price from ${range}${option === "35" ? " for this file size" : ""}. Change the price or choose ${otherOption}.`);
+          }
+
           latestCopy = `A ${formatUsdGrouped(listPriceCents)} Kindle eBook at the ${option}% option earns ${formatUsdGrouped(royaltyCents)} per Amazon.com sale.`;
         } else {
           const result = calculatePrintRoyalty({
@@ -229,9 +233,11 @@ const hint = "mt-1 block text-xs font-normal text-ink/55";
           setText("kdp-range", `${formatUsdGrouped(result.minimumAtFiftyCents)} at 50%, ${formatUsdGrouped(result.minimumAtSixtyCents)} at 60%`);
 
           if (listPriceCents > result.maximumListPriceCents) {
-            warning = `KDP's maximum list price is ${formatUsdGrouped(result.maximumListPriceCents)}.`;
-          } else if (!result.priceInRange) {
-            warning = `KDP will not accept a list price below ${formatUsdGrouped(result.minimumListPriceCents)}, the printing cost divided by the ${result.royaltyRateBps / 100}% rate.`;
+            throw new InputProblem("kdpPrice", `KDP's maximum list price is ${formatUsdGrouped(result.maximumListPriceCents)}.`);
+          }
+
+          if (!result.priceInRange) {
+            throw new InputProblem("kdpPrice", `KDP will not accept a list price below ${formatUsdGrouped(result.minimumListPriceCents)}, the printing cost divided by the ${result.royaltyRateBps / 100}% rate.`);
           }
 
           latestCopy = `A ${formatUsdGrouped(listPriceCents)} ${format} costs ${formatUsdGrouped(result.printingCostCents)} to print and earns ${formatUsdGrouped(royaltyCents)} per Amazon.com sale.`;
@@ -241,7 +247,7 @@ const hint = "mt-1 block text-xs font-normal text-ink/55";
         requireHtmlElement("kdp-total-row").hidden = copies === null;
 
         if (copies !== null) setText("kdp-total", formatUsdGrouped(royaltyCents * BigInt(copies)));
-        setText("kdp-message", warning);
+        setText("kdp-message", "");
         markResultsCurrent(panel, [copyButton]);
         setFieldState(form);
       } catch (error) {

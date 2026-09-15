@@ -22,13 +22,16 @@ export type ToolId =
   | "kickstarter-fees"
   | "patreon-fees"
   | "kofi-fees"
+  | "substack-fees"
+  | "payhip-fees"
   | "kdp-royalties"
   | "gumroad-fees"
   | "lemon-squeezy-fees"
   | "stripe-vs-paypal"
   | "gumroad-vs-lemon-squeezy"
   | "digital-product-fees"
-  | "upwork-vs-fiverr";
+  | "upwork-vs-fiverr"
+  | "patreon-vs-kofi";
 
 export interface Crumb {
   readonly name: string;
@@ -206,6 +209,26 @@ export const tools: readonly Tool[] = [
       "ko-fi kofi tips donations shop memberships commissions gold service fee stripe paypal",
   },
   {
+    id: "substack-fees",
+    hub: "fees",
+    href: "/fees/substack-fee-calculator/",
+    name: "Substack Fee Calculator",
+    menuLabel: "Substack fees",
+    summary: "Substack's 10% fee and Stripe's card and Billing fees on a paid subscription.",
+    searchTerms:
+      "substack newsletter paid subscription writer 10% fee stripe billing founding member annual plan",
+  },
+  {
+    id: "payhip-fees",
+    hub: "fees",
+    href: "/fees/payhip-fee-calculator/",
+    name: "Payhip Fee Calculator",
+    menuLabel: "Payhip fees",
+    summary: "Payhip's 5%, 2%, or 0% plan fee and Stripe processing on a digital product sale.",
+    searchTerms:
+      "payhip digital downloads ebooks courses coaching free plus pro plan transaction fee stripe",
+  },
+  {
     id: "kdp-royalties",
     hub: "fees",
     href: "/fees/kdp-royalty-calculator/",
@@ -274,6 +297,16 @@ export const tools: readonly Tool[] = [
     summary: "Compare what Upwork and Fiverr keep from the same freelance job, side by side.",
     searchTerms:
       "upwork fiverr compare comparison freelancer fees service fee commission which is cheaper",
+  },
+  {
+    id: "patreon-vs-kofi",
+    hub: "fees",
+    href: "/fees/patreon-vs-ko-fi-fees/",
+    name: "Patreon vs Ko-fi Fees",
+    menuLabel: "Patreon vs Ko-fi",
+    summary: "Compare what Patreon and Ko-fi keep from the same membership or tip, side by side.",
+    searchTerms:
+      "patreon ko-fi kofi compare comparison creator membership tips fees which is cheaper gold",
   },
 ];
 
