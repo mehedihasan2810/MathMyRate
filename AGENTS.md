@@ -18,6 +18,10 @@ record what has actually happened since the plan was written.
   [the architecture](docs/architecture.md), and
   [the testing and release gates](docs/testing-and-release.md) before taking
   ownership of a task.
+- For UX, SEO, content, or monetization work, also read
+  [the honest review](docs/honest-review-2026-09-15.md),
+  [the improvement plan](docs/improvement-plan.md), and follow
+  [the SEO playbook](docs/seo-playbook.md) for every public page.
 - Keep changes reviewable and ordered by the approved PR sequence. The freelance
   calculation engine is now independently tested and wired to an accessible
   Astro UI; provider calculators and deployment are still separate milestones.
