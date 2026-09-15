@@ -1,29 +1,68 @@
 ---
 import { calculateProjectRate } from "@MathMyRate/calculators";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import FaqSection from "../../components/FaqSection.astro";
 import NumberField from "../../components/NumberField.astro";
+import PageByline from "../../components/PageByline.astro";
 import RelatedTools from "../../components/RelatedTools.astro";
 import ResultRow from "../../components/ResultRow.astro";
 import StickyResult from "../../components/StickyResult.astro";
 import { findTool, toolBreadcrumbs } from "../../data/tools";
 import Layout from "../../layouts/Layout.astro";
+import type { FaqEntry } from "../../lib/structured-data";
 import { formatUsdGrouped } from "../../scripts/calculator-form";
 
 const tool = findTool("project-rate");
 
 const breadcrumbs = toolBreadcrumbs(tool.id);
 
-const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes: 1320, directExpensesCents: 18000n, contingencyBps: 1500 });
+const exampleInput = { hourlyRateCents: 11250n, estimatedMinutes: 1320, directExpensesCents: 18000n, contingencyBps: 1500 };
+
+const example = calculateProjectRate(exampleInput);
 
 const rowLabel = "text-[#f3f5fa]/80";
 
 const minutesHelp = "Whole minutes only: 1, 1.25, 1.5, and 1.75 are accepted.";
+
+
+const exampleLabor = formatUsdGrouped(example.laborCents);
+
+const exampleContingency = formatUsdGrouped(example.contingencyCents);
+
+const exampleTotal = formatUsdGrouped(example.targetReceiptsCents);
+
+const contingencyRows = [0, 1000, 1500, 2000, 2500, 3000].map((contingency) => {
+  const result = calculateProjectRate({ ...exampleInput, contingencyBps: contingency });
+
+  return [`${contingency / 100}%`, formatUsdGrouped(result.contingencyCents), formatUsdGrouped(result.targetReceiptsCents)];
+});
+
+const rateRows = [5000n, 7500n, 10000n, 11250n, 15000n, 20000n].map((rate) => {
+  const result = calculateProjectRate({ ...exampleInput, hourlyRateCents: rate });
+
+  return [formatUsdGrouped(rate), formatUsdGrouped(result.laborCents), formatUsdGrouped(result.contingencyCents), formatUsdGrouped(result.targetReceiptsCents)];
+});
+
+const updatedOn = "2026-09-15";
+
+const faq: readonly FaqEntry[] = [
+  { question: "What is contingency in a project quote?", answer: "Contingency is an allowance for work you cannot see yet, such as extra revision rounds or a task that takes longer than planned. It is added to the labor estimate as a percentage, so the quote still covers your time when the project grows a little." },
+  { question: "Why is contingency applied to labor but not to expenses?", answer: "In this calculator, direct expenses are passed through at cost. If you want a buffer or markup on expenses, include it in the expense amount you enter." },
+  { question: "Why include meetings and admin hours?", answer: "Calls, emails, feedback rounds, and invoicing take real time on every project. Quoting only delivery hours leaves those hours unpaid." },
+  { question: "Why does the calculator only accept times that land on a whole minute?", answer: "Time is stored in whole minutes so labor can be calculated exactly. Quarter hours such as 1.25, 1.5, and 1.75 land on whole minutes. A value like 0.33 hours does not, so the calculator asks for a different one." },
+  { question: "Does the quote include my tax reserve?", answer: "Only through your hourly rate. If the rate came from the hourly rate calculator, it already includes your yearly tax reserve, so the project calculator does not add tax again." },
+  { question: "Should I add payment processing fees to the quote?", answer: "If the client pays by card or PayPal, the processor keeps part of the payment. Use the Stripe or PayPal fee calculator in keep-a-target mode with this quote as the target to see what to invoice." },
+  { question: "Can I use this for hourly billing?", answer: "The total is a fixed-price target for one project. If you bill by the hour instead, the hourly rate calculator gives the rate to charge." },
+  { question: "Is my information saved or sent anywhere?", answer: "No. The quote is calculated in your browser. An hourly rate transferred from the hourly calculator is read once and then removed from this browser." },
+];
 ---
 <Layout title="Freelance Project Rate Calculator for Quotes | MathMyRate" description="Price a fixed-fee project from delivery hours, meetings, contingency, and expenses. See labor, buffer, and the quote total at once. Free, no sign-up." ogImage="/og/project-rate.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
     <Breadcrumbs items={breadcrumbs} />
     <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
     <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Give the scope a number. Turn delivery hours, meetings, contingency, and expenses into a clear fixed-price quote.</p>
+    <PageByline updatedOn={updatedOn} />
     <div id="transfer-notice" class="mt-6 hidden rounded-xl border border-[#aac7a9] bg-[#e2efe1] px-5 py-4 text-sm text-ink"><strong>Hourly rate brought across.</strong> This is stored only in this browser. Your annual tax reserve is already reflected in this rate and is not added again.</div>
     <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
       <form id="project-form" data-calculator-form class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate>
@@ -52,7 +91,51 @@ const minutesHelp = "Whole minutes only: 1, 1.25, 1.5, and 1.75 are accepted.";
     </div>
     <StickyResult />
     <noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The example scope is visible; enable JavaScript to calculate a quote locally.</p></noscript>
-    <section class="mt-14 max-w-3xl border-t border-line pt-10"><h2 class="display text-3xl font-bold">A quote, not a tax calculation</h2><p class="mt-4 leading-relaxed text-ink/70">Contingency is applied to labor only. Direct expenses are added separately without markup. The target assumes the hourly rate already includes the annual tax reserve chosen in the <a class="underline" href="/freelance/hourly-rate-calculator/">freelance hourly rate calculator</a>, so it never adds that reserve a second time.</p><p class="mt-4 text-sm leading-relaxed text-ink/60">Payment processing fees are intentionally not included here. Use the <a class="underline" href="/fees/stripe-fee-calculator/">Stripe fee calculator</a> or the <a class="underline" href="/fees/paypal-fee-calculator/">PayPal fee calculator</a> when a quote needs a gross-up for the fee.</p></section>
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The freelance project rate calculator turns an hourly rate and a scope into a fixed-price quote. It prices delivery and admin time, adds a contingency allowance to that labor, and passes direct expenses through at cost. With the example inputs, the quote to aim for is <strong>{exampleTotal}</strong>.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Enter your hourly rate, or bring it across from the <a href="/freelance/hourly-rate-calculator/">freelance hourly rate calculator</a>.</li>
+        <li>Estimate delivery hours: the design, writing, development, or other work the client asked for.</li>
+        <li>Add hours for meetings, feedback rounds, and admin.</li>
+        <li>Choose a contingency percentage for work you cannot see yet.</li>
+        <li>Enter direct expenses such as stock assets, fonts, travel, or contractor costs. The quote updates as you type.</li>
+      </ol>
+
+      <h2>How the quote is built</h2>
+      <p>Here is the example worked through, using the same code as the calculator.</p>
+      <ol>
+        <li><strong>Labor.</strong> 18 delivery hours plus 4 admin hours is 22 hours. At $112.50 an hour, labor is {exampleLabor}.</li>
+        <li><strong>Contingency.</strong> 15% of labor adds {exampleContingency}, rounded up to the cent.</li>
+        <li><strong>Expenses.</strong> $180 of direct expenses is added at cost.</li>
+        <li><strong>Total.</strong> {exampleLabor} plus {exampleContingency} plus $180 is {exampleTotal}.</li>
+      </ol>
+
+      <h2>Quotes at different contingency levels</h2>
+      <p>These rows keep the example's 22 hours at $112.50 and $180 of expenses.</p>
+      <DataTable caption="Project quote by contingency percentage" headers={["Contingency", "Contingency amount", "Quote"]} rows={contingencyRows} />
+
+      <h2>Quotes at different hourly rates</h2>
+      <p>These rows keep 22 hours, 15% contingency, and $180 of expenses.</p>
+      <DataTable caption="Project quote by hourly rate" headers={["Hourly rate", "Labor", "Contingency", "Quote"]} rows={rateRows} />
+
+      <h2>Choosing a contingency</h2>
+      <p>No single percentage fits every project. A familiar project with a tight brief needs less room than new work with an open-ended scope. The most reliable guide is your own history: compare the hours you estimated on past projects with the hours they really took, and set contingency to cover that gap.</p>
+
+      <h2>What the quote does not include</h2>
+      <ul>
+        <li><strong>A second tax reserve.</strong> Tax is planned once, inside the hourly rate.</li>
+        <li><strong>Payment processing fees.</strong> Use the <a href="/fees/stripe-fee-calculator/">Stripe fee calculator</a> or the <a href="/fees/paypal-fee-calculator/">PayPal fee calculator</a> with this quote as the amount you want to keep.</li>
+        <li><strong>Sales tax or VAT.</strong> Whether you must charge it depends on where you and your client are; the calculator never adds it.</li>
+        <li><strong>Markup on expenses.</strong> Expenses are added at cost unless you include a markup in the amount you enter.</li>
+      </ul>
+
+      <FaqSection entries={faq} />
+
+      <p class="text-sm text-ink/60">Planning estimate only; not tax, accounting, or legal advice. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
     <RelatedTools current={tool.id} />
   </main>
   <script>

@@ -172,8 +172,21 @@ the last good result and disables copy and transfer instead of wiping it; a
 finished edit (the change event) or an explicit update shows the error. Money
 fields are tidied to `1,250.00` when an edit finishes. There is no account
 navigation. Calculator results stay in the browser; the transfer uses local
-storage rather than a query string, and the UI makes no calculator fetch, XHR,
-or beacon calls.
+storage rather than a query string, and the UI makes no calculator fetch, XHR, or beacon calls.
+
+The four fee pages share one calculator. `apps/web/src/data/fee-calculators.ts`
+maps each provider's scenario menu to official preset IDs; rates, assumptions,
+and sources stay in the presets. `FeeCalculator.astro` renders the scenario
+choice, keep-a-target mode, a tax field shown only for presets that accept tax,
+an optional sales-per-month field, line items for multi-component presets, and
+monthly totals; `scripts/fee-calculator.ts` runs it in the browser.
+`FeeRuleDetails.astro` prints each scenario's combined rate, assumptions, and
+exclusions from the presets. Comparison pages use `data/fee-comparisons.ts`,
+`FeeComparison.astro`, and `scripts/fee-comparison.ts` in the same way.
+Reference tables and worked-example numbers on every calculator page come from
+`lib/fee-tables.ts` and the engine at build time, so page text cannot drift
+from the calculator. `data/changelog.ts` is the public record of fee rule
+changes behind `/changelog/`.
 
 ## Source ownership
 

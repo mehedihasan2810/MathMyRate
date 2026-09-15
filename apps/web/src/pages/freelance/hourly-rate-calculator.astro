@@ -1,12 +1,16 @@
 ---
 import { calculateFreelanceRate } from "@MathMyRate/calculators";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import FaqSection from "../../components/FaqSection.astro";
 import NumberField from "../../components/NumberField.astro";
+import PageByline from "../../components/PageByline.astro";
 import RelatedTools from "../../components/RelatedTools.astro";
 import ResultRow from "../../components/ResultRow.astro";
 import StickyResult from "../../components/StickyResult.astro";
 import { findTool, toolBreadcrumbs } from "../../data/tools";
 import Layout from "../../layouts/Layout.astro";
+import type { FaqEntry } from "../../lib/structured-data";
 import { formatUsdGrouped } from "../../scripts/calculator-form";
 
 interface FieldSpec {
@@ -22,7 +26,9 @@ const tool = findTool("hourly-rate");
 
 const breadcrumbs = toolBreadcrumbs(tool.id);
 
-const example = calculateFreelanceRate({ annualTakeHomeCents: 8500000n, annualExpensesCents: 750000n, taxRateBps: 2700, weeksPerYear: 46, hoursPerWeek: 40, billablePercentBps: 6500, hoursPerDay: 7 });
+const exampleInput = { annualTakeHomeCents: 8500000n, annualExpensesCents: 750000n, taxRateBps: 2700, weeksPerYear: 46, hoursPerWeek: 40, billablePercentBps: 6500, hoursPerDay: 7 };
+
+const example = calculateFreelanceRate(exampleInput);
 
 const fields: readonly FieldSpec[] = [
   { id: "takeHome", label: "Desired annual take-home", value: "85,000.00", unit: "usd", help: "Enter the money you want to keep after your planning tax reserve." },
@@ -33,12 +39,50 @@ const fields: readonly FieldSpec[] = [
   { id: "billable", label: "Billable time", value: "65.00", unit: "percent", help: "The proportion of working time you expect to invoice." },
   { id: "hoursDay", label: "Hours in your day", value: "7", inputMode: "numeric", help: "Whole hours used to show a day rate." },
 ];
+
+const dollars = (cents: bigint) => formatUsdGrouped(cents).replace(/\.00$/u, "");
+
+const exampleHourly = formatUsdGrouped(example.hourlyRateCents);
+
+const exampleDay = formatUsdGrouped(example.dayRateCents);
+
+const exampleRevenue = formatUsdGrouped(example.annualRevenueCents);
+
+const exampleBeforeExpenses = formatUsdGrouped(example.annualRevenueCents - exampleInput.annualExpensesCents);
+
+const exampleHours = example.annualBillableHours.toLocaleString("en-US");
+
+const takeHomeRows = [4_000_000n, 6_000_000n, 8_500_000n, 10_000_000n, 12_500_000n, 15_000_000n, 20_000_000n].map((takeHome) => {
+  const result = calculateFreelanceRate({ ...exampleInput, annualTakeHomeCents: takeHome });
+
+  return [dollars(takeHome), formatUsdGrouped(result.hourlyRateCents), formatUsdGrouped(result.dayRateCents), formatUsdGrouped(result.annualRevenueCents)];
+});
+
+const billableRows = [4000, 5000, 6000, 6500, 7500, 8500].map((billable) => {
+  const result = calculateFreelanceRate({ ...exampleInput, billablePercentBps: billable });
+
+  return [`${billable / 100}%`, `${result.annualBillableHours.toLocaleString("en-US")} hours`, formatUsdGrouped(result.hourlyRateCents), formatUsdGrouped(result.dayRateCents)];
+});
+
+const updatedOn = "2026-09-15";
+
+const faq: readonly FaqEntry[] = [
+  { question: "What is a minimum sustainable hourly rate?", answer: "It is the lowest hourly rate that still reaches your take-home target after your tax reserve and business expenses, given the billable hours you enter. Charging less means missing the target unless you bill more hours." },
+  { question: "Why is billable time lower than working time?", answer: "Freelance work includes unpaid tasks such as finding clients, admin, invoicing, and learning. Only billable hours earn money, so the calculator spreads your annual revenue across billable hours, not every working hour. Your own time records are the best guide to a realistic percentage." },
+  { question: "What tax reserve should I enter?", answer: "Enter the share of revenue you plan to set aside for taxes. MathMyRate does not calculate taxes, deductions, or self-employment contributions, and it does not know where you live. Your past returns or a tax professional are better guides than a default." },
+  { question: "How is the day rate calculated?", answer: `The day rate is the hourly rate multiplied by the hours in your working day, with no separate rounding. In the example, a 7-hour day at ${exampleHourly} an hour is ${exampleDay}.` },
+  { question: "Does the rate include payment processing fees?", answer: "No. If clients pay by card or PayPal, the processor keeps part of each payment. The Stripe and PayPal fee calculators show what to charge so you still receive your rate." },
+  { question: "How do I turn this rate into a project quote?", answer: "Select Use in project quote. The rate is copied to the project rate calculator in this browser only, where you add delivery hours, meetings, contingency, and expenses. Your tax reserve is already inside the rate, so the project calculator does not add it again." },
+  { question: "Why is the result rounded up?", answer: "Dividing revenue by billable hours rarely lands on a whole cent. Rounding up by less than a cent keeps the rate at or above your target instead of just under it." },
+  { question: "Is my information saved or sent anywhere?", answer: "No. The calculation runs in your browser. Only an hourly rate you choose to transfer is stored, in this browser, and the project calculator removes it as soon as it reads it." },
+];
 ---
 <Layout title="Freelance Hourly Rate Calculator (and Day Rate) | MathMyRate" description="Turn a yearly take-home goal, expenses, tax reserve, and billable time into the minimum hourly and day rate you need to charge. Free, no sign-up." ogImage="/og/hourly-rate.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
     <Breadcrumbs items={breadcrumbs} />
     <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
     <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Build a rate with room to work. Turn a yearly take-home goal into the minimum hourly and day rate that covers tax, expenses, and unbilled time.</p>
+    <PageByline updatedOn={updatedOn} />
     <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
       <form id="hourly-form" data-calculator-form class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate>
         <div class="flex items-baseline justify-between gap-3"><h2 class="display text-2xl font-bold">Example working year</h2><span class="shrink-0 text-xs text-ink/50">USD / annual</span></div>
@@ -62,7 +106,49 @@ const fields: readonly FieldSpec[] = [
     </div>
     <StickyResult />
     <noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">The worked example is shown above. Enable JavaScript to update calculations locally.</p></noscript>
-    <section class="mt-14 max-w-3xl border-t border-line pt-10"><h2 class="display text-3xl font-bold">How this number is built</h2><p class="mt-4 leading-relaxed text-ink/70">Annual revenue is your desired take-home grossed up once for the effective tax reserve, plus annual business expenses. That revenue is divided by billable capacity and rounded up to the nearest cent.</p><p class="mt-4 text-sm text-ink/60">Planning estimate only; not tax, accounting, or legal advice. No payment fees or currency conversion are included.</p></section>
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The freelance hourly rate calculator turns the money you want to keep in a year into the minimum hourly and day rate you need to charge. It adds your tax reserve and business expenses, then divides by the hours you can actually bill. With the example inputs, that minimum is <strong>{exampleHourly} an hour</strong>, or <strong>{exampleDay} a day</strong>.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Enter the take-home pay you want for the year, after your tax reserve.</li>
+        <li>Add your yearly business expenses, such as software, insurance, equipment, and subcontractors.</li>
+        <li>Enter the share of revenue you set aside for taxes.</li>
+        <li>Enter your working weeks, working hours per week, and the percentage of that time you expect to bill.</li>
+        <li>Enter the hours in your working day to see a day rate. The result updates as you type.</li>
+      </ol>
+
+      <h2>How the number is built</h2>
+      <p>Here is the example worked through, using the same code as the calculator.</p>
+      <ol>
+        <li><strong>Gross up for tax once.</strong> Keeping $85,000 after a 27% reserve needs {exampleBeforeExpenses} of revenue, because $85,000 is 73% of that amount. The result is rounded up to the cent.</li>
+        <li><strong>Add expenses.</strong> {exampleBeforeExpenses} plus $7,500 of expenses is {exampleRevenue} of annual revenue.</li>
+        <li><strong>Find billable capacity.</strong> 46 weeks of 40 hours at 65% billable is {exampleHours} billable hours a year.</li>
+        <li><strong>Divide and round up.</strong> {exampleRevenue} divided by {exampleHours} hours is {exampleHourly} an hour.</li>
+        <li><strong>Scale to a day.</strong> {exampleHourly} times 7 hours is {exampleDay}.</li>
+      </ol>
+
+      <h2>Rates at different take-home targets</h2>
+      <p>Every other input stays at the example values: $7,500 of expenses, a 27% tax reserve, 46 weeks of 40 hours, 65% billable time, and a 7-hour day.</p>
+      <DataTable caption="Minimum rates by yearly take-home target" headers={["Take-home target", "Hourly rate", "Day rate", "Revenue needed"]} rows={takeHomeRows} />
+
+      <h2>How billable time changes your rate</h2>
+      <p>Billable time has a large effect because every unbilled hour still has to be paid for by the billable ones. This table keeps the $85,000 target and the other example values.</p>
+      <DataTable caption="Minimum rates by billable share of working time" headers={["Billable time", "Billable hours a year", "Hourly rate", "Day rate"]} rows={billableRows} />
+
+      <h2>What the rate does not include</h2>
+      <ul>
+        <li><strong>A tax calculation.</strong> The reserve is your own planning assumption. The calculator does not know tax brackets, deductions, or self-employment contributions.</li>
+        <li><strong>Payment processing fees.</strong> Card and PayPal fees come out of each payment. Use the <a href="/fees/stripe-fee-calculator/">Stripe fee calculator</a> or the <a href="/fees/paypal-fee-calculator/">PayPal fee calculator</a> to charge enough to cover them.</li>
+        <li><strong>Anything outside your inputs.</strong> Health insurance, retirement savings, time off, and savings goals only count if you include them in your take-home target or your expenses.</li>
+        <li><strong>Currency conversion.</strong> Amounts are treated as US dollars and never converted.</li>
+      </ul>
+
+      <FaqSection entries={faq} />
+
+      <p class="text-sm text-ink/60">Planning estimate only; not tax, accounting, or legal advice. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
     <RelatedTools current={tool.id} />
   </main>
   <script>

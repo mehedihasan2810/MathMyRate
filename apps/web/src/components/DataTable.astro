@@ -1,0 +1,26 @@
+---
+interface Props {
+  caption: string;
+  headers: readonly string[];
+  /** Each row's first cell labels the row; the remaining cells are right-aligned values. */
+  rows: readonly (readonly string[])[];
+}
+
+const { caption, headers, rows } = Astro.props;
+---
+
+<div class="guide-table">
+  <table>
+    <caption>{caption}</caption>
+    <thead>
+      <tr>{headers.map((header, index) => <th scope="col" class:list={[index > 0 && "numeric"]}>{header}</th>)}</tr>
+    </thead>
+    <tbody>
+      {rows.map((row) => (
+        <tr>
+          {row.map((cell, index) => (index === 0 ? <th scope="row">{cell}</th> : <td class="numeric">{cell}</td>))}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

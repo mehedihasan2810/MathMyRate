@@ -1,28 +1,29 @@
 ---
+import { issuesUrl } from "../data/site";
 import Layout from "../layouts/Layout.astro";
+import { formatReadableDate } from "../lib/dates";
+
+const updatedOn = "2026-09-15";
 ---
 <Layout title="Privacy | MathMyRate" description="What MathMyRate collects, stores, and sends: calculator inputs stay in your browser, with no analytics, no cookies, and no tracking on this site.">
   <main id="main-content" class="mx-auto max-w-3xl px-5 py-16 md:px-8 md:py-24">
     <p class="eyebrow">Privacy</p>
     <h1 class="display mt-4 text-5xl font-bold leading-none md:text-6xl">Your numbers stay yours.</h1>
-    <div class="mt-10 space-y-10 text-lg leading-relaxed text-ink/70">
-      <p>This page describes everything MathMyRate does with data. If we ever change this, this page changes first, not a policy blog post.</p>
-      <div>
-        <h2 class="display text-2xl font-bold text-ink">What is collected</h2>
-        <p class="mt-3">Nothing. There is no analytics, no tracking, no cookies, no telemetry, and no advertising on this site.</p>
-      </div>
-      <div>
-        <h2 class="display text-2xl font-bold text-ink">What is stored on your device</h2>
-        <p class="mt-3">One thing: when you transfer an hourly rate into the project calculator, the rate is kept in your browser's localStorage under the key <code class="rounded bg-mist px-1.5 py-0.5 text-base">mathmyrate:hourly-cents</code> so the other page can read it. It never leaves your browser, and clearing your site data removes it. No other inputs, income targets, expenses, sale amounts, are stored or transmitted anywhere.</p>
-      </div>
-      <div>
-        <h2 class="display text-2xl font-bold text-ink">What leaves your browser</h2>
-        <p class="mt-3">Calculator inputs and results are processed locally in your browser and are never sent to a server, embedded in URLs, or written to logs. Standard web hosting may generate ordinary server logs (such as IP addresses and requested URLs) operated by the hosting provider; those logs contain no financial inputs from this site's calculators.</p>
-      </div>
-      <div>
-        <h2 class="display text-2xl font-bold text-ink">Contact</h2>
-        <p class="mt-3">Questions about this page can go to the site operator through the repository's issue tracker.</p>
-      </div>
+    <p class="mt-6 text-sm text-ink/60">Last updated <time datetime={updatedOn}>{formatReadableDate(updatedOn)}</time>.</p>
+    <div class="guide mt-6 text-lg">
+      <p>This page describes everything MathMyRate does with data. If that ever changes, this page changes first.</p>
+      <h2>What is collected</h2>
+      <p>Nothing, by this site. It runs no analytics, tracking, or advertising scripts, and its own code sets no cookies. Fonts and images are served from the site itself, so loading a page does not contact a third party.</p>
+      <h2>What is stored on your device</h2>
+      <p>One thing: when you transfer an hourly rate into the project calculator, the rate is kept in your browser's local storage under the key <code class="rounded bg-mist px-1.5 py-0.5 text-base">mathmyrate:hourly-cents</code> so the other page can read it. The project calculator removes it as soon as it reads it, and clearing your site data removes it too. No other inputs, income targets, expenses, or sale amounts are stored or transmitted anywhere.</p>
+      <h2>What leaves your browser</h2>
+      <p>Calculator inputs and results are processed in your browser. They are never sent to a server, placed in web addresses, or written to logs. Like any website, the hosting provider may keep ordinary server logs, such as IP addresses and the pages requested; those logs contain no calculator inputs.</p>
+      <h2>Links to other sites</h2>
+      <p>Fee calculators link to each provider's official pricing pages, and the site links to its source code on GitHub. Those sites have their own privacy policies. Following a link sends them the same basic request information your browser sends to any website.</p>
+      <h2>If this changes</h2>
+      <p>If analytics or advertising is ever added, this page will be updated before it goes live. It will name each provider, list what they collect, and explain how to give or refuse consent. The date at the top of this page shows the last change.</p>
+      <h2>Contact</h2>
+      <p>Questions about this page can go to the <a href={issuesUrl}>public issue tracker on GitHub</a>. Issues are visible to everyone, so please do not include personal or financial details.</p>
     </div>
   </main>
 </Layout>

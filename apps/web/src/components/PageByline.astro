@@ -1,0 +1,17 @@
+---
+import { siteName } from "../data/site";
+import { formatReadableDate } from "../lib/dates";
+
+interface Props {
+  /** The date this page's written content was last meaningfully changed. */
+  updatedOn: string;
+  /** The date the official fee source was last reviewed, for fee calculators. */
+  reviewedOn?: string | null;
+}
+
+const { updatedOn, reviewedOn } = Astro.props;
+---
+
+<p class="mt-3 text-sm text-ink/60">
+  By <a href="/about/" class="underline underline-offset-2 hover:text-navy">{siteName}</a>. Updated <time datetime={updatedOn}>{formatReadableDate(updatedOn)}</time>.{reviewedOn ? <> Fee source reviewed <time datetime={reviewedOn}>{formatReadableDate(reviewedOn)}</time>.</> : null} <a href="/methodology/" class="underline underline-offset-2 hover:text-navy">How the numbers are made</a>.
+</p>

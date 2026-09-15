@@ -164,6 +164,31 @@ are implemented on branch `feat/launch-blockers-ux-seo`, based on `b06b53b`, not
   unfinished entry dims the last result instead of erasing it, and errors
   appear when the field is left or Update is pressed.
 
+### Content, trust pages, and new fee scenarios (2026-09-15)
+
+On branch `feat/content-trust-growth`, based on `b645576`:
+
+- Every provider fact was re-checked against the provider's own pages on
+  2026-09-15. Stripe gained international and manually entered card
+  scenarios. PayPal gained standard card payments, invoices paid through
+  PayPal or by card, international Checkout, and QR codes. Lemon Squeezy
+  gained international card, PayPal, and subscription orders, and now accepts
+  tax on the order, because its fee is calculated on the tax-inclusive total.
+  Review dates moved to 2026-09-15, and revisions were bumped where a rule's
+  sources, assumptions, or status changed.
+- The four fee pages share `FeeCalculator.astro`, with scenario choice,
+  keep-a-target mode, tax where the preset accepts it, and an optional
+  sales-per-month field backed by the engine's new `repeatSale` and
+  `effectiveFeeRateBps`.
+- All six calculators carry long-form guides: worked examples and reference
+  tables computed at build time, the provider fees the calculator does not
+  add, per-scenario assumptions, visible FAQs, sources, and updated and
+  reviewed dates. FAQPage markup is not emitted, because Google stopped showing
+  FAQ rich results on May 7, 2026.
+- New pages: `/fees/stripe-vs-paypal-fees/`, `/fees/gumroad-vs-lemon-squeezy-fees/`,
+  and `/changelog/`. About, Privacy, and Terms now give a public GitHub issue
+  tracker as the contact and correction route, and state that no ads run today.
+
 ### Infrastructure and deployment
 
 Alchemy remains the infrastructure owner for the existing Cloudflare Workers,
@@ -430,6 +455,55 @@ Browser evidence on the production preview:
   transfer to $2,801.84. PayPal $3.98, Gumroad $13.70, and Lemon Squeezy $5.50
   computed on load. Every route returned 200 with a 137 to 150 character
   description, the unknown URL returned 404, and no page has an inline handler.
+
+Local checks on 2026-09-15 for content, trust pages, and new fee scenarios
+(branch `feat/content-trust-growth`, based on `b645576`; browser work on the production preview at `:4321`
+and the restarted dev server at `:4399`, in-app Chromium at 1024×768 and
+375×812):
+
+| Check                                                      | Observed result                                                                                                                                                                                                                                                                                      |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run lint`                                            | Passed with 0 findings                                                                                                                                                                                                                                                                               |
+| `pnpm run format:check`                                    | Passed                                                                                                                                                                                                                                                                                               |
+| `pnpm run check-types`                                     | Passed: `astro check` 0 errors, 0 warnings, 0 hints                                                                                                                                                                                                                                                  |
+| `pnpm run test`                                            | Passed: 46 calculator tests, including Lemon Squeezy's two published worked examples and PayPal's international fee, and 76 web tests                                                                                                                                                                |
+| Guard build (`REQUIRE_SITE_URL=true`, no site)             | Failed as intended                                                                                                                                                                                                                                                                                   |
+| Site build (`PUBLIC_SITE_URL=https://calculators.example`) | Passed; 17 pages. Audit: one H1 and no skipped heading level per page, titles at most 60 characters, descriptions 135 to 160 characters, canonical links, `WebApplication` and `BreadcrumbList` on all eight calculator and comparison pages, no FAQPage markup, no inline handlers, 16 sitemap URLs |
+| Preview build                                              | Passed; every page noindex, `Disallow: /`, no sitemap                                                                                                                                                                                                                                                |
+
+Guide length on the eight calculator and comparison pages: 922 to 2,043 words.
+
+Browser evidence:
+
+- Stripe, desktop: domestic $3.20, international $4.70 with line items $3.20
+  and $1.50, manually entered $3.70. At 250 sales a month: $800.00 in fees,
+  $24,200.00 kept, $9,600.00 a year, 3.20%. International with $10 tax keeps
+  $85.30, or $21,325.00 a month. Keeping $100 with that tax charges $115.38,
+  and one cent less keeps $99.99 (hand-checked). Invalid and zero sales counts
+  dim the result while typing, then show errors; Update moves focus to the
+  field; Reset restores every field.
+- Gumroad, desktop: no tax field. Discover $30.00, after the threshold $8.70,
+  keeping $100 charges $109.44, and 1,000 sales a month is $9,440.00 in fees,
+  8.63% of sales.
+- Lemon Squeezy, 375 px: the fee page's worked example reproduced live. An
+  international card order of $24.00 with $4.00 tax pays $2.06 ($1.70 plus
+  $0.36) and keeps $17.94.
+- PayPal, 375 px: six scenarios stack in one column, the page does not scroll
+  sideways, and tables scroll inside their own box.
+- Comparisons: Stripe vs PayPal prices $100 at $3.20, $3.48, $3.98, $4.70, and
+  $5.48. Gumroad vs Lemon Squeezy marks Gumroad Discover lowest at $1 ($0.30)
+  and Lemon Squeezy lowest at $1,250 ($63.00); $0 dims while typing and then
+  shows "Enter an amount above zero."
+- Every route returned 200 with its FAQs, tables, and GitHub issue links; an
+  unknown URL returned 404.
+- Found and fixed in the pass: whole-number range errors printed 1000000
+  without digit grouping.
+- The dev server again returned 504 for its prebundled `effect.js` after the
+  new fee scripts triggered a dependency re-optimization; restarting it
+  cleared the error. Builds are unaffected.
+- Not verified: menu and form activation by Enter or Space (a limitation of
+  the in-app browser), a successful clipboard copy, print preview, and iOS
+  Safari's on-screen keyboard.
 
 For every future status update, record:
 

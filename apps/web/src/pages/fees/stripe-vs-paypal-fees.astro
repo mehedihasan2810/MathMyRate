@@ -1,0 +1,73 @@
+---
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeComparison from "../../components/FeeComparison.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { commonSaleAmounts, feeColumnsByAmount, feeFor, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+
+const tool = findTool("stripe-vs-paypal");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const stripe = requireOfficialPreset("stripe-us-online-domestic-card");
+
+const amountRows = feeColumnsByAmount(["stripe-us-online-domestic-card", "paypal-us-standard-card-payment", "paypal-us-checkout-paypal-payment"], commonSaleAmounts);
+
+const internationalRows = feeColumnsByAmount(["stripe-us-online-international-card", "paypal-us-checkout-international"], [1000n, 10000n, 50000n]);
+
+const updatedOn = "2026-09-15";
+
+const faq: readonly FaqEntry[] = [
+  { question: "Is Stripe cheaper than PayPal?", answer: `At the published US rates, Stripe's domestic card fee of 2.9% + 30¢ is lower than PayPal's standard card fee of 2.99% + 49¢ and PayPal Checkout's 3.49% + 49¢ at every sale amount, because both its percentage and its fixed fee are lower. On $100 that is ${feeFor("stripe-us-online-domestic-card", 10000n)}, ${feeFor("paypal-us-standard-card-payment", 10000n)}, and ${feeFor("paypal-us-checkout-paypal-payment", 10000n)}. PayPal's Advanced Credit and Debit Card Payments, which needs approval, lists 2.89% + 0.29 USD, and custom pricing on either side can change the picture.` },
+  { question: "Why does PayPal cost more on small payments?", answer: `Mostly the fixed fee: PayPal charges 49¢ per payment and Stripe 30¢. On a $10 sale, Stripe's domestic card fee is ${feeFor("stripe-us-online-domestic-card", 1000n)} and PayPal Checkout's is ${feeFor("paypal-us-checkout-paypal-payment", 1000n)}.` },
+  { question: "Do Stripe and PayPal return fees when I refund a customer?", answer: "Neither does. Stripe charges no fee to refund a card payment but keeps the original processing fees. PayPal charges no fee to make a refund but does not return the fees you paid to receive the payment." },
+  { question: "Which charges less for international buyers?", answer: `Stripe adds 1.5% for international cards and PayPal adds 1.50% for international commercial transactions. On a $100 sale, Stripe's international card fee is ${feeFor("stripe-us-online-international-card", 10000n)} and PayPal Checkout's international fee is ${feeFor("paypal-us-checkout-international", 10000n)}. Currency conversion costs extra on both.` },
+  { question: "What does each charge for a dispute?", answer: "Stripe charges $15.00 per dispute received, which is not returned, plus $15.00 if you respond manually, returned if you win. PayPal charges a 15.00 USD standard dispute fee, 30.00 USD for high-volume dispute accounts, and a 20.00 USD chargeback fee on card transactions not processed through a PayPal account or guest checkout." },
+];
+---
+<Layout title="Stripe vs PayPal Fees: Side-by-Side Calculator | MathMyRate" description="Compare Stripe and PayPal fees on the same sale: domestic cards, PayPal Checkout, and international buyers, from each provider's published US rates." ogImage="/og/stripe-vs-paypal.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">The same sale priced under Stripe's and PayPal's published US rates, side by side.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={stripe.checkedOn} />
+    <FeeComparison comparisonId="stripe-vs-paypal" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>The short answer</h2>
+      <p>For a US account on standard pricing, a domestic card payment costs 2.9% + 30¢ on Stripe and 2.99% + 49¢ through PayPal's standard card payments. When the buyer pays through PayPal Checkout, PayPal charges 3.49% + 49¢. On a $100 sale that is <strong>{feeFor("stripe-us-online-domestic-card", 10000n)}</strong>, <strong>{feeFor("paypal-us-standard-card-payment", 10000n)}</strong>, and <strong>{feeFor("paypal-us-checkout-paypal-payment", 10000n)}</strong>. The gap in fixed fees matters most on small sales.</p>
+
+      <h2>Fees at common sale amounts</h2>
+      <DataTable caption="Fee on a domestic payment by sale amount" headers={["Sale", "Stripe card", "PayPal card", "PayPal Checkout"]} rows={amountRows} />
+
+      <h2>International buyers</h2>
+      <p>Stripe adds 1.5% for cards issued outside the US. PayPal adds 1.50% when the buyer and seller are residents of different markets. Neither figure includes currency conversion, which costs extra on both.</p>
+      <DataTable caption="Fee on an international payment by sale amount" headers={["Sale", "Stripe international card", "PayPal Checkout, international"]} rows={internationalRows} />
+
+      <h2>Refunds, disputes, and payouts</h2>
+      <ul>
+        <li><strong>Refunds:</strong> neither returns the original fees. Stripe charges no fee to refund a card payment, and PayPal charges no fee to make a refund.</li>
+        <li><strong>Disputes:</strong> Stripe charges $15.00 per dispute received, plus $15.00 if you respond manually, returned if you win. PayPal's standard dispute fee is 15.00 USD, and its card chargeback fee is 20.00 USD.</li>
+        <li><strong>Payouts:</strong> both pay out to a bank for free on their standard schedule. Stripe's Instant Payouts cost 1.5% with a 50¢ minimum fee, and PayPal's instant transfers cost 1.50% with a 0.50 USD minimum.</li>
+      </ul>
+
+      <h2>What this comparison leaves out</h2>
+      <p>It uses each provider's published US rates for the named products only. It does not include custom or negotiated pricing, PayPal Pay Later or Advanced Credit and Debit Card Payments, Stripe ACH Direct Debit, currency conversion, or sales tax. For a full breakdown, use the <a href="/fees/stripe-fee-calculator/">Stripe fee calculator</a> or the <a href="/fees/paypal-fee-calculator/">PayPal fee calculator</a>.</p>
+
+      <FaqSection entries={faq} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">
+        <li><a href="https://stripe.com/pricing" rel="noopener">Pricing & Fees | Stripe</a></li>
+        <li><a href="https://docs.stripe.com/disputes/how-disputes-work" rel="noopener">How disputes work | Stripe Documentation</a></li>
+        <li><a href="https://www.paypal.com/us/business/paypal-business-fees" rel="noopener">PayPal Merchant Fees</a></li>
+      </ul>
+      <p class="text-sm text-ink/60">MathMyRate is not affiliated with Stripe or PayPal. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

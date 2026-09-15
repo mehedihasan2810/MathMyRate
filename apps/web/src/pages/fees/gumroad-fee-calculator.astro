@@ -1,379 +1,122 @@
 ---
-import { calculateFees, getFeePreset } from "@MathMyRate/calculators";
+import { calculateFees } from "@MathMyRate/calculators";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
-import NumberField from "../../components/NumberField.astro";
+import DataTable from "../../components/DataTable.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
 import RelatedTools from "../../components/RelatedTools.astro";
-import ResultRow from "../../components/ResultRow.astro";
-import StickyResult from "../../components/StickyResult.astro";
+import { findFeeCalculator } from "../../data/fee-calculators";
 import { findTool, toolBreadcrumbs } from "../../data/tools";
 import Layout from "../../layouts/Layout.astro";
-import { formatFeeRate } from "../../lib/fee-labels";
+import { formatCombinedRate } from "../../lib/fee-labels";
+import { commonSaleAmounts, feeColumnsByAmount, requireOfficialPreset, scenarioRowsAt } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
 import { formatUsdGrouped } from "../../scripts/calculator-form";
-
-function requirePreset(id: string) {
-  const preset = getFeePreset(id);
-
-  if (!preset) {
-    throw new Error(`The ${id} fee preset is missing from the registry.`);
-  }
-
-  return preset;
-}
-
-const directPreset = requirePreset("gumroad-us-direct-card");
-
-const directHighVolumePreset = requirePreset("gumroad-us-direct-card-high-volume");
-
-const discoverPreset = requirePreset("gumroad-us-discover");
-
-const thresholdPreset = requirePreset("gumroad-us-direct-threshold-crossing");
-
-const exampleSale = calculateFees({ preset: directPreset, grossCents: 10000n });
-
-const scenarioDocs = [
-  { heading: "Direct sale, before the threshold", preset: directPreset },
-  { heading: "Direct sale, after the monthly threshold", preset: directHighVolumePreset },
-  { heading: "Discover marketplace sale", preset: discoverPreset },
-];
-
-const sourceByUrl = new Map<string, { url: string; title: string }>();
-
-for (const preset of [directPreset, directHighVolumePreset, discoverPreset]) {
-  for (const source of preset.sources) {
-    sourceByUrl.set(source.url, source);
-  }
-}
-
-const sources = [...sourceByUrl.values()];
-
-const reviewedOn = directPreset.checkedOn ?? "date not recorded";
 
 const tool = findTool("gumroad-fees");
 
 const breadcrumbs = toolBreadcrumbs(tool.id);
 
-const directPlatform = directPreset.components[0];
+const config = findFeeCalculator("gumroad");
 
-const discoverComponent = discoverPreset.components[0];
+const direct = requireOfficialPreset("gumroad-us-direct-card");
 
-if (!directPlatform || !discoverComponent) {
-  throw new Error("A Gumroad fee preset has no fee components.");
-}
+const highVolume = requireOfficialPreset("gumroad-us-direct-card-high-volume");
 
-const description = `Estimate Gumroad fees on direct sales (${formatFeeRate(directPlatform)} plus card processing) and Discover sales (${formatFeeRate(discoverComponent)}), what you keep, and what to charge to net a target.`;
+const discover = requireOfficialPreset("gumroad-us-discover");
 
-const directNote = "Supported scenario: US Gumroad creator account, USD direct sale paid by credit card, before the documented $20,000 calendar-month volume threshold.";
+const directSale = calculateFees({ preset: direct, grossCents: 10000n });
 
-const lineItemRow = "mt-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 text-sm text-paper/70";
+const highVolumeSale = calculateFees({ preset: highVolume, grossCents: 10000n });
+
+const discoverSale = calculateFees({ preset: discover, grossCents: 10000n });
+
+const directRate = formatCombinedRate(direct.components);
+
+const amountRows = feeColumnsByAmount(["gumroad-us-direct-card", "gumroad-us-direct-card-high-volume", "gumroad-us-discover"], commonSaleAmounts);
+
+const scenarioRows = scenarioRowsAt(config.scenarios, 10000n);
+
+const updatedOn = "2026-09-15";
+
+const description = "Estimate Gumroad fees on direct sales (10% + 50¢ plus 2.9% + 30¢ card processing) and Discover sales (30%), what you keep, and what to charge.";
+
+const guideSources = [
+  { title: "Gumroad pricing", url: "https://gumroad.com/pricing" },
+  { title: "Gumroad's fees - Gumroad Help Center", url: "https://gumroad.com/help/article/66-gumroads-fees.html" },
+  { title: "Sales tax on Gumroad - Gumroad Help Center", url: "https://gumroad.com/help/article/121-sales-tax-on-gumroad.html" },
+  { title: "How to refund a customer - Gumroad Help Center", url: "https://gumroad.com/help/article/47-how-to-refund-a-customer.html" },
+  { title: "Getting paid - Gumroad Help Center", url: "https://gumroad.com/help/article/13-getting-paid.html" },
+  { title: "How does Gumroad handle chargebacks - Gumroad Help Center", url: "https://gumroad.com/help/article/134-how-does-gumroad-handle-chargebacks.html" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Gumroad take from a sale?", answer: `For a direct card sale, Gumroad charges 10% + $0.50 and card processing adds 2.9% + $0.30, so a $100 sale pays ${formatUsdGrouped(directSale.feeCents)}. A sale through Gumroad's Discover marketplace pays a flat 30%, or ${formatUsdGrouped(discoverSale.feeCents)} on $100, which includes processing.` },
+  { question: "Is Gumroad's 10% fee the only fee on a direct sale?", answer: "No. Gumroad's fee list says the 10% + $0.50 does not include credit card processing of 2.9% + $0.30, so this calculator adds both. Gumroad's refund help describes processing as a portion of its fee, which conflicts with that list, so treat the result as an estimate and check your sales export." },
+  { question: "What does Gumroad charge for Discover sales?", answer: "When a new customer finds and buys your product through Gumroad Discover, Gumroad charges a flat 30% per transaction, and that fee includes all processing fees." },
+  { question: "How does the $20,000 monthly threshold work?", answer: `Once your paid sales in a calendar month reach $20,000, new direct sales that month cost 5% + $0.50 instead of 10% + $0.50. It applies automatically, resets on the 1st, and a refund can take you back under the threshold. Discover sales stay at 30%. A $100 direct sale after the threshold pays ${formatUsdGrouped(highVolumeSale.feeCents)} including card processing.` },
+  { question: "Does Gumroad add sales tax on top of my price?", answer: "Yes. Gumroad has been the merchant of record for all sales since January 1, 2025, and collects and remits sales tax, VAT, and GST. Its terms say prices are exclusive of indirect tax, so tax is added at checkout. This calculator covers orders with no tax collected." },
+  { question: "Does Gumroad return its fee when I refund a customer?", answer: "For a normal Gumroad sale, Gumroad returns its own fee on the refunded portion and keeps only the payment-processing portion. Sales through a connected Stripe or PayPal account are handled differently." },
+  { question: "When does Gumroad pay out, and what does it cost?", answer: "You need a balance of at least $100 for a payout. Creators are typically paid weekly, after a 7-day holding period, and can choose daily, monthly, or quarterly payouts instead. PayPal payouts have a 2% processing fee, and US instant payouts cost 3%." },
+  { question: "What does Gumroad charge on PayPal sales?", answer: "Gumroad lists PayPal fees separately from its own fee but does not publish the PayPal rate on its fee page, so this calculator does not estimate PayPal sales." },
+];
 ---
 <Layout title="Gumroad Fee Calculator: Direct & Discover | MathMyRate" description={description} ogImage="/og/gumroad.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
     <Breadcrumbs items={breadcrumbs} />
     <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
-    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Gumroad's cut, worked out in cents, for direct sales and Discover marketplace sales.</p>
-    <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
-      <form id="gumroad-fee-form" data-calculator-form class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate>
-        <div class="flex items-baseline justify-between gap-3"><h2 class="display text-2xl font-bold">Sale details</h2><span class="shrink-0 text-xs text-ink/50">USD / per transaction</span></div>
-        <p id="scenario-note" class="mt-2 text-sm text-ink/60">{directNote}</p>
-        <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
-        <fieldset class="mt-6">
-          <legend class="text-sm font-semibold">What kind of sale was it?</legend>
-          <div class="mt-3 grid gap-2 sm:grid-cols-3">
-            <label class="flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium"><input type="radio" name="scenario" value="direct" class="mt-1" checked /><span>Direct sale<span class="mt-1 block text-xs font-normal text-ink/55">From your profile or a direct link, before the volume threshold.</span></span></label>
-            <label class="flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium"><input type="radio" name="scenario" value="direct-high-volume" class="mt-1" /><span>Direct sale after threshold<span class="mt-1 block text-xs font-normal text-ink/55">Your month already passed $20,000 in paid sales.</span></span></label>
-            <label class="flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium"><input type="radio" name="scenario" value="discover" class="mt-1" /><span>Discover sale<span class="mt-1 block text-xs font-normal text-ink/55">The customer found the product through Gumroad's Discover marketplace.</span></span></label>
-          </div>
-        </fieldset>
-        <fieldset class="mt-6">
-          <legend class="text-sm font-semibold">What do you want to work out?</legend>
-          <div class="mt-3 grid gap-2 sm:grid-cols-2">
-            <label class="flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium"><input type="radio" name="feeMode" value="received" class="mt-1" checked /><span>Customer paid an amount<span class="mt-1 block text-xs font-normal text-ink/55">See the fee and what you keep.</span></span></label>
-            <label class="flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium"><input type="radio" name="feeMode" value="net" class="mt-1" /><span>I want to keep a target<span class="mt-1 block text-xs font-normal text-ink/55">Find what to charge for it.</span></span></label>
-          </div>
-        </fieldset>
-        <NumberField class="mt-6" id="amount" label="Amount the customer paid" labelTextId="amount-label" value="100.00" unit="usd" required help="The customer's full order amount." />
-        <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="gumroad-fee-update">Update fees</button><button id="gumroad-fee-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
-      </form>
-      <aside id="fee-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-ink p-7 text-paper shadow-[0_16px_45px_rgba(19,31,51,.16)] md:p-9">
-        <p class="eyebrow !text-[#c3d2ea]" id="primary-label" data-primary-label>You keep from this sale</p>
-        <p id="fee-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(exampleSale.sellerProceedsCents)}</p>
-        <p class="mt-1 text-paper/70">before expenses and income tax</p>
-        <div class="my-7 border-t border-paper/25"></div>
-        <div class="[&>:first-child]:mt-0">
-          <ResultRow label="Gumroad fee" valueId="fee-total-result" value={formatUsdGrouped(exampleSale.feeCents)} />
-          <div id="line-items" class="mt-1">{exampleSale.lineItems.map((item) => <div class={lineItemRow}><span>{item.label}</span><strong class="ml-auto text-right text-paper">{formatUsdGrouped(item.feeCents)}</strong></div>)}</div>
-          <ResultRow label="Net after fees" valueId="net-result" value={formatUsdGrouped(exampleSale.netAfterFeesCents)} />
-          <ResultRow label="You keep from that charge" valueId="keep-result" value="—" rowId="keep-row" hidden />
-        </div>
-        <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-fee" type="button" class="rounded-full bg-paper px-4 py-2.5 text-sm font-bold text-ink">Copy result</button><button type="button" data-print class="rounded-full border border-paper/35 px-4 py-2.5 text-sm font-bold">Print</button></div>
-        <ul class="mt-6 list-disc space-y-1 pl-5 text-sm text-[#ccd8ec]">{exampleSale.warnings.map((warning) => <li>{warning}</li>)}</ul>
-        <p id="fee-message" class="mt-4 text-sm text-[#ccd8ec]" aria-live="polite"></p>
-      </aside>
-    </div>
-    <StickyResult />
-    <noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The worked example above uses a $100.00 direct sale before Gumroad's monthly volume threshold; enable JavaScript to calculate your own amounts locally.</p></noscript>
-    <section class="mt-14 max-w-3xl border-t border-line pt-10">
-      <h2 class="display text-3xl font-bold">Where this rate comes from</h2>
-      <p class="mt-4 leading-relaxed text-ink/70">Gumroad documents two sale kinds with separate pricing. A direct sale from your profile or a direct link pays 10% + $0.50 to Gumroad plus 2.9% + $0.30 in credit-card processing. A sale through the Discover marketplace pays a flat 30% that already includes processing. Once an account has reached $20,000 in paid sales in a calendar month, the direct-sale fee drops to 5% + $0.50 while card processing stays separate. Results are estimates rounded to the nearest cent; Gumroad's published pages do not establish a component-rounding policy.</p>
-      <p class="mt-4 leading-relaxed text-ink/70">One gap is documented on purpose: a direct sale that itself crosses the $20,000 monthly threshold. {thresholdPreset.blockedReason} This tool refuses that case instead of inventing a blended rate; use the pre-threshold or post-threshold scenario once the month's state is known.</p>
-      <p class="mt-4 leading-relaxed text-ink/70">Sales tax is never calculated here. Gumroad's own sales-tax handling on these sale kinds is outside the documented scenarios below, so no tax input is offered and no tax row appears.</p>
-      {scenarioDocs.map((doc) => (<div class="mt-8"><h3 class="display text-xl font-bold">{doc.heading}</h3><h4 class="mt-3 text-sm font-semibold uppercase tracking-wide text-ink/60">Stated assumptions</h4><ul class="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-ink/70">{doc.preset.assumptions.map((assumption) => <li>{assumption}</li>)}</ul><h4 class="mt-4 text-sm font-semibold uppercase tracking-wide text-ink/60">Not covered</h4><ul class="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-ink/70">{doc.preset.exclusions.map((exclusion) => <li>{exclusion}</li>)}</ul></div>))}
-      <p class="mt-8 text-sm text-ink/60">Official sources: {sources.map((source, index) => <span>{index > 0 && " "}<a class="underline" href={source.url} rel="noopener">{source.title}</a></span>)}. Reviewed {reviewedOn}. Rates can change; unsupported cases are refused rather than estimated.</p>
-    </section>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Gumroad's cut, worked out in cents, for direct sales, the $20,000 monthly threshold, and Discover marketplace sales.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={direct.checkedOn} />
+    <FeeCalculator calculatorId="gumroad" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The Gumroad fee calculator shows what Gumroad keeps from a digital product sale and what reaches you. A direct card sale pays Gumroad's 10% + $0.50 plus 2.9% + $0.30 card processing, a combined <strong>{directRate}</strong>, so a $100 sale pays <strong>{formatUsdGrouped(directSale.feeCents)}</strong> and leaves <strong>{formatUsdGrouped(directSale.sellerProceedsCents)}</strong>. Discover marketplace sales pay a flat 30%, and direct sales get cheaper after $20,000 of paid sales in a month.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Choose the kind of sale: a direct sale, a direct sale after the monthly threshold, or a Discover sale.</li>
+        <li>Choose whether you know the price the customer paid, or what you want to keep.</li>
+        <li>Enter the amount, before any sales tax Gumroad adds at checkout.</li>
+        <li>To see monthly and yearly totals, enter how many same-size sales you make a month.</li>
+      </ol>
+
+      <h2>How the fee is built</h2>
+      <p>Here is a $100.00 sale in each scenario, using the same code as the calculator.</p>
+      <ol>
+        <li><strong>Direct sale.</strong> Gumroad's 10% is $10.00, plus $0.50. Card processing is 2.9%, or $2.90, plus $0.30. The total fee is {formatUsdGrouped(directSale.feeCents)}.</li>
+        <li><strong>After the threshold.</strong> Gumroad's part drops to 5% + $0.50, or $5.50, while card processing stays $3.20, for {formatUsdGrouped(highVolumeSale.feeCents)}.</li>
+        <li><strong>Discover sale.</strong> A flat 30% is {formatUsdGrouped(discoverSale.feeCents)}, with processing included.</li>
+      </ol>
+
+      <h2>Gumroad fees at common sale amounts</h2>
+      <p>Card sales with no tax collected. The fixed charges make direct sales cost a larger share of a cheap product, while Discover takes the same 30% at every price.</p>
+      <DataTable caption="Gumroad fee by sale amount and sale type" headers={["Sale", "Direct", "Direct after $20,000", "Discover"]} rows={amountRows} />
+
+      <h2>The same $100 sale in every scenario</h2>
+      <DataTable caption="Gumroad fee on a $100 sale by sale type" headers={["Scenario", "Rate", "Gumroad fee", "You keep"]} rows={scenarioRows} />
+
+      <h2>The $20,000 monthly threshold</h2>
+      <p>Once your paid sales in a calendar month reach $20,000, new direct sales that month cost 5% + $0.50 instead of 10% + $0.50. The lower fee applies automatically and resets on the 1st of each month, and a refund can bring you back under $20,000. Discover sales stay at 30%. Gumroad does not publish how it prices the single sale that crosses the threshold, so this calculator does not guess it.</p>
+
+      <h2>Tax, refunds, payouts, and chargebacks</h2>
+      <ul>
+        <li><strong>Sales tax:</strong> Gumroad has been the merchant of record since January 1, 2025. It collects and remits sales tax, VAT, and GST, and adds tax on top of your price.</li>
+        <li><strong>Refunds:</strong> Gumroad returns its own fee on the refunded portion of a sale and keeps the payment-processing portion.</li>
+        <li><strong>Payouts:</strong> a $100 minimum balance, usually paid weekly after a 7-day holding period. PayPal payouts have a 2% fee, and US instant payouts cost 3%.</li>
+        <li><strong>Chargebacks:</strong> Gumroad's chargeback help says you cover the refunded amount and payment-processing fees and Gumroad returns its platform fee. Other Gumroad pages describe chargeback costs differently, and no dispute fee amount is published.</li>
+        <li><strong>Affiliates:</strong> fees on an affiliate sale are split between you and the affiliate in proportion to the affiliate's commission.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="gumroad" blockedPresetIds={["gumroad-us-direct-threshold-crossing"]} />
+
+      <FaqSection entries={faq} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{guideSources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Gumroad's pages were reviewed on the date shown at the top of this page. Custom account fees can differ. MathMyRate is not affiliated with Gumroad. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
     <RelatedTools current={tool.id} />
   </main>
-  <script>
-    import {
-      calculateFees,
-      getFeePreset,
-      grossUpFees,
-      type FeePreset,
-    } from "@MathMyRate/calculators";
-    import {
-      type CalculationTrigger,
-      formatUsdGrouped,
-      focusProblemField,
-      InputProblem,
-      markResultsCurrent,
-      markResultsStale,
-      requireHtmlButton,
-      requireHtmlElement,
-      requireHtmlForm,
-      requireHtmlInput,
-      setFieldState,
-      shouldDeferProblem,
-      usdToCents,
-      watchCalculatorFields,
-    } from "../../scripts/calculator-form";
-
-    function requirePreset(id: string): FeePreset {
-      const preset = getFeePreset(id);
-
-      if (!preset) {
-        throw new Error(`The ${id} fee preset is missing from the registry.`);
-      }
-
-      return preset;
-    }
-
-    const PRESETS = {
-      direct: requirePreset("gumroad-us-direct-card"),
-      "direct-high-volume": requirePreset("gumroad-us-direct-card-high-volume"),
-      discover: requirePreset("gumroad-us-discover"),
-    } as const;
-
-    const SCENARIOS = {
-      direct: {
-        label: "Gumroad direct sale",
-        note: "Supported scenario: US Gumroad creator account, USD direct sale paid by credit card, before the documented $20,000 calendar-month volume threshold.",
-      },
-      "direct-high-volume": {
-        label: "Gumroad direct sale after the monthly threshold",
-        note: "Supported scenario: US Gumroad creator account, USD direct credit-card sale, after the account passed $20,000 in paid sales this calendar month.",
-      },
-      discover: {
-        label: "Gumroad Discover marketplace sale",
-        note: "Supported scenario: US Gumroad creator account, USD sale made through Gumroad's Discover marketplace.",
-      },
-    } as const;
-
-    type ScenarioId = keyof typeof SCENARIOS;
-
-    const MODE_TEXT = {
-      received: {
-        amountLabel: "Amount the customer paid",
-        amountHelp: "The customer's full order amount.",
-        primaryLabel: "You keep from this sale",
-      },
-      net: {
-        amountLabel: "Amount you want to keep",
-        amountHelp: "What should reach you after Gumroad's fee.",
-        primaryLabel: "Charge the customer",
-      },
-    } as const;
-
-    type FeeMode = keyof typeof MODE_TEXT;
-
-    const form = requireHtmlForm("gumroad-fee-form");
-
-    const panel = requireHtmlElement("fee-panel");
-
-    const copyButton = requireHtmlButton("copy-fee");
-
-    let latestCopy: string | null = null;
-
-    function currentMode(): FeeMode {
-      const checked = form.querySelector('input[name="feeMode"]:checked');
-
-      return checked instanceof HTMLInputElement && checked.value === "net" ? "net" : "received";
-    }
-
-    function currentScenario(): ScenarioId {
-      const checked = form.querySelector('input[name="scenario"]:checked');
-      const value = checked instanceof HTMLInputElement ? checked.value : "direct";
-
-      return value === "direct-high-volume"
-        ? "direct-high-volume"
-        : value === "discover"
-          ? "discover"
-          : "direct";
-    }
-
-    function setResult(id: string, text: string): void {
-      requireHtmlElement(id).textContent = text;
-    }
-
-    function applyModeText(mode: FeeMode): void {
-      const text = MODE_TEXT[mode];
-
-      requireHtmlElement("amount-label").textContent = text.amountLabel;
-      requireHtmlElement("amount-help").textContent = text.amountHelp;
-      requireHtmlElement("primary-label").textContent = text.primaryLabel;
-      requireHtmlElement("keep-row").hidden = mode !== "net";
-    }
-
-    function applyScenarioText(scenario: ScenarioId): void {
-      requireHtmlElement("scenario-note").textContent = SCENARIOS[scenario].note;
-    }
-
-    function renderLineItems(items: ReadonlyArray<{ label: string; feeCents: bigint }>): void {
-      const container = requireHtmlElement("line-items");
-
-      container.replaceChildren();
-
-      for (const item of items) {
-        const row = document.createElement("div");
-        row.className = "mt-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 text-sm text-paper/70";
-
-        const label = document.createElement("span");
-        label.textContent = item.label;
-
-        const value = document.createElement("strong");
-        value.className = "ml-auto text-right text-paper";
-        value.textContent = formatUsdGrouped(item.feeCents);
-
-        row.appendChild(label);
-        row.appendChild(value);
-        container.appendChild(row);
-      }
-    }
-
-    function clear(): void {
-      for (const id of ["fee-result", "fee-total-result", "net-result", "keep-result"]) {
-        setResult(id, "—");
-      }
-
-      renderLineItems([]);
-      markResultsCurrent(panel, []);
-      copyButton.disabled = true;
-      latestCopy = null;
-    }
-
-    function calc(trigger: CalculationTrigger): void {
-      const mode = currentMode();
-      const scenario = currentScenario();
-      const preset = PRESETS[scenario];
-
-      try {
-        const amount = usdToCents(requireHtmlInput("amount").value, "amount");
-
-        const result =
-          mode === "received"
-            ? calculateFees({ preset, grossCents: amount })
-            : grossUpFees({ preset, targetProceedsCents: amount });
-
-        setResult(
-          "fee-result",
-          formatUsdGrouped(mode === "received" ? result.sellerProceedsCents : result.grossCents),
-        );
-        setResult("fee-total-result", formatUsdGrouped(result.feeCents));
-        setResult("net-result", formatUsdGrouped(result.netAfterFeesCents));
-        renderLineItems(result.lineItems);
-
-        const reviewed = result.checkedOn ?? "date not recorded";
-
-        if (mode === "net") {
-          setResult("keep-result", formatUsdGrouped(result.sellerProceedsCents));
-        }
-
-        latestCopy =
-          mode === "received"
-            ? `${SCENARIOS[scenario].label} on ${formatUsdGrouped(result.grossCents)}: ${formatUsdGrouped(result.feeCents)} fee, you keep ${formatUsdGrouped(result.sellerProceedsCents)} (estimate; source reviewed ${reviewed}).`
-            : `To keep ${formatUsdGrouped(amount)} from a ${SCENARIOS[scenario].label}, charge ${formatUsdGrouped(result.grossCents)} (estimate; source reviewed ${reviewed}).`;
-
-        markResultsCurrent(panel, [copyButton]);
-        requireHtmlElement("fee-message").textContent = "";
-        setFieldState(form);
-      } catch (error) {
-        const problem =
-          error instanceof InputProblem
-            ? error
-            : new InputProblem(
-                "amount",
-                mode === "received"
-                  ? "Enter an amount above zero."
-                  : "This target cannot be reached. Try a smaller amount.",
-              );
-
-        if (shouldDeferProblem(form, trigger)) {
-          markResultsStale(panel, [copyButton]);
-
-          return;
-        }
-
-        clear();
-        setFieldState(form, problem);
-
-        if (trigger === "submit") focusProblemField(form, problem);
-      }
-    }
-
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      calc("submit");
-    });
-
-    requireHtmlButton("gumroad-fee-update").addEventListener("click", () => calc("submit"));
-
-    form.querySelectorAll('input[name="feeMode"]').forEach((element) => {
-      element.addEventListener("change", () => {
-        applyModeText(currentMode());
-        calc("commit");
-      });
-    });
-
-    form.querySelectorAll('input[name="scenario"]').forEach((element) => {
-      element.addEventListener("change", () => {
-        applyScenarioText(currentScenario());
-        calc("commit");
-      });
-    });
-
-    watchCalculatorFields(form, calc);
-
-    requireHtmlButton("gumroad-fee-reset").addEventListener("click", () => {
-      form.reset();
-      applyScenarioText(currentScenario());
-      applyModeText(currentMode());
-      calc("commit");
-    });
-
-    copyButton.addEventListener("click", async () => {
-      if (latestCopy === null) return;
-
-      try {
-        await navigator.clipboard.writeText(latestCopy);
-        requireHtmlElement("fee-message").textContent = "Result copied.";
-      } catch {
-        requireHtmlElement("fee-message").textContent =
-          "Copy was unavailable. Select the result to copy it manually.";
-      }
-    });
-
-    applyScenarioText(currentScenario());
-
-    applyModeText(currentMode());
-
-    calc("commit");
-  </script>
 </Layout>

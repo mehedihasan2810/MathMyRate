@@ -1,0 +1,22 @@
+---
+import { issuesUrl } from "../data/site";
+import { changelog } from "../data/changelog";
+import Layout from "../layouts/Layout.astro";
+import { formatReadableDate } from "../lib/dates";
+---
+<Layout title="Fee Rule Changelog | MathMyRate" description="Every change to MathMyRate's official fee rules, with dates and sources: new scenarios, rate updates, source moves, and review dates for each provider.">
+  <main id="main-content" class="mx-auto max-w-3xl px-5 py-16 md:px-8 md:py-24">
+    <p class="eyebrow">Changelog</p>
+    <h1 class="display mt-4 text-5xl font-bold leading-none md:text-6xl">Fee rule changes.</h1>
+    <div class="guide mt-10 text-lg">
+      <p>Providers change their pricing, and MathMyRate's rules have to follow. Each entry below records what changed, when it was reviewed, and the official pages it was checked against. If you spot a rate that no longer matches its source, please <a href={issuesUrl}>open an issue on GitHub</a>.</p>
+      {changelog.map((entry) => (
+        <section>
+          <h2><time datetime={entry.date}>{formatReadableDate(entry.date)}</time>: {entry.title}</h2>
+          <ul>{entry.changes.map((change) => <li>{change}</li>)}</ul>
+          <p class="text-base">Sources: {entry.sources.map((source, index) => <>{index > 0 ? ", " : ""}<a href={source.url} rel="noopener">{source.title}</a></>)}.</p>
+        </section>
+      ))}
+    </div>
+  </main>
+</Layout>

@@ -90,6 +90,95 @@ input[type="number"]::-webkit-inner-spin-button {
 .result-value {
   overflow-wrap: anywhere;
 }
+/* Long-form guide content under each calculator. */
+.guide {
+  max-width: 48rem;
+  color: rgb(19 31 51 / 0.78);
+  line-height: 1.7;
+}
+.guide h2 {
+  margin-top: 3.5rem;
+  color: var(--color-ink);
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.guide h3 {
+  margin-top: 2rem;
+  color: var(--color-ink);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.guide p,
+.guide ul,
+.guide ol,
+.guide .guide-table {
+  margin-top: 1rem;
+}
+.guide ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+.guide ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+}
+.guide li + li {
+  margin-top: 0.4rem;
+}
+.guide a {
+  color: var(--color-navy);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.guide strong {
+  color: var(--color-ink);
+}
+.guide .faq-entry h3 {
+  margin-top: 1.75rem;
+}
+.guide .faq-entry p {
+  margin-top: 0.5rem;
+}
+.guide-table {
+  overflow-x: auto;
+  border: 1px solid var(--color-line);
+  border-radius: 1rem;
+  background: white;
+}
+.guide-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.guide-table caption {
+  padding: 0.85rem 1rem 0.35rem;
+  color: rgb(19 31 51 / 0.6);
+  font-size: 0.8rem;
+  text-align: left;
+}
+.guide-table th,
+.guide-table td {
+  padding: 0.6rem 1rem;
+  border-top: 1px solid var(--color-line);
+  text-align: left;
+  white-space: nowrap;
+}
+.guide-table thead th {
+  border-top: 0;
+  color: var(--color-ink);
+  font-weight: 600;
+}
+.guide-table tbody th {
+  color: var(--color-ink);
+  font-weight: 500;
+}
+.guide-table .numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
 .site-menu > summary::-webkit-details-marker {
   display: none;
 }
@@ -106,9 +195,21 @@ input[type="number"]::-webkit-inner-spin-button {
 [data-result-panel] strong {
   transition: opacity 0.15s ease;
 }
+[data-result-panel][data-stale] td,
 [data-result-panel][data-stale] .result-value,
 [data-result-panel][data-stale] strong {
   opacity: 0.45;
+}
+.lowest-badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  border-radius: 999px;
+  background: rgb(185 141 47 / 0.16);
+  padding: 0.1rem 0.5rem;
+  color: #7a5a17;
+  font-size: 0.7rem;
+  font-weight: 600;
+  vertical-align: middle;
 }
 .sticky-result {
   position: fixed;

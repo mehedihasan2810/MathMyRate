@@ -34,9 +34,7 @@ record what has actually happened since the plan was written.
 ## Current guardrails (2026-09-15)
 
 - Public routes are `/`, `/freelance/`, `/freelance/hourly-rate-calculator/`,
-  and `/freelance/project-rate-calculator/`; `/fees/` plus the Stripe, PayPal,
-  Gumroad, and Lemon Squeezy calculators; `/methodology/`, `/about/`,
-  `/privacy/`, `/terms/`; and a 404 page for unknown routes. Tools are free;
+  and `/freelance/project-rate-calculator/`; `/fees/` plus the Stripe, PayPal, Gumroad, and Lemon Squeezy calculators and the `/fees/stripe-vs-paypal-fees/` and `/fees/gumroad-vs-lemon-squeezy-fees/` comparisons; `/methodology/`, `/changelog/`, `/about/`, `/privacy/`, `/terms/`; and a 404 page for unknown routes. Tools are free;
   there are no login, signup, or dashboard pages. The pages use labeled native
   controls and browser scripts, not a Preact island, and consume real engine
   results. Without `PUBLIC_SITE_URL`, pages are noindexed, `robots.txt` disallows crawling, and no sitemap is emitted. Setting it for the production build turns all three on, and `REQUIRE_SITE_URL=true` or `ALCHEMY_STAGE=production` makes a missing value fail the build. SEO and UX work follows [the SEO playbook](docs/seo-playbook.md).

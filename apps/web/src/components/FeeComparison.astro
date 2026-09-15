@@ -1,0 +1,57 @@
+---
+import { calculateFees, effectiveFeeRateBps } from "@MathMyRate/calculators";
+import { findFeeComparison, type FeeComparisonId } from "../data/fee-comparisons";
+import { formatCombinedRate } from "../lib/fee-labels";
+import { requireOfficialPreset } from "../lib/fee-tables";
+import { formatPercentBps, formatUsdGrouped } from "../scripts/calculator-form";
+import NumberField from "./NumberField.astro";
+
+interface Props {
+  comparisonId: FeeComparisonId;
+}
+
+const config = findFeeComparison(Astro.props.comparisonId);
+
+const rows = config.options.map((option) => {
+  const preset = requireOfficialPreset(option.presetId);
+  const result = calculateFees({ preset, grossCents: 10000n });
+
+  return { option, rate: formatCombinedRate(preset.components), result };
+});
+
+const lowestFee = rows.reduce((lowest, row) => (row.result.feeCents < lowest ? row.result.feeCents : lowest), rows[0]?.result.feeCents ?? 0n);
+---
+
+<div class="print-card mt-8 rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" data-fee-comparison={config.id}>
+  <form id="comparison-form" data-calculator-form novalidate class="max-w-sm">
+    <div data-error-summary role="alert" hidden class="mb-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
+    <NumberField id="amount" label="Sale amount" value="100.00" unit="usd" required help="The same sale is priced under every option, with no tax." />
+  </form>
+  <div id="comparison-panel" data-result-panel aria-live="polite" class="guide-table mt-6">
+    <table>
+      <caption>{config.caption}</caption>
+      <thead>
+        <tr><th scope="col">Option</th><th scope="col" class="numeric">Rate</th><th scope="col" class="numeric">Fee</th><th scope="col" class="numeric">You keep</th><th scope="col" class="numeric">Fee share</th></tr>
+      </thead>
+      <tbody>
+        {rows.map(({ option, rate, result }) => (
+          <tr>
+            <th scope="row"><a href={option.href} class="underline underline-offset-2 hover:text-navy">{option.label}</a> <span id={`cmp-${option.id}-lowest`} class="lowest-badge" hidden={result.feeCents !== lowestFee}>Lowest fee</span></th>
+            <td class="numeric">{rate}</td>
+            <td class="numeric" id={`cmp-${option.id}-fee`}>{formatUsdGrouped(result.feeCents)}</td>
+            <td class="numeric" id={`cmp-${option.id}-keep`}>{formatUsdGrouped(result.sellerProceedsCents)}</td>
+            <td class="numeric" id={`cmp-${option.id}-share`}>{formatPercentBps(effectiveFeeRateBps(result.feeCents, result.grossCents))}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p class="mt-4 text-xs text-ink/55">Estimates from each provider's published US rates. Rounding policies are not published, so a processor's statement can differ by a cent.</p>
+</div>
+<noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">The table above prices a $100.00 sale. Enable JavaScript to compare your own amount.</p></noscript>
+
+<script>
+  import { mountFeeComparison } from "../scripts/fee-comparison";
+
+  mountFeeComparison();
+</script>

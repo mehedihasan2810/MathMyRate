@@ -1,0 +1,73 @@
+---
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeComparison from "../../components/FeeComparison.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { commonSaleAmounts, feeColumnsByAmount, feeFor, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+
+const tool = findTool("gumroad-vs-lemon-squeezy");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const gumroad = requireOfficialPreset("gumroad-us-direct-card");
+
+const amountRows = feeColumnsByAmount(["gumroad-us-direct-card", "gumroad-us-direct-card-high-volume", "gumroad-us-discover", "lemon-squeezy-us-domestic-card"], commonSaleAmounts);
+
+const updatedOn = "2026-09-15";
+
+const faq: readonly FaqEntry[] = [
+  { question: "Is Lemon Squeezy cheaper than Gumroad?", answer: `At their published rates, Lemon Squeezy's 5% + 50¢ is lower than a Gumroad direct card sale, which pays 10% + $0.50 plus 2.9% + $0.30 card processing, at every sale amount, and lower than Gumroad Discover's 30% on any sale of $5 or more. On a $100 sale, Lemon Squeezy's US card fee is ${feeFor("lemon-squeezy-us-domestic-card", 10000n)}, Gumroad's direct fee is ${feeFor("gumroad-us-direct-card", 10000n)}, and Discover's is ${feeFor("gumroad-us-discover", 10000n)}.` },
+  { question: "Does Gumroad's 10% include card processing?", answer: "Gumroad's fee list says its 10% + $0.50 does not include credit card processing of 2.9% + $0.30, so both are added here. Its refund help describes processing as part of the fee, which conflicts with that list." },
+  { question: "Which platform returns its fee on refunds?", answer: "Gumroad returns its own fee on the refunded portion of a sale and keeps the processing portion. Lemon Squeezy deducts the refunded amount minus its platform fee from your next payout, so its fee is not returned." },
+  { question: "Who handles sales tax and VAT?", answer: "Both are merchants of record. Gumroad has collected and remitted sales tax, VAT, and GST on all sales since January 1, 2025, and adds tax on top of the price. Lemon Squeezy also collects and remits tax, adds it on top unless you enable tax-inclusive pricing, and calculates its fee on the total including tax." },
+  { question: "How do their payouts differ?", answer: "Gumroad needs a $100 minimum balance and usually pays weekly after a 7-day holding period, with a 2% fee on PayPal payouts. Lemon Squeezy needs $50, creates payouts on the 1st and 15th and pays them on the 14th and 28th after a 13-day hold, and charges nothing for US bank payouts through Stripe or $0.50 for US PayPal payouts." },
+];
+---
+<Layout title="Gumroad vs Lemon Squeezy Fees: Side-by-Side | MathMyRate" description="Compare Gumroad and Lemon Squeezy fees on the same digital product sale: direct, Discover, and card orders, plus tax, refund, and payout differences." ogImage="/og/gumroad-vs-lemon-squeezy.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">What each platform keeps from the same digital product sale, from their published rates.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={gumroad.checkedOn} />
+    <FeeComparison comparisonId="gumroad-vs-lemon-squeezy" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>The short answer</h2>
+      <p>Lemon Squeezy charges 5% + 50¢ per transaction. A Gumroad direct card sale pays 10% + $0.50 plus 2.9% + $0.30 card processing, and a sale through Gumroad Discover pays a flat 30%. On a $100 sale with no tax, that is <strong>{feeFor("lemon-squeezy-us-domestic-card", 10000n)}</strong> on Lemon Squeezy, <strong>{feeFor("gumroad-us-direct-card", 10000n)}</strong> for a Gumroad direct sale, and <strong>{feeFor("gumroad-us-discover", 10000n)}</strong> for a Discover sale. After $20,000 of paid sales in a month, a Gumroad direct sale drops to {feeFor("gumroad-us-direct-card-high-volume", 10000n)}.</p>
+
+      <h2>Fees at common sale amounts</h2>
+      <DataTable caption="Fee on a card sale with no tax, by sale amount" headers={["Sale", "Gumroad direct", "Gumroad after $20,000", "Gumroad Discover", "Lemon Squeezy"]} rows={amountRows} />
+
+      <h2>Both are merchants of record</h2>
+      <p>Gumroad and Lemon Squeezy both collect and remit sales tax and VAT for you, and both add tax on top of your price by default. Lemon Squeezy calculates its fee on the total order value including that tax and lets a store switch to tax-inclusive pricing. This comparison uses sales with no tax so the platform fees line up.</p>
+
+      <h2>Refunds, disputes, and payouts</h2>
+      <ul>
+        <li><strong>Refunds:</strong> Gumroad returns its own fee on the refunded portion and keeps processing. Lemon Squeezy keeps its platform fee.</li>
+        <li><strong>Chargebacks:</strong> Lemon Squeezy deducts the refunded amount minus its fee, plus a $15 dispute fee. Gumroad's chargeback help says you cover the refunded amount and processing fees while Gumroad returns its platform fee, and it publishes no dispute fee amount.</li>
+        <li><strong>Payouts:</strong> Gumroad pays usually weekly, with a $100 minimum and a 2% fee on PayPal payouts. Lemon Squeezy pays on the 14th and 28th, with a $50 minimum, free US bank payouts through Stripe, and $0.50 US PayPal payouts.</li>
+      </ul>
+
+      <h2>What this comparison leaves out</h2>
+      <p>It does not include Gumroad PayPal sales, whose rate Gumroad does not publish; subscriptions on Gumroad, whose fee Gumroad does not state; Lemon Squeezy's PayPal and subscription fees; affiliate and abandoned cart fees; or custom pricing. The <a href="/fees/gumroad-fee-calculator/">Gumroad fee calculator</a> and the <a href="/fees/lemon-squeezy-fee-calculator/">Lemon Squeezy fee calculator</a> cover each platform in full.</p>
+
+      <FaqSection entries={faq} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">
+        <li><a href="https://gumroad.com/help/article/66-gumroads-fees.html" rel="noopener">Gumroad's fees - Gumroad Help Center</a></li>
+        <li><a href="https://gumroad.com/help/article/13-getting-paid.html" rel="noopener">Getting paid - Gumroad Help Center</a></li>
+        <li><a href="https://gumroad.com/help/article/121-sales-tax-on-gumroad.html" rel="noopener">Sales tax on Gumroad - Gumroad Help Center</a></li>
+        <li><a href="https://docs.lemonsqueezy.com/help/getting-started/fees" rel="noopener">Docs: Fees • Lemon Squeezy</a></li>
+        <li><a href="https://docs.lemonsqueezy.com/help/getting-started/getting-paid" rel="noopener">Docs: Getting Paid • Lemon Squeezy</a></li>
+        <li><a href="https://docs.lemonsqueezy.com/help/payments/refunds-chargebacks" rel="noopener">Docs: Refunds and Chargebacks • Lemon Squeezy</a></li>
+      </ul>
+      <p class="text-sm text-ink/60">MathMyRate is not affiliated with Gumroad or Lemon Squeezy. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

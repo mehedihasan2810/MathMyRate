@@ -123,7 +123,10 @@ export function wholeNumber(
   const parsed = Number(clean);
 
   if (!Number.isSafeInteger(parsed) || parsed < minimum || parsed > maximum) {
-    throw new InputProblem(field, `Enter a whole number from ${minimum} to ${maximum}.`);
+    throw new InputProblem(
+      field,
+      `Enter a whole number from ${minimum.toLocaleString("en-US")} to ${maximum.toLocaleString("en-US")}.`,
+    );
   }
 
   return parsed;
@@ -158,6 +161,11 @@ export function formatUsdGrouped(cents: bigint): string {
   const absolute = cents < 0n ? -cents : cents;
 
   return `${sign}$${(absolute / 100n).toLocaleString("en-US")}.${String(absolute % 100n).padStart(2, "0")}`;
+}
+
+/** Formats basis points as a percentage with two decimals, so 292n becomes "2.92%". */
+export function formatPercentBps(bps: bigint): string {
+  return `${bps / 100n}.${String(bps % 100n).padStart(2, "0")}%`;
 }
 
 /** Formats cents for an input field: digit groups and two decimals, without a currency sign. */
