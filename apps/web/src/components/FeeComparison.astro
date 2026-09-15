@@ -46,6 +46,7 @@ const lowestFee = rows.reduce((lowest, row) => (row.result.feeCents < lowest ? r
       </tbody>
     </table>
   </div>
+  <p id="comparison-message" class="mt-4 text-sm font-medium text-ink" aria-live="polite"></p>
   <p class="mt-4 text-xs text-ink/55">Estimates from each provider's published US rates. Rounding policies are not published, so a processor's statement can differ by a cent.</p>
 </div>
 <noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">The table above prices a $100.00 sale. Enable JavaScript to compare your own amount.</p></noscript>

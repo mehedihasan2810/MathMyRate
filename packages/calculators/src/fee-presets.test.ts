@@ -109,6 +109,11 @@ const expectedFees = new Map([
   ["kofi-us-stripe-5-percent", 820n], // 5% = 500, + 290, + 30
   ["kofi-us-stripe-no-fee", 320n], // 290 + 30
   ["kofi-us-paypal-5-percent", 500n], // 5%
+  ["substack-us-web-domestic-card", 1390n], // 10% = 1000, + 290, + 30, + Billing 0.7% = 70
+  ["substack-us-web-international-card", 1540n], // 1000 + 290 + 30 + 1.5% = 150, + 70
+  ["payhip-us-free-stripe-card", 820n], // 5% = 500, + 290, + 30
+  ["payhip-us-plus-stripe-card", 520n], // 2% = 200, + 290, + 30
+  ["payhip-us-pro-stripe-card", 320n], // 290 + 30
 ]);
 
 // Presets whose range excludes $100 get a fixture at an amount inside their range.
@@ -188,6 +193,17 @@ test("a project receipt target composes with payment gross-up without taxing it 
   const quote = grossUpFees({ preset, targetProceedsCents: project.targetReceiptsCents });
   assert.ok(quote.sellerProceedsCents >= 115000n);
   assert.equal(quote.taxCents, 0n);
+});
+
+test("Substack's $150 annual example plus Stripe's 0.7% Billing fee", () => {
+  const preset = getFeePreset("substack-us-web-domestic-card");
+
+  assert.ok(preset);
+  const result = calculateFees({ preset, grossCents: 15_000n });
+
+  // Substack's example: $150 − 10% ($15.00) − 2.9% + $0.30 ($4.65) = $130.35, before the $1.05 Billing fee.
+  assert.equal(result.sellerProceedsCents, 13_035n - 105n);
+  assert.equal(result.feeCents, 1_500n + 465n + 105n);
 });
 
 test("Lemon Squeezy matches the worked examples on its own fee and sales tax pages", () => {

@@ -1,0 +1,110 @@
+---
+import { calculateFees } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeComparison from "../../components/FeeComparison.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findFeeComparison } from "../../data/fee-comparisons";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { feeColumnsByAmount, formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("patreon-vs-kofi");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const comparison = findFeeComparison("patreon-vs-kofi");
+
+const patreonWeb = requireOfficialPreset("patreon-us-standard-web");
+
+const patreonIos = requireOfficialPreset("patreon-us-standard-ios-first-year");
+
+const kofiFee = requireOfficialPreset("kofi-us-stripe-5-percent");
+
+const kofiNoFee = requireOfficialPreset("kofi-us-stripe-no-fee");
+
+function fee(preset: typeof patreonWeb, grossCents: bigint): string {
+  return formatUsdGrouped(calculateFees({ preset, grossCents }).feeCents);
+}
+
+function kept(preset: typeof patreonWeb, grossCents: bigint): string {
+  return formatUsdGrouped(calculateFees({ preset, grossCents }).sellerProceedsCents);
+}
+
+const amounts = [300n, 500n, 1_000n, 2_500n, 5_000n];
+
+const amountRows = feeColumnsByAmount(
+  comparison.options.map((option) => option.presetId),
+  amounts,
+);
+
+const kofiRateBps = kofiFee.components.find((component) => component.id === "kofi-service")?.rateBps ?? 0;
+
+// Ko-fi Gold's monthly price for new users, from Ko-fi's Gold help article.
+const goldMonthlyCents = 1_200n;
+
+const goldBreakEvenCents = (goldMonthlyCents * 10_000n) / BigInt(kofiRateBps);
+
+const sources = [
+  ...new Map(
+    comparison.options
+      .flatMap((option) => requireOfficialPreset(option.presetId).sources)
+      .map((source) => [source.url, source]),
+  ).values(),
+];
+
+const updatedOn = "2026-09-16";
+
+const faq: readonly FaqEntry[] = [
+  { question: "Is Ko-fi cheaper than Patreon?", answer: `On fees alone, yes. Patreon's standard plan takes 10% plus 2.9% + $0.30 processing, while Ko-fi takes 5% or nothing, and your Stripe account charges its 2.9% + $0.30. On a $10 payment, Patreon's fees are ${fee(patreonWeb, 1_000n)}, Ko-fi with its 5% fee is ${fee(kofiFee, 1_000n)}, and Ko-fi with no fee is ${fee(kofiNoFee, 1_000n)}.` },
+  { question: "When does Ko-fi charge no fee?", answer: "Ko-fi takes 0% on one-off tips and Goals if you turn off Contributor status, and 0% on everything with Ko-fi Gold, which costs $12 a month for new users. Memberships that began before you joined Gold keep the 5% fee." },
+  { question: "What do iOS app purchases cost on Patreon?", answer: `Apple takes a 30% App Store fee on eligible purchases in Patreon's iOS app, or 15% after a year of continuous membership billing, and Patreon's 10% platform fee still applies. A $10 purchase in the app leaves ${kept(patreonIos, 1_000n)}. US fans can pay on Patreon's mobile web checkout instead.` },
+  { question: "Which platform handles sales tax?", answer: "Patreon adds sales tax, VAT, or GST to member payments where the law requires it and sends it to the tax authorities. Ko-fi does not collect or remit sales tax or VAT; you can add tax at checkout and are responsible for paying it." },
+  { question: "How do payouts differ?", answer: "Patreon holds your earnings and charges $0.25 per payout by Stripe direct deposit, or 1% with a $0.25 minimum and $20 cap for PayPal. Ko-fi never holds your money: payments go straight to your PayPal or Stripe account, so there is no Ko-fi payout." },
+];
+---
+<Layout title="Patreon vs Ko-fi Fees: Side-by-Side | MathMyRate" description="Compare Patreon's 10% platform fee and Ko-fi's 5% or 0% service fee on the same payment, with card processing, iOS purchases, and Ko-fi Gold." ogImage="/og/patreon-vs-kofi.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">What Patreon and Ko-fi each keep from the same membership payment or tip, from their published fees.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={patreonWeb.checkedOn} />
+    <FeeComparison comparisonId="patreon-vs-kofi" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>The short answer</h2>
+      <p>Ko-fi's fees are lower. Patreon's standard plan takes a <strong>10%</strong> platform fee plus 2.9% + $0.30 processing. Ko-fi takes <strong>5%</strong>, or nothing on one-off tips without Contributor status and on everything with Ko-fi Gold, and your Stripe account charges its own 2.9% + $0.30. On a $10 payment, Patreon's fees are <strong>{fee(patreonWeb, 1_000n)}</strong>, Ko-fi's are <strong>{fee(kofiFee, 1_000n)}</strong> with the 5% fee and <strong>{fee(kofiNoFee, 1_000n)}</strong> without it.</p>
+      <p>Fees are only part of the choice: Patreon runs memberships, collects sales tax, and handles chargebacks for you, while Ko-fi sends payments straight to your own PayPal or Stripe account.</p>
+
+      <h2>Fees at common payment amounts</h2>
+      <p>Card payments with no sales tax. The Ko-fi columns use Stripe's published US card rate.</p>
+      <DataTable caption="Fees on one payment, by platform" headers={["Payment", ...comparison.options.map((option) => option.shortLabel ?? option.label)]} rows={amountRows} />
+
+      <h2>How each platform charges</h2>
+      <ul>
+        <li><strong>Patreon:</strong> a 10% platform fee for pages published after August 4, 2025, calculated before sales tax, plus 2.9% + $0.30 processing on card and US PayPal payments. Payments in another currency add 2.5%. Purchases in the iOS app pay Apple 30%, or 15% after a year, instead of processing.</li>
+        <li><strong>Ko-fi:</strong> 5% on shop sales, memberships, commissions, and monthly tips, and on one-off tips while Contributor status is on. PayPal or Stripe charge their own fees on top.</li>
+      </ul>
+
+      <h2>When Ko-fi Gold pays for itself</h2>
+      <p>Ko-fi Gold costs $12 a month for new users and removes Ko-fi's 5% fee. Counting fees alone, it saves money once more than <strong>{formatSaleLabel(goldBreakEvenCents)}</strong> a month of payments would otherwise pay that fee.</p>
+
+      <h2>Taxes and payouts</h2>
+      <ul>
+        <li><strong>Sales tax:</strong> Patreon adds and remits sales tax, VAT, or GST where required. Ko-fi does not collect tax for you.</li>
+        <li><strong>Payouts:</strong> Patreon charges $0.25 per Stripe direct deposit, or 1% for PayPal with a $0.25 minimum and a $20 cap. Ko-fi has no payouts, because payments land in your PayPal or Stripe account.</li>
+      </ul>
+      <p>The <a href="/fees/patreon-fee-calculator/">Patreon fee calculator</a> and the <a href="/fees/ko-fi-fee-calculator/">Ko-fi fee calculator</a> cover each platform's other scenarios and monthly totals.</p>
+
+      <FaqSection entries={faq} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Rates were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Patreon, Ko-fi, or Stripe. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

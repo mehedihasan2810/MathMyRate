@@ -35,6 +35,8 @@ const feeHeights: Readonly<Record<FeeCalculatorId, number>> = {
   kickstarter: 1_650,
   patreon: 2_150,
   kofi: 1_800,
+  substack: 1_700,
+  payhip: 1_750,
   gumroad: 1_750,
   "lemon-squeezy": 1_900,
 };

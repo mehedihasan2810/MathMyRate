@@ -53,6 +53,7 @@ export function mountFeeComparison(): void {
       requireHtmlElement(`cmp-${option.id}-lowest`).hidden = true;
     }
 
+    setText("comparison-message", "");
     markResultsCurrent(panel, []);
   };
 
@@ -81,6 +82,12 @@ export function mountFeeComparison(): void {
         requireHtmlElement(`cmp-${option.id}-lowest`).hidden = result.feeCents !== lowestFee;
       }
 
+      setText(
+        "comparison-message",
+        results.some(({ result }) => result.sellerProceedsCents <= 0n)
+          ? "At this amount, the fees on at least one option are as large as the payment or larger."
+          : "",
+      );
       markResultsCurrent(panel, []);
       setFieldState(form);
     } catch (error) {

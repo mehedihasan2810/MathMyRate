@@ -190,6 +190,22 @@ const cards = [
     path: "/fees/ko-fi-fee-calculator/",
   },
   {
+    file: "substack",
+    eyebrow: "Payment fees / Substack",
+    accent: palette.navy,
+    title: "Substack fee calculator",
+    description: "Substack's 10% fee and Stripe's costs on a paid subscription.",
+    path: "/fees/substack-fee-calculator/",
+  },
+  {
+    file: "payhip",
+    eyebrow: "Payment fees / Payhip",
+    accent: palette.gold,
+    title: "Payhip fee calculator",
+    description: "Payhip's plan fee and Stripe processing on a product sale.",
+    path: "/fees/payhip-fee-calculator/",
+  },
+  {
     file: "kdp-royalties",
     eyebrow: "Royalties / Amazon KDP",
     accent: palette.navy,
@@ -292,6 +308,30 @@ const cards = [
     title: "Gumroad's $20,000 threshold",
     description: "When the direct-sale fee drops to 5% + 50¢, and what it saves.",
     path: "/guides/gumroad-20000-threshold/",
+  },
+  {
+    file: "patreon-vs-kofi",
+    eyebrow: "Compare / Creator platforms",
+    accent: palette.navy,
+    title: "Patreon vs Ko-fi fees",
+    description: "What each platform keeps from the same membership or tip.",
+    path: "/fees/patreon-vs-ko-fi-fees/",
+  },
+  {
+    file: "kdp-royalties-explained",
+    eyebrow: "Guide / Self-publishing",
+    accent: palette.navy,
+    title: "How KDP royalties work",
+    description: "70% or 35%, the $9.99 threshold, and printing costs.",
+    path: "/guides/how-kdp-royalties-work/",
+  },
+  {
+    file: "kickstarter-reward-pricing",
+    eyebrow: "Guide / Crowdfunding",
+    accent: palette.gold,
+    title: "Price Kickstarter rewards to cover fees",
+    description: "What each pledge leaves, and how many backers net your goal.",
+    path: "/guides/price-kickstarter-rewards-for-fees/",
   },
 ];
 

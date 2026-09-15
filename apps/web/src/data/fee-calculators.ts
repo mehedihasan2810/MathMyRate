@@ -14,6 +14,8 @@ export type FeeCalculatorId =
   | "kickstarter"
   | "patreon"
   | "kofi"
+  | "substack"
+  | "payhip"
   | "gumroad"
   | "lemon-squeezy";
 
@@ -490,6 +492,80 @@ export const feeCalculators: readonly FeeCalculatorConfig[] = [
         description: "Ko-fi's fee only; PayPal's own fee is not added.",
         note: "Supported scenario: US creator in USD paid through PayPal. Only Ko-fi's 5% is estimated, because Ko-fi does not publish PayPal's fee.",
         copyName: "Ko-fi PayPal payment, Ko-fi fee only",
+      },
+    ],
+  },
+  {
+    id: "substack",
+    toolId: "substack-fees",
+    provider: "Substack",
+    formHeading: "Subscription details",
+    scenarioLegend: "What card is the reader paying with?",
+    panelTone: "ink",
+    taxHelp: "",
+    volume: {
+      fieldLabel: "Paid subscribers (optional)",
+      fieldHelp: "Subscribers paying this price each month. Adds monthly and yearly totals.",
+      unitSingular: "subscriber",
+      unitPlural: "subscribers",
+      perPeriod: "a month",
+      feesLabel: "Fees per month",
+      keepLabel: "You keep per month",
+      yearly: true,
+      shareLabel: "Fees as a share of payments",
+      shareNoun: "payments",
+    },
+    scenarios: [
+      {
+        id: "domestic",
+        presetId: "substack-us-web-domestic-card",
+        label: "US card on the web",
+        description: "Substack's 10%, 2.9% + 30¢ card fee, and 0.7% Billing fee.",
+        note: "Supported scenario: US writer with a US Stripe account, reader paying in USD on the web with a US card, and no sales tax collected.",
+        copyName: "Substack subscription payment",
+      },
+      {
+        id: "international",
+        presetId: "substack-us-web-international-card",
+        label: "International card in USD",
+        description: "Adds Stripe's 1.5% international card fee, with no conversion.",
+        note: "Supported scenario: US writer with a US Stripe account, reader paying in USD on the web with a card issued outside the US, no currency conversion, and no sales tax collected.",
+        copyName: "Substack subscription payment by international card",
+      },
+    ],
+  },
+  {
+    id: "payhip",
+    toolId: "payhip-fees",
+    provider: "Payhip",
+    formHeading: "Sale details",
+    scenarioLegend: "Which Payhip plan are you on?",
+    panelTone: "navy",
+    taxHelp: "",
+    scenarios: [
+      {
+        id: "free",
+        presetId: "payhip-us-free-stripe-card",
+        label: "Free Forever plan",
+        description: "$0 a month. 5% Payhip fee plus Stripe's 2.9% + 30¢.",
+        note: "Supported scenario: US seller in USD on Payhip's Free Forever plan, a one-time sale paid by US card through Stripe, with no tax, shipping, or discount.",
+        copyName: "Payhip Free plan sale",
+      },
+      {
+        id: "plus",
+        presetId: "payhip-us-plus-stripe-card",
+        label: "Plus plan",
+        description: "$29 a month. 2% Payhip fee plus Stripe's 2.9% + 30¢.",
+        note: "Supported scenario: US seller in USD on Payhip's Plus plan, a one-time sale paid by US card through Stripe, with no tax, shipping, or discount. The $29 monthly price is not included.",
+        copyName: "Payhip Plus plan sale",
+      },
+      {
+        id: "pro",
+        presetId: "payhip-us-pro-stripe-card",
+        label: "Pro plan",
+        description: "$99 a month. No Payhip fee; Stripe's 2.9% + 30¢ still applies.",
+        note: "Supported scenario: US seller in USD on Payhip's Pro plan, a one-time sale paid by US card through Stripe, with no tax, shipping, or discount. The $99 monthly price is not included.",
+        copyName: "Payhip Pro plan sale",
       },
     ],
   },

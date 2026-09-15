@@ -1,0 +1,139 @@
+---
+import { calculateFees, type FeePreset } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("payhip-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const free = requireOfficialPreset("payhip-us-free-stripe-card");
+
+const plus = requireOfficialPreset("payhip-us-plus-stripe-card");
+
+const pro = requireOfficialPreset("payhip-us-pro-stripe-card");
+
+// Monthly plan prices from Payhip's pricing page.
+const plusMonthlyCents = 2_900n;
+
+const proMonthlyCents = 9_900n;
+
+const payhipRateBps = (preset: FeePreset): bigint => BigInt(preset.components.find((component) => component.id === "payhip-transaction")?.rateBps ?? 0);
+
+const freeBps = payhipRateBps(free);
+
+const plusBps = payhipRateBps(plus);
+
+const proBps = payhipRateBps(pro);
+
+const ceilDivide = (numerator: bigint, denominator: bigint): bigint => (numerator + denominator - 1n) / denominator;
+
+// Monthly sales at which a paid plan's price equals the Payhip fee it removes.
+const plusOverFreeCents = ceilDivide(plusMonthlyCents * 10_000n, freeBps - plusBps);
+
+const proOverFreeCents = ceilDivide(proMonthlyCents * 10_000n, freeBps - proBps);
+
+const proOverPlusCents = ceilDivide((proMonthlyCents - plusMonthlyCents) * 10_000n, plusBps - proBps);
+
+const keep = (preset: FeePreset, grossCents: bigint): string => formatUsdGrouped(calculateFees({ preset, grossCents }).sellerProceedsCents);
+
+const twentyFive = [free, plus, pro].map((preset) => calculateFees({ preset, grossCents: 2_500n }));
+
+const [freeTwentyFive, plusTwentyFive, proTwentyFive] = twentyFive;
+
+const keepRows = [500n, 1_000n, 2_500n, 5_000n, 10_000n, 25_000n].map((grossCents) => [formatSaleLabel(grossCents), keep(free, grossCents), keep(plus, grossCents), keep(pro, grossCents)]);
+
+const monthlyCost = (planCents: bigint, bps: bigint, salesCents: bigint): string => formatUsdGrouped(planCents + (salesCents * bps) / 10_000n);
+
+const planCostRows = [50_000n, 100_000n, 200_000n, 350_000n, 500_000n, 1_000_000n].map((salesCents) => [formatSaleLabel(salesCents), monthlyCost(0n, freeBps, salesCents), monthlyCost(plusMonthlyCents, plusBps, salesCents), monthlyCost(proMonthlyCents, proBps, salesCents)]);
+
+const updatedOn = "2026-09-16";
+
+const guideSources = [
+  { title: "Pricing - Payhip", url: "https://payhip.com/pricing" },
+  { title: "Billing and Upgrading - Help Center", url: "https://help.payhip.com/article/102-billing-and-upgrading" },
+  { title: "Connect Your Stripe Account - Help Center", url: "https://help.payhip.com/article/65-connecting-your-stripe-account" },
+  { title: "Connect Your PayPal Account - Help Center", url: "https://help.payhip.com/article/64-connecting-your-paypal-account" },
+  { title: "Connect Your Square Account - Help Center", url: "https://help.payhip.com/article/342-connecting-your-square-account" },
+  { title: "Set up Recurring Payments - Help Center", url: "https://help.payhip.com/article/303-set-up-recurring-payments" },
+  { title: "Digital EU VAT & UK VAT - Help Center", url: "https://help.payhip.com/article/127-digital-eu-vat" },
+  { title: "US Sales Tax - Help Center", url: "https://help.payhip.com/article/392-us-sales-tax" },
+  { title: "How Do I Refund a Transaction? - Help Center", url: "https://help.payhip.com/article/147-how-do-i-refund-a-transaction" },
+  { title: "Video Subscription - Help Center", url: "https://help.payhip.com/article/336-video-subscription" },
+  { title: "Marketplace - Help Center", url: "https://help.payhip.com/article/307-marketplace" },
+  { title: "Pricing & Fees | Stripe", url: "https://stripe.com/pricing" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Payhip take per sale?", answer: `Payhip's fee depends on your plan: 5% on the Free Forever plan, 2% on Plus, and nothing on Pro. Stripe or PayPal charge their own fees on every plan. A $25 sale paid by US card through Stripe leaves ${formatUsdGrouped(freeTwentyFive?.sellerProceedsCents ?? 0n)} on the Free Forever plan.` },
+  { question: "Is Payhip free to use?", answer: "The Free Forever plan costs nothing a month and includes every feature; Payhip takes 5% of each sale instead. Payhip's pricing page lists the same features on all three plans." },
+  { question: "When is Payhip Plus worth it?", answer: `Plus costs $29 a month and cuts Payhip's fee from 5% to 2%. Counting Payhip's fees alone, it costs less than Free Forever once your sales pass ${formatSaleLabel(plusOverFreeCents)} a month.` },
+  { question: "When is Payhip Pro worth it?", answer: `Pro costs $99 a month and removes Payhip's fee. It costs less than Plus once sales pass ${formatSaleLabel(proOverPlusCents)} a month, and less than Free Forever once they pass ${formatSaleLabel(proOverFreeCents)}.` },
+  { question: "Does Payhip handle sales tax and VAT?", answer: "Payhip collects and pays digital EU and UK VAT for you by default, and since July 1, 2026 it handles US sales tax as a marketplace facilitator at no charge. In Payhip's VAT example, its fee is charged on the price before VAT. Payhip does not say how its fee treats US sales tax, so this calculator covers sales without tax." },
+  { question: "What does PayPal charge on Payhip sales?", answer: "Payhip's PayPal article gives the standard card rate as 2.99% plus a fixed fee that varies by currency, without the fixed amount, so this calculator covers Stripe only." },
+  { question: "Does Payhip charge for refunds?", answer: "You refund a customer from your PayPal or Stripe account, and the refund shows in Payhip. Payhip's pages do not say whether its own fee is returned." },
+];
+---
+<Layout title="Payhip Fee Calculator: Free, Plus & Pro Plan Fees | MathMyRate" description="Estimate Payhip's 5%, 2%, or 0% transaction fee plus Stripe's 2.9% + 30¢ on a sale, and find the monthly sales where Plus or Pro pays for itself." ogImage="/og/payhip.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Payhip's plan fee and Stripe's card processing take from a digital product, course, or coaching sale, and which plan costs least for your sales.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={free.checkedOn} />
+    <FeeCalculator calculatorId="payhip" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The Payhip fee calculator shows what you keep from one sale. On a <strong>$25</strong> sale paid by US card through Stripe, you keep <strong>{formatUsdGrouped(freeTwentyFive?.sellerProceedsCents ?? 0n)}</strong> on the Free Forever plan, {formatUsdGrouped(plusTwentyFive?.sellerProceedsCents ?? 0n)} on Plus, and {formatUsdGrouped(proTwentyFive?.sellerProceedsCents ?? 0n)} on Pro. Plus and Pro also charge a monthly price, which is not taken from each sale.</p>
+
+      <h2>Payhip's plans</h2>
+      <ul>
+        <li><strong>Free Forever:</strong> $0 a month and a 5% transaction fee.</li>
+        <li><strong>Plus:</strong> $29 a month and a 2% transaction fee.</li>
+        <li><strong>Pro:</strong> $99 a month and no transaction fee.</li>
+      </ul>
+      <p>Every plan includes all of Payhip's features. On all three, PayPal or Stripe still charge their standard fees, and those fees go to them, not to Payhip.</p>
+
+      <h2>How payments reach you</h2>
+      <p>You connect your own Stripe or PayPal account, and buyers pay you through it. This calculator uses Stripe's published US card rate of 2.9% + 30¢, which Payhip's Stripe article also quotes. With Square, Payhip works differently: you receive the full payment, and Payhip bills its fees to your card at the end of each month.</p>
+
+      <h2>What you keep at common prices</h2>
+      <p>One-time sales paid by US card through Stripe, with no tax, shipping, or discount.</p>
+      <DataTable caption="What you keep from a Payhip sale on each plan" headers={["Sale", "Free Forever", "Plus", "Pro"]} rows={keepRows} />
+
+      <h2>Which plan costs least</h2>
+      <p>Counting Payhip's own charges only, Plus costs less than Free Forever once your sales pass <strong>{formatSaleLabel(plusOverFreeCents)}</strong> a month, and Pro costs less than Plus once they pass <strong>{formatSaleLabel(proOverPlusCents)}</strong>. Stripe's fee is the same on every plan, so it does not change which plan is cheapest.</p>
+      <DataTable caption="Payhip's monthly cost by plan: plan price plus Payhip's fee on that month's sales" headers={["Sales per month", "Free Forever", "Plus", "Pro"]} rows={planCostRows} />
+
+      <h2>Tax, refunds, and extras</h2>
+      <ul>
+        <li><strong>VAT and sales tax:</strong> Payhip collects and pays digital EU and UK VAT, and US sales tax since July 1, 2026, at no charge. In its VAT example, Payhip's fee is charged on the price before VAT.</li>
+        <li><strong>Refunds:</strong> made in your PayPal or Stripe account. Payhip does not say whether it returns its fee.</li>
+        <li><strong>Subscriptions and payment plans:</strong> available only with Stripe. Payhip does not say whether Stripe's Billing fee applies, so they are not estimated.</li>
+        <li><strong>Video hosting:</strong> $5 a month for 16 hours of storage, or $10 a month for 32 hours.</li>
+        <li><strong>Marketplace sales:</strong> no extra fee beyond your plan's usual fee.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="payhip" />
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId="payhip-fees" />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{guideSources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Payhip's and Stripe's pages were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Payhip or Stripe. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>
