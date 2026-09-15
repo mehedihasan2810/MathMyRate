@@ -1,0 +1,120 @@
+---
+import { calculateServiceFee } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import ServiceFeeComparison from "../../components/ServiceFeeComparison.astro";
+import { findServiceFeeCalculator } from "../../data/service-fee-calculators";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatSaleLabel } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("upwork-vs-fiverr");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const upwork = findServiceFeeCalculator("upwork");
+
+const fiverr = findServiceFeeCalculator("fiverr");
+
+function contractFee(config: typeof upwork, contractId: string): number {
+  const fee = config.contracts.find((contract) => contract.id === contractId)?.feeBps;
+
+  if (fee === undefined || fee === null) throw new Error(`${config.provider} ${contractId} has no fixed fee.`);
+
+  return fee;
+}
+
+const fiverrBps = contractFee(fiverr, "order");
+
+const directBps = contractFee(upwork, "direct");
+
+function fee(earningsCents: bigint, feeBps: number): string {
+  return formatUsdGrouped(calculateServiceFee({ earningsCents, feeBps }).feeCents);
+}
+
+function earned(earningsCents: bigint, feeBps: number): string {
+  return formatUsdGrouped(calculateServiceFee({ earningsCents, feeBps }).afterFeeCents);
+}
+
+const jobRows = [5_000n, 10_000n, 50_000n, 100_000n, 500_000n].map((earningsCents) => [
+  formatSaleLabel(earningsCents),
+  earned(earningsCents, upwork.maxFeeBps),
+  earned(earningsCents, upwork.exampleFeeBps),
+  earned(earningsCents, directBps),
+  earned(earningsCents, fiverrBps),
+]);
+
+const sources = [
+  ...upwork.sources.filter((source) => /Freelancer-Service-Fee|Direct-Contracts|How-to-get-paid|pricing\/freelancer/u.test(source.url)),
+  { title: "Upwork Pricing: Plans and Fees for Clients", url: "https://www.upwork.com/pricing/client" },
+  { title: "What is the Client Marketplace Fee? – Upwork Help", url: "https://support.upwork.com/hc/en-us/articles/4660220468499-What-is-the-Client-Marketplace-Fee" },
+  ...fiverr.sources.filter((source) => /Your-earnings-page|Withdrawing-your-earnings|Managing-your-orders|Paying-for-orders|How-Fiverr-works-for-clients/u.test(source.url)),
+];
+
+const updatedOn = "2026-09-15";
+
+const faq: readonly FaqEntry[] = [
+  { question: "Is Upwork or Fiverr cheaper for freelancers?", answer: `At their published rates, Upwork's fee is lower. Upwork sets its Freelancer Service Fee between 0% and 15% per contract, while Fiverr keeps a fixed 20%. On a $500 job, Upwork's highest rate takes ${fee(50_000n, upwork.maxFeeBps)} and Fiverr takes ${fee(50_000n, fiverrBps)}.` },
+  { question: "Why do I have to enter my Upwork fee?", answer: "Upwork does not publish one rate for marketplace contracts. It shows the percentage when you submit a proposal or receive an offer, and in your contract details, and the rate is locked in for that contract. Direct Contracts are a fixed 5%, or 0% with an active Freelancer Plus membership." },
+  { question: "What do clients pay on each platform?", answer: "Both charge clients on top of your price. Upwork's client pricing page lists a 5% Marketplace fee, or 3% for eligible U.S. clients paying from a checking account, plus a one-time Contract Initiation Fee from $0.99 to $14.99; its help article describes the Marketplace fee as up to 7.99%. Fiverr charges buyers 5.5% of each payment plus a small-order fee, listed on its pages as both $3.50 under $200 and $3.00 under $100." },
+  { question: "Do both platforms take a fee from tips and bonuses?", answer: "Yes. Upwork charges its service fee on bonus, expense, and miscellaneous payments, and Fiverr keeps 20% of Gig Extras and tips." },
+  { question: "Which is cheaper to withdraw from?", answer: "Both have a free option for US freelancers. Upwork's Direct to U.S. Bank withdrawals are free, Instant Pay costs $2.00, and a wire costs $50.00. Fiverr's PayPal withdrawals are free, and a Payoneer Account withdrawal costs $3. Fiverr earnings clear 14 days after an order is completed, or 7 days for Seller Plus, Top Rated, and Pro freelancers." },
+  { question: "What happens to the fee on a refund?", answer: "Upwork returns its service fee on any amount refunded to the client. Fiverr recalculates your fee on the final price after a partial refund." },
+];
+---
+<Layout title="Upwork vs Fiverr Fees: Side-by-Side | MathMyRate" description="Compare Upwork's 0% to 15% Freelancer Service Fee with Fiverr's 20% seller commission on the same job, plus withdrawal fees and what clients pay." ogImage="/og/upwork-vs-fiverr.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">What Upwork and Fiverr each keep from the same freelance job, from their published rates.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={upwork.reviewedOn} />
+    <ServiceFeeComparison />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>The short answer</h2>
+      <p>Fiverr keeps a fixed <strong>20%</strong> of every order, including Gig Extras and tips. Upwork sets its Freelancer Service Fee between <strong>0% and 15%</strong> for each contract, so even its highest rate is lower. On a $500 job, Fiverr takes <strong>{fee(50_000n, fiverrBps)}</strong>, Upwork takes <strong>{fee(50_000n, upwork.maxFeeBps)}</strong> at 15% or {fee(50_000n, upwork.exampleFeeBps)} at 10%, and a Direct Contract with a client you bring to Upwork takes {fee(50_000n, directBps)}.</p>
+      <p>A lower fee is not the whole story: the platforms find clients differently, and each charges clients its own fees on top of your price.</p>
+
+      <h2>What you earn at common job sizes</h2>
+      <p>Earnings after the platform's fee, before withdrawal fees.</p>
+      <DataTable caption="Freelancer earnings on Upwork and Fiverr by job price" headers={["Job", "Upwork at 15%", "Upwork at 10%", "Upwork Direct Contract", "Fiverr"]} rows={jobRows} />
+
+      <h2>How each platform sets its fee</h2>
+      <ul>
+        <li><strong>Upwork:</strong> a Freelancer Service Fee from 0% to 15% per contract, shown on your proposal, offer, or contract and locked in once sent. Direct Contracts are 5%, or 0% with an active Freelancer Plus membership, and Enterprise clients typically mean 10%.</li>
+        <li><strong>Fiverr:</strong> 20% of the purchase amount, including Gig Extras and tips. With a coupon or promotion, the 20% is taken from the discounted price.</li>
+      </ul>
+
+      <h2>What clients pay</h2>
+      <ul>
+        <li><strong>Upwork:</strong> the client pricing page lists a 5% Marketplace fee, or 3% for eligible U.S. clients paying from a checking account, plus a one-time Contract Initiation Fee from $0.99 to $14.99. A help article describes the Marketplace fee as up to 7.99%.</li>
+        <li><strong>Fiverr:</strong> a 5.5% service fee on every payment plus a small-order fee, which Fiverr's pages list as both $3.50 under $200 and $3.00 under $100.</li>
+      </ul>
+      <p>These are charged to the client, so they are not taken from your earnings. Because the platforms' own pages disagree on some of them, this comparison does not add them up.</p>
+
+      <h2>Getting paid</h2>
+      <ul>
+        <li><strong>Upwork:</strong> Direct to U.S. Bank withdrawals are free, Instant Pay costs $2.00 per transfer, and a U.S. dollar wire costs $50.00.</li>
+        <li><strong>Fiverr:</strong> earnings clear 14 days after an order is completed, or 7 days for Seller Plus, Top Rated, and Pro freelancers. PayPal withdrawals are free and Payoneer Account withdrawals cost $3.</li>
+      </ul>
+
+      <h2>Other costs to compare</h2>
+      <ul>
+        <li><strong>Upwork Connects:</strong> $0.15 each, used to send proposals; each job post shows how many a proposal needs.</li>
+        <li><strong>Memberships:</strong> Upwork's Freelancer Plus is $19.99 a month on its pricing page. Fiverr's Seller Plus starts at $15 a month for Kickstart, and no Fiverr page says it changes the 20% commission.</li>
+      </ul>
+      <p>The <a href="/fees/upwork-fee-calculator/">Upwork fee calculator</a> and the <a href="/fees/fiverr-fee-calculator/">Fiverr fee calculator</a> add withdrawal fees and can work backward from the amount you want to receive.</p>
+
+      <FaqSection entries={faq} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Rates were reviewed on the date shown at the top of this page. Legacy and custom arrangements can differ. MathMyRate is not affiliated with Upwork or Fiverr. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

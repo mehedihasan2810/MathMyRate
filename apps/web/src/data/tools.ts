@@ -19,11 +19,16 @@ export type ToolId =
   | "ebay-fees"
   | "upwork-fees"
   | "fiverr-fees"
+  | "kickstarter-fees"
+  | "patreon-fees"
+  | "kofi-fees"
+  | "kdp-royalties"
   | "gumroad-fees"
   | "lemon-squeezy-fees"
   | "stripe-vs-paypal"
   | "gumroad-vs-lemon-squeezy"
-  | "digital-product-fees";
+  | "digital-product-fees"
+  | "upwork-vs-fiverr";
 
 export interface Crumb {
   readonly name: string;
@@ -171,6 +176,47 @@ export const tools: readonly Tool[] = [
       "fiverr seller commission fee gig extras tips withdrawal paypal payoneer freelance platform",
   },
   {
+    id: "kickstarter-fees",
+    hub: "fees",
+    href: "/fees/kickstarter-fee-calculator/",
+    name: "Kickstarter Fee Calculator",
+    menuLabel: "Kickstarter fees",
+    summary:
+      "Kickstarter's 5% fee and payment processing on each pledge, and your campaign's total fees.",
+    searchTerms: "kickstarter crowdfunding campaign pledge fee processing backers funding goal",
+  },
+  {
+    id: "patreon-fees",
+    hub: "fees",
+    href: "/fees/patreon-fee-calculator/",
+    name: "Patreon Fee Calculator",
+    menuLabel: "Patreon fees",
+    summary:
+      "Patreon's platform, processing, and iOS App Store fees on a membership, and what you keep.",
+    searchTerms: "patreon creator membership platform fee processing ios app store payout members",
+  },
+  {
+    id: "kofi-fees",
+    hub: "fees",
+    href: "/fees/ko-fi-fee-calculator/",
+    name: "Ko-fi Fee Calculator",
+    menuLabel: "Ko-fi fees",
+    summary: "Ko-fi's 5% service fee and Stripe processing on tips, shop sales, and memberships.",
+    searchTerms:
+      "ko-fi kofi tips donations shop memberships commissions gold service fee stripe paypal",
+  },
+  {
+    id: "kdp-royalties",
+    hub: "fees",
+    href: "/fees/kdp-royalty-calculator/",
+    name: "KDP Royalty Calculator",
+    menuLabel: "KDP royalties",
+    summary:
+      "Amazon KDP royalties on eBooks, paperbacks, and hardcovers, after delivery and printing costs.",
+    searchTerms:
+      "amazon kdp kindle direct publishing royalty ebook paperback hardcover printing cost self publishing book",
+  },
+  {
     id: "gumroad-fees",
     hub: "fees",
     href: "/fees/gumroad-fee-calculator/",
@@ -218,6 +264,16 @@ export const tools: readonly Tool[] = [
       "Compare Lemon Squeezy, Gumroad, Etsy, Stripe, and PayPal fees on the same digital product sale.",
     searchTerms:
       "cheapest way sell digital products ebook course download platform fees compare gumroad lemon squeezy etsy stripe paypal",
+  },
+  {
+    id: "upwork-vs-fiverr",
+    hub: "fees",
+    href: "/fees/upwork-vs-fiverr-fees/",
+    name: "Upwork vs Fiverr Fees",
+    menuLabel: "Upwork vs Fiverr",
+    summary: "Compare what Upwork and Fiverr keep from the same freelance job, side by side.",
+    searchTerms:
+      "upwork fiverr compare comparison freelancer fees service fee commission which is cheaper",
   },
 ];
 

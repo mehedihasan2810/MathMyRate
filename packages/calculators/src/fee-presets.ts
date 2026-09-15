@@ -44,7 +44,7 @@ export interface FeePreset {
    * documented amount, such as a per-order fee that differs above $10. The
    * engine refuses a charge outside the range instead of mixing two rates.
    */
-  readonly grossRangeCents?: { readonly minCents: number; readonly maxCents: number };
+  readonly grossRangeCents?: { readonly minCents?: number; readonly maxCents?: number };
   readonly sources: readonly {
     readonly url: string;
     readonly title: string;
@@ -117,6 +117,46 @@ const ebaySellingFees = {
 const ebayStoreFees = {
   url: "https://www.ebay.com/help/selling/fees-credits-invoices/store-selling-fees-managed-payments-sellers?id=4809",
   title: "Store selling fees | eBay",
+};
+
+const kickstarterFees = {
+  url: "https://www.kickstarter.com/help/fees",
+  title: "Fees: United States — Kickstarter",
+};
+
+const kickstarterFeesHelp = {
+  url: "https://help.kickstarter.com/en-us/articles/16236674-what-are-the-fees",
+  title: "What are the fees? | Kickstarter Help Center",
+};
+
+const patreonPricing = {
+  url: "https://www.patreon.com/pricing",
+  title: "Patreon Pricing Plans — Patreon",
+};
+
+const patreonFees = {
+  url: "https://support.patreon.com/hc/en-us/articles/11111747095181-Creator-fees-overview",
+  title: "Creator fees overview",
+};
+
+const patreonIos = {
+  url: "https://support.patreon.com/hc/en-us/articles/20009513905933-How-iOS-in-app-payment-works-for-one-time-purchases",
+  title: "How iOS in-app payment works for one-time purchases",
+};
+
+const kofiFees = {
+  url: "https://help.ko-fi.com/hc/en-us/articles/360002506494-Does-Ko-fi-take-a-fee",
+  title: "Does Ko-fi take a fee?",
+};
+
+const kofiGold = {
+  url: "https://help.ko-fi.com/hc/en-us/articles/360005506873-What-is-Ko-fi-Gold",
+  title: "What is Ko-fi Gold?",
+};
+
+const kofiStripe = {
+  url: "https://help.ko-fi.com/hc/en-us/articles/360007522474-Connect-your-Stripe-account-and-start-earning",
+  title: "Connect your Stripe account and start earning ✨",
 };
 
 const lemonGettingPaid = {
@@ -1289,6 +1329,473 @@ const officialPresetRecords: FeePreset[] = [
     status: "blocked",
     blockedReason:
       "Above a category's threshold, eBay charges a second rate on part or all of the sale. The fee engine applies one rate to the whole charge, so it does not estimate these sales.",
+  }),
+  official({
+    id: "kickstarter-us-pledge",
+    label: "Kickstarter US pledge of $10 or more",
+    provider: "kickstarter",
+    taxMode: "zero-only",
+    paymentProduct: "Kickstarter campaign pledge",
+    channel: "crowdfunding",
+    tierPolicy: "post-threshold",
+    components: [
+      {
+        id: "kickstarter-platform",
+        label: "Kickstarter fee",
+        rateBps: 500,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "kickstarter-processing",
+        label: "Payment processing fee",
+        rateBps: 300,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 1_000 },
+    sources: [kickstarterFees, kickstarterFeesHelp],
+    assumptions: [
+      "US project raising USD that is successfully funded. Kickstarter charges no fees when a project does not reach its goal.",
+      "The pledge was collected. Kickstarter takes fees only from pledges it successfully collects, so dropped pledges pay nothing.",
+      "The amount is the pledge charged to the backer, including any shipping charged with it: Kickstarter collects its fees from the funding total, and its help pages say shipping charged at pledge time is part of the funding amount.",
+      "The pledge is $10 or more, so the payment processing fee is 3% + $0.30. Kickstarter does not say whether its under-$10 test includes shipping, so this scenario assumes the pledge is $10 or more either way.",
+      "Late Pledges pay the same fees, and each Pledge Over Time charge pays these fees separately.",
+      "Campaign pledges carry no sales tax; Kickstarter collects sales tax only through its Pledge Manager after the campaign.",
+      "The estimator rounds each component to cents; Kickstarter's pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Pledge Manager payments, refunds, chargebacks, and fiscal sponsor fees.",
+      "Projects outside the US, where Kickstarter says processing fees can differ.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "kickstarter-us-micropledge",
+    label: "Kickstarter US pledge under $10",
+    provider: "kickstarter",
+    taxMode: "zero-only",
+    paymentProduct: "Kickstarter campaign pledge",
+    channel: "crowdfunding",
+    tierPolicy: "pre-threshold",
+    components: [
+      {
+        id: "kickstarter-platform",
+        label: "Kickstarter fee",
+        rateBps: 500,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "kickstarter-processing",
+        label: "Payment processing fee",
+        rateBps: 500,
+        fixedCents: 8,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { maxCents: 999 },
+    sources: [kickstarterFees, kickstarterFeesHelp],
+    assumptions: [
+      "US project raising USD that is successfully funded. Kickstarter charges no fees when a project does not reach its goal.",
+      "The pledge was collected. Kickstarter takes fees only from pledges it successfully collects, so dropped pledges pay nothing.",
+      "The amount is the pledge charged to the backer, including any shipping charged with it: Kickstarter collects its fees from the funding total, and its help pages say shipping charged at pledge time is part of the funding amount.",
+      "The pledge is under $10, so Kickstarter's discounted micropledge processing fee of 5% + $0.08 applies. A pledge under $10 including shipping is also under $10 without it.",
+      "Late Pledges pay the same fees, and each Pledge Over Time charge pays these fees separately.",
+      "Campaign pledges carry no sales tax; Kickstarter collects sales tax only through its Pledge Manager after the campaign.",
+      "The estimator rounds each component to cents; Kickstarter's pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Pledge Manager payments, refunds, chargebacks, and fiscal sponsor fees.",
+      "Projects outside the US, where Kickstarter says processing fees can differ.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "kickstarter-us-pledge-manager",
+    label: "Kickstarter Pledge Manager payment",
+    provider: "kickstarter",
+    taxMode: "zero-only",
+    paymentProduct: "Kickstarter Pledge Manager",
+    channel: "crowdfunding",
+    tierPolicy: "explicitly-excluded",
+    components: [],
+    sources: [kickstarterFeesHelp],
+    assumptions: [
+      "In Kickstarter's Pledge Manager, the 5% fee applies to all funds except taxes, and the payment processing fee applies to the full payment, including taxes.",
+      "Kickstarter describes that processing fee only as roughly 3-5%.",
+    ],
+    exclusions: ["No estimate is given for Pledge Manager payments."],
+    status: "blocked",
+    blockedReason:
+      "Kickstarter describes the Pledge Manager processing fee only as roughly 3-5% and does not publish its formula, so no estimate is given.",
+  }),
+  official({
+    id: "patreon-us-standard-web",
+    label: "Patreon standard plan, web payment by card or US PayPal",
+    provider: "patreon",
+    taxMode: "zero-only",
+    paymentProduct: "Patreon membership",
+    channel: "web",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "patreon-platform",
+        label: "Patreon platform fee",
+        rateBps: 1000,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "patreon-processing",
+        label: "Payment processing fee",
+        rateBps: 290,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    sources: [patreonPricing, patreonFees, patreonIos],
+    assumptions: [
+      "US creator paid in USD on Patreon's standard plan, which charges a 10% platform fee to pages published after August 4, 2025.",
+      "The member pays in USD on the web by card or Apple Pay, or from the US by PayPal or Venmo, so processing is 2.9% + $0.30 at any amount.",
+      "The payment carries no sales tax. Patreon calculates its platform fee before sales tax, and its pages disagree on whether the processing fee applies to tax.",
+      "The estimator rounds each component to cents; Patreon's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Currency conversion, non-US PayPal or Venmo payments, and iOS in-app purchases (separate scenarios).",
+      "One-time purchases, whose platform fee Patreon's pages state differently: 10%, between 5% and 12%, or a flat 5%.",
+      "Payout fees ($0.25 per Stripe bank payout, or 1% with a $0.25 minimum and $20 cap for PayPal), tax on Patreon's fees, merch, refunds, and chargebacks.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "patreon-us-standard-non-us-paypal",
+    label: "Patreon standard plan, PayPal or Venmo payment from outside the US",
+    provider: "patreon",
+    taxMode: "zero-only",
+    paymentProduct: "Patreon membership",
+    channel: "web",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "patreon-platform",
+        label: "Patreon platform fee",
+        rateBps: 1000,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "patreon-processing",
+        label: "Payment processing fee",
+        rateBps: 390,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    sources: [patreonFees],
+    assumptions: [
+      "US creator paid in USD on Patreon's standard plan, which charges a 10% platform fee to pages published after August 4, 2025.",
+      "A member outside the US pays in USD by PayPal or Venmo, so processing is 3.9% + $0.30.",
+      "The payment carries no sales tax. Patreon calculates its platform fee before sales tax, and its pages disagree on whether the processing fee applies to tax.",
+      "The estimator rounds each component to cents; Patreon's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Currency conversion (a separate scenario) and iOS in-app purchases.",
+      "Payout fees ($0.25 per Stripe bank payout, or 1% with a $0.25 minimum and $20 cap for PayPal), tax on Patreon's fees, merch, refunds, and chargebacks.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "patreon-us-standard-currency-conversion",
+    label: "Patreon standard plan, card payment in another currency",
+    provider: "patreon",
+    taxMode: "zero-only",
+    paymentProduct: "Patreon membership",
+    channel: "web",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "patreon-platform",
+        label: "Patreon platform fee",
+        rateBps: 1000,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "patreon-processing",
+        label: "Payment processing fee",
+        rateBps: 290,
+        fixedCents: 30,
+        base: "gross",
+      },
+      {
+        id: "patreon-currency-conversion",
+        label: "Currency conversion fee",
+        rateBps: 250,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    sources: [patreonFees],
+    assumptions: [
+      "US creator paid in USD on Patreon's standard plan, which charges a 10% platform fee to pages published after August 4, 2025.",
+      "The member pays by card in a currency other than USD, so Patreon's 2.5% currency conversion fee applies on top of 2.9% + $0.30 processing. The amount is the payment converted to USD.",
+      "The payment carries no sales tax. Patreon calculates its platform fee before sales tax, and its pages disagree on whether the processing fee applies to tax.",
+      "The estimator rounds each component to cents; Patreon's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "The exchange rate Patreon uses, non-US PayPal or Venmo payments, and iOS in-app purchases.",
+      "Payout fees ($0.25 per Stripe bank payout, or 1% with a $0.25 minimum and $20 cap for PayPal), tax on Patreon's fees, merch, refunds, and chargebacks.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "patreon-us-standard-ios-first-year",
+    label: "Patreon standard plan, iOS in-app purchase",
+    provider: "patreon",
+    taxMode: "zero-only",
+    paymentProduct: "Patreon iOS in-app purchase",
+    channel: "iOS app",
+    tierPolicy: "pre-threshold",
+    components: [
+      {
+        id: "apple-app-store",
+        label: "Apple App Store fee",
+        rateBps: 3000,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "patreon-platform",
+        label: "Patreon platform fee",
+        rateBps: 1000,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    sources: [patreonFees, patreonIos],
+    assumptions: [
+      "US creator paid in USD on Patreon's standard plan, which charges a 10% platform fee to pages published after August 4, 2025.",
+      "The purchase is made in Patreon's iOS app, where Apple's in-app purchase system applies a 30% App Store fee and Patreon charges no payment processing fee. The platform fee applies to the iOS sale price before tax.",
+      "The amount is the iOS sale price, which Patreon raises by default to cover Apple's fee. The results match Patreon's own example of a $14.50 iOS price.",
+      "The payment carries no sales tax. Patreon calculates its platform fee before sales tax, and its pages disagree on whether the processing fee applies to tax.",
+      "The estimator rounds each component to cents; Patreon's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Memberships billed continuously for more than a year (a separate scenario), App Store rates in China, and Apple's handling of refunds.",
+      "Payout fees ($0.25 per Stripe bank payout, or 1% with a $0.25 minimum and $20 cap for PayPal), tax on Patreon's fees, merch, refunds, and chargebacks.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "patreon-us-standard-ios-after-year",
+    label: "Patreon standard plan, iOS membership after one year",
+    provider: "patreon",
+    taxMode: "zero-only",
+    paymentProduct: "Patreon iOS in-app purchase",
+    channel: "iOS app",
+    tierPolicy: "post-threshold",
+    components: [
+      {
+        id: "apple-app-store",
+        label: "Apple App Store fee",
+        rateBps: 1500,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "patreon-platform",
+        label: "Patreon platform fee",
+        rateBps: 1000,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    sources: [patreonFees],
+    assumptions: [
+      "US creator paid in USD on Patreon's standard plan, which charges a 10% platform fee to pages published after August 4, 2025.",
+      "A membership bought in Patreon's iOS app has been billed continuously for more than a year, so Apple's App Store fee drops from 30% to 15%. Patreon charges no payment processing fee on iOS payments.",
+      "The payment carries no sales tax. Patreon calculates its platform fee before sales tax, and its pages disagree on whether the processing fee applies to tax.",
+      "The estimator rounds each component to cents; Patreon's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "The first year of an iOS membership (a separate scenario) and App Store rates in China.",
+      "Payout fees ($0.25 per Stripe bank payout, or 1% with a $0.25 minimum and $20 cap for PayPal), tax on Patreon's fees, merch, refunds, and chargebacks.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "patreon-us-pro-over-3",
+    label: "Patreon Pro plan, payment over $3",
+    provider: "patreon",
+    taxMode: "zero-only",
+    paymentProduct: "Patreon membership",
+    channel: "web",
+    tierPolicy: "post-threshold",
+    components: [
+      {
+        id: "patreon-platform",
+        label: "Patreon platform fee",
+        rateBps: 800,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "patreon-processing",
+        label: "Payment processing fee",
+        rateBps: 290,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 301 },
+    sources: [patreonFees],
+    assumptions: [
+      "US creator paid in USD on Patreon's legacy Pro plan, which keeps its 8% platform fee for pages published on or before August 4, 2025 that have stayed published.",
+      "The member pays over $3 in USD by card, Apple Pay, or US PayPal or Venmo, so processing is 2.9% + $0.30.",
+      "The payment carries no sales tax. Patreon calculates its platform fee before sales tax, and its pages disagree on whether the processing fee applies to tax.",
+      "The estimator rounds each component to cents; Patreon's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Pro plus Merch, the Founders plan, non-US PayPal or Venmo payments, currency conversion, and iOS in-app purchases.",
+      "Payout fees ($0.25 per Stripe bank payout, or 1% with a $0.25 minimum and $20 cap for PayPal), tax on Patreon's fees, merch, refunds, and chargebacks.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "patreon-us-pro-3-or-less",
+    label: "Patreon Pro plan, payment of $3 or less",
+    provider: "patreon",
+    taxMode: "zero-only",
+    paymentProduct: "Patreon membership",
+    channel: "web",
+    tierPolicy: "pre-threshold",
+    components: [
+      {
+        id: "patreon-platform",
+        label: "Patreon platform fee",
+        rateBps: 800,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "patreon-processing",
+        label: "Payment processing fee",
+        rateBps: 500,
+        fixedCents: 10,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { maxCents: 300 },
+    sources: [patreonFees],
+    assumptions: [
+      "US creator paid in USD on Patreon's legacy Pro plan, which keeps its 8% platform fee for pages published on or before August 4, 2025 that have stayed published.",
+      "The tier is priced at $3 or less, so legacy micropayment processing of 5% + $0.10 applies.",
+      "The payment carries no sales tax. Patreon calculates its platform fee before sales tax, and its pages disagree on whether the processing fee applies to tax.",
+      "The estimator rounds each component to cents; Patreon's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Pro plus Merch, the Founders plan, non-US PayPal or Venmo payments, currency conversion, and iOS in-app purchases.",
+      "Payout fees ($0.25 per Stripe bank payout, or 1% with a $0.25 minimum and $20 cap for PayPal), tax on Patreon's fees, merch, refunds, and chargebacks.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "kofi-us-stripe-5-percent",
+    label: "Ko-fi 5% service fee, card payment through Stripe",
+    provider: "kofi",
+    taxMode: "zero-only",
+    paymentProduct: "Ko-fi shop, membership, commission, or tip",
+    channel: "Stripe",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "kofi-service",
+        label: "Ko-fi service fee",
+        rateBps: 500,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "stripe-processing",
+        label: "Stripe card processing",
+        rateBps: 290,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    sources: [kofiFees, kofiStripe, stripePricing],
+    assumptions: [
+      "US creator paid in USD, with the supporter paying by US card through the creator's own Stripe account. Ko-fi says standard Stripe fees apply, and Stripe's pricing page lists 2.9% + 30¢ for domestic cards on standard pricing.",
+      "The payment is a shop sale, membership, commission, or monthly tip, or a one-off tip while Contributor status is on, so Ko-fi's 5% service fee applies.",
+      "The payment has no shipping or sales tax: Ko-fi says it takes no fee on shipping and does not say whether its fee applies to tax.",
+      "The estimator rounds each component to cents; Ko-fi's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "PayPal payments (a separate scenario) and Ko-fi Gold.",
+      "Currency conversion, Stripe instant payouts, disputes, refunds, and Stripe's custom pricing.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "kofi-us-stripe-no-fee",
+    label: "No Ko-fi fee, card payment through Stripe",
+    provider: "kofi",
+    taxMode: "zero-only",
+    paymentProduct: "Ko-fi with Gold, or a one-off tip",
+    channel: "Stripe",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "stripe-processing",
+        label: "Stripe card processing",
+        rateBps: 290,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    sources: [kofiFees, kofiGold, kofiStripe, stripePricing],
+    assumptions: [
+      "US creator paid in USD, with the supporter paying by US card through the creator's own Stripe account. Ko-fi says standard Stripe fees apply, and Stripe's pricing page lists 2.9% + 30¢ for domestic cards on standard pricing.",
+      "No Ko-fi service fee applies: the creator has Ko-fi Gold ($12 a month, not included) with Contributor status off, or the payment is a one-off tip or Goal without Contributor status. Memberships that began before Gold keep the 5% fee.",
+      "The payment has no shipping or sales tax: Ko-fi says it takes no fee on shipping and does not say whether its fee applies to tax.",
+      "The estimator rounds each component to cents; Ko-fi's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "The Ko-fi Gold subscription price and PayPal payments.",
+      "Currency conversion, Stripe instant payouts, disputes, refunds, and Stripe's custom pricing.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "kofi-us-paypal-5-percent",
+    label: "Ko-fi 5% service fee on a PayPal payment",
+    provider: "kofi",
+    taxMode: "zero-only",
+    paymentProduct: "Ko-fi shop, membership, commission, or tip",
+    channel: "PayPal",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "kofi-service",
+        label: "Ko-fi service fee",
+        rateBps: 500,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    sources: [kofiFees],
+    assumptions: [
+      "US creator paid in USD through their own PayPal account, on a payment where Ko-fi's 5% service fee applies.",
+      "Only Ko-fi's fee is estimated. PayPal charges its own transaction fee, which Ko-fi does not publish, so it is not added.",
+      "The payment has no shipping or sales tax: Ko-fi says it takes no fee on shipping and does not say whether its fee applies to tax.",
+      "The estimator rounds each component to cents; Ko-fi's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "PayPal's transaction fee, currency conversion, PayPal holds, disputes, and refunds.",
+    ],
+    status: "supported",
   }),
   official({
     id: "lemon-squeezy-us-domestic-card",

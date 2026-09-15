@@ -4,14 +4,16 @@ interface Props {
   valueId: string;
   value: string;
   rowId?: string;
+  /** Lets a page script rename the row. */
+  labelId?: string;
   hidden?: boolean;
   labelClass?: string;
   valueClass?: string;
 }
 
-const { label, valueId, value, rowId, hidden = false, labelClass = "text-paper/70", valueClass } = Astro.props;
+const { label, valueId, value, rowId, labelId, hidden = false, labelClass = "text-paper/70", valueClass } = Astro.props;
 ---
 
 <div id={rowId} hidden={hidden} class="mt-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
-  <span class={labelClass}>{label}</span><strong id={valueId} class:list={["ml-auto text-right", valueClass]}>{value}</strong>
+  <span id={labelId} class={labelClass}>{label}</span><strong id={valueId} class:list={["ml-auto text-right", valueClass]}>{value}</strong>
 </div>

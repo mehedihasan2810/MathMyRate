@@ -68,8 +68,12 @@ export const FeePresetSchema = Schema.Struct({
   components: Schema.Array(FeeComponent),
   grossRangeCents: Schema.optional(
     Schema.Struct({
-      minCents: Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: Number(MAX_CENTS) })),
-      maxCents: Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: Number(MAX_CENTS) })),
+      minCents: Schema.optional(
+        Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: Number(MAX_CENTS) })),
+      ),
+      maxCents: Schema.optional(
+        Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: Number(MAX_CENTS) })),
+      ),
     }),
   ),
   sources: Schema.Array(FeeSource),
@@ -122,9 +126,16 @@ export const FeePresetSchema = Schema.Struct({
 
     if (preset.blockedReason !== undefined) return "supported rule has a blockedReason";
 
+    const range = preset.grossRangeCents;
+
+    if (range && range.minCents === undefined && range.maxCents === undefined) {
+      return "grossRangeCents needs a minimum or a maximum";
+    }
+
     if (
-      preset.grossRangeCents &&
-      preset.grossRangeCents.minCents > preset.grossRangeCents.maxCents
+      range?.minCents !== undefined &&
+      range.maxCents !== undefined &&
+      range.minCents > range.maxCents
     ) {
       return "grossRangeCents minimum must not exceed its maximum";
     }

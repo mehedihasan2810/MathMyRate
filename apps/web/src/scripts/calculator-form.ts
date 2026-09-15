@@ -172,6 +172,34 @@ export function hoursToHundredths(
   return hundredths;
 }
 
+/** Reads a positive decimal with up to two places as hundredths, so "2.5" MB becomes 250. */
+export function decimalToHundredths(
+  value: string,
+  field: FieldName,
+  unit: string,
+  maximumHundredths: number,
+): number {
+  const clean = tidyNumber(value, COUNT_NOISE);
+
+  if (clean.length === 0) throw new InputProblem(field, `Enter a size in ${unit}.`);
+
+  if (!/^\d+(\.\d{1,2})?$/u.test(clean)) {
+    throw new InputProblem(field, "Use a number with up to 2 decimal places.");
+  }
+
+  const [whole, decimal = ""] = clean.split(".");
+  const hundredths = Number(whole) * 100 + Number(decimal.padEnd(2, "0"));
+
+  if (hundredths < 1 || hundredths > maximumHundredths) {
+    throw new InputProblem(
+      field,
+      `Enter from 0.01 to ${(maximumHundredths / 100).toLocaleString("en-US")} ${unit}.`,
+    );
+  }
+
+  return hundredths;
+}
+
 export function hoursToMinutes(value: string, field: FieldName): number {
   const clean = tidyNumber(value, HOURS_NOISE);
 

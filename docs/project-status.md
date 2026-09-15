@@ -237,6 +237,27 @@ On branch `feat/marketplace-fees-embeds`, based on `df44ae1`:
   has a noindex embed page. Shopify Payments is still not built, because its
   official pages publish no card rate.
 
+### Creator platform fees and KDP royalties (2026-09-16)
+
+On branch `feat/creator-platform-fees`, based on `b043b00`:
+
+- Kickstarter: pledges of $10 or more (5% plus 3% + $0.30) and under $10 (5%
+  plus 5% + $0.08), with campaign totals from the pledge count. Pledge Manager
+  payments are a blocked preset. `grossRangeCents` can now set only a minimum
+  or only a maximum.
+- Patreon: the standard 10% plan by payment method, currency conversion, iOS
+  in-app purchases, and the legacy Pro plan's $3 threshold. Results match
+  Patreon's own $10 web and $14.50 iOS examples.
+- Ko-fi: its 5% fee or no fee, with Stripe's published US card rate for
+  payments through Stripe, and Ko-fi's fee alone for PayPal.
+- KDP: `packages/calculators/src/kdp.ts` computes Amazon.com eBook royalties
+  (70% after delivery costs, or 35%) and print royalties from KDP's printing
+  cost tables, refusing page counts and inks the tables do not price.
+- Upwork vs Fiverr: a comparison of freelancer fees on one job, with the
+  freelancer's Upwork rate as an input.
+- The fee calculator's volume field takes per-calculator wording, so
+  Kickstarter totals a campaign and Patreon totals members.
+
 ### Infrastructure and deployment
 
 Alchemy remains the infrastructure owner for the existing Cloudflare Workers,
@@ -661,6 +682,56 @@ Browser evidence (each value hand-checked):
   copies hide the pinned bar and the project hand-off.
 - Every embed page at 360 and 760 px has no horizontal overflow; suggested
   heights come from the 360 px measurements.
+- Not verified: Enter and Space activation (a limitation of the in-app
+  browser), a successful clipboard copy, print preview, iOS Safari's on-screen
+  keyboard, and an embed on another site.
+
+Local checks on 2026-09-16 for creator platform fees and KDP royalties
+(branch `feat/creator-platform-fees`, based on `b043b00`; browser work on the
+dev server at `:4399`, at desktop width and 375×812):
+
+| Check                                                      | Observed result                                                                                                                                                                                                                                                               |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run lint`                                            | Passed with 0 findings                                                                                                                                                                                                                                                        |
+| `pnpm run format:check`                                    | Passed                                                                                                                                                                                                                                                                        |
+| `pnpm run check-types`                                     | Passed: 7 of 7 tasks; `astro check` 0 errors, 0 warnings, 0 hints                                                                                                                                                                                                             |
+| Vitest                                                     | Passed: 103 calculator tests (Kickstarter's threshold, Patreon's worked examples, KDP's royalty and printing cost examples) and 110 web tests                                                                                                                                 |
+| Guard build (`REQUIRE_SITE_URL=true`, no site)             | Failed as intended                                                                                                                                                                                                                                                            |
+| Site build (`PUBLIC_SITE_URL=https://calculators.example`) | Passed; 55 pages. Audit: one H1 and no skipped heading level per page, no inline handlers, canonical links and existing OG images on every indexable page, `WebApplication` on the new pages, titles 46 to 64 characters, and 36 sitemap URLs with none of the 18 embed pages |
+| Preview build                                              | Passed; every page noindex, `Disallow: /`, no sitemap, no canonical links, no JSON-LD, and no embed snippet                                                                                                                                                                   |
+
+Official sources were rechecked on 2026-09-15 and 2026-09-16: Kickstarter's
+fees page in the in-app browser, Patreon's pricing page and Help Center
+articles, Ko-fi's Help Center articles, and KDP's royalty, list price, and
+printing cost pages.
+
+Browser evidence (each value hand-checked):
+
+- Kickstarter: $100 pays $8.30 ($5.00 and $3.30). 200 pledges of $50 pay
+  $860.00 and leave $9,140.00, under "Across 200 pledges" with no yearly row.
+  $5 in the micropledge scenario pays $0.58. $9 in the standard scenario shows
+  "This scenario covers amounts of $10.00 or more."; $10 in the micropledge
+  scenario shows "up to $9.99". Keeping $50 charges $54.67.
+- Patreon: $10 pays $1.59 and keeps $8.41; 100 members keep $841.00 a month
+  and pay $1,908.00 in fees a year. iOS at $14.50 keeps $8.70. Currency
+  conversion on $10 pays $1.84. The Pro plan at $3 pays $0.49, and $5 names
+  the $3.00 limit.
+- Ko-fi: $10 pays $1.09 ($0.50 and $0.59); with no Ko-fi fee $0.59; the PayPal
+  scenario $0.50. The Gold break-even reads $240 a month.
+- KDP: a $4.99, 2.5 MB eBook earns $3.23 at 70% ($0.38 delivery) and $1.75 at
+  35%. $15 at 70% warns about the $2.99 to $12.99 band. A 300-page black-ink
+  paperback at $14.99 earns $4.39 after $4.60 printing, and 500 copies earn
+  $2,195.00; at $8 it shows -$0.60 and the $9.20 minimum. A 300-page hardcover
+  at $24.99 earns $5.74; groundwood is disabled for hardcovers; 109 hardcover
+  pages and 70 standard-color pages name the missing table row. A 120-page
+  large-trim standard-color paperback costs $5.82 to print.
+- Upwork vs Fiverr: $500 at 10% leaves $450.00 on Upwork and $400.00 on
+  Fiverr, and earning the full $500 needs $555.56 and $625.00. 16% shows
+  "Enter a value no higher than 15%."
+- At 375 px the KDP, Patreon, and comparison pages do not scroll sideways; the
+  comparison table scrolls inside its box. Embed pages at 360 and 760 px have
+  no horizontal overflow, and their suggested heights come from the 360 px
+  measurement.
 - Not verified: Enter and Space activation (a limitation of the in-app
   browser), a successful clipboard copy, print preview, iOS Safari's on-screen
   keyboard, and an embed on another site.

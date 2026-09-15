@@ -37,7 +37,10 @@ function serializeFeePreset(preset: FeePreset): string {
     effectiveFrom: preset.effectiveFrom,
     exclusions: [...preset.exclusions],
     grossRangeCents: preset.grossRangeCents
-      ? { maxCents: preset.grossRangeCents.maxCents, minCents: preset.grossRangeCents.minCents }
+      ? {
+          maxCents: preset.grossRangeCents.maxCents ?? null,
+          minCents: preset.grossRangeCents.minCents ?? null,
+        }
       : null,
     id: preset.id,
     kind: preset.kind ?? null,
@@ -56,13 +59,16 @@ function serializeFeePreset(preset: FeePreset): string {
   });
 }
 
-/** A charge outside the amounts a scenario covers, such as an order above a documented rate threshold. */
+/**
+ * A charge outside the amounts a scenario covers, such as an order above a
+ * documented rate threshold. A null bound means the range is open on that side.
+ */
 export class GrossOutOfRangeError extends RangeError {
   constructor(
-    readonly minCents: bigint,
-    readonly maxCents: bigint,
+    readonly minCents: bigint | null,
+    readonly maxCents: bigint | null,
   ) {
-    super(`This scenario covers charges from ${minCents} to ${maxCents} cents`);
+    super(`This scenario covers charges from ${minCents ?? "any"} to ${maxCents ?? "any"} cents`);
     this.name = "GrossOutOfRangeError";
   }
 }
@@ -72,11 +78,15 @@ function requireGrossInRange(preset: FeePreset, grossCents: bigint): void {
 
   if (!range) return;
 
-  const minCents = BigInt(range.minCents);
-  const maxCents = BigInt(range.maxCents);
+  const minCents = range.minCents === undefined ? null : BigInt(range.minCents);
+  const maxCents = range.maxCents === undefined ? null : BigInt(range.maxCents);
 
-  if (grossCents < minCents || grossCents > maxCents)
+  if (
+    (minCents !== null && grossCents < minCents) ||
+    (maxCents !== null && grossCents > maxCents)
+  ) {
     throw new GrossOutOfRangeError(minCents, maxCents);
+  }
 }
 
 function trustedPreset(input: FeePreset): FeePreset {

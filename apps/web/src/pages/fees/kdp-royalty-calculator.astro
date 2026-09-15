@@ -1,0 +1,130 @@
+---
+import { calculateEbookRoyalty, calculatePrintingCost, calculatePrintRoyalty } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import KdpRoyaltyCalculator from "../../components/KdpRoyaltyCalculator.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("kdp-royalties");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const ebook = calculateEbookRoyalty({ listPriceCents: 499n, option: "70", fileSizeHundredthsMb: 250 });
+
+const paperback = calculatePrintRoyalty({ format: "paperback", ink: "black", trim: "regular", pages: 300, listPriceCents: 1_499n });
+
+const hardcover = calculatePrintRoyalty({ format: "hardcover", ink: "black", trim: "regular", pages: 300, listPriceCents: 2_499n });
+
+const ebookRows = [99n, 299n, 499n, 799n, 999n, 1_299n].map((listPriceCents) => {
+  const seventy = calculateEbookRoyalty({ listPriceCents, option: "70", fileSizeHundredthsMb: 250 });
+  const thirtyFive = calculateEbookRoyalty({ listPriceCents, option: "35", fileSizeHundredthsMb: 250 });
+
+  return [formatUsdGrouped(listPriceCents), seventy.priceInRange ? formatUsdGrouped(seventy.royaltyCents) : "Not available", formatUsdGrouped(thirtyFive.royaltyCents)];
+});
+
+const pageCounts = [100, 200, 300, 400, 600];
+
+const printingRows = pageCounts.map((pages) => [
+  `${pages} pages`,
+  formatUsdGrouped(calculatePrintingCost({ format: "paperback", ink: "black", trim: "regular", pages })),
+  formatUsdGrouped(calculatePrintingCost({ format: "paperback", ink: "black", trim: "large", pages })),
+  pages <= 600 ? formatUsdGrouped(calculatePrintingCost({ format: "paperback", ink: "standard-color", trim: "regular", pages })) : "—",
+  formatUsdGrouped(calculatePrintingCost({ format: "paperback", ink: "premium-color", trim: "regular", pages })),
+]);
+
+const paperbackRows = [999n, 1_299n, 1_499n, 1_999n, 2_499n].map((listPriceCents) => {
+  const result = calculatePrintRoyalty({ format: "paperback", ink: "black", trim: "regular", pages: 300, listPriceCents });
+
+  return [formatUsdGrouped(listPriceCents), `${result.royaltyRateBps / 100}%`, formatUsdGrouped(result.royaltyCents)];
+});
+
+const updatedOn = "2026-09-16";
+
+const sources = [
+  { title: "eBook Royalties", url: "https://kdp.amazon.com/en_US/help/topic/G200644210" },
+  { title: "eBook List Price Requirements", url: "https://kdp.amazon.com/en_US/help/topic/G200634560" },
+  { title: "Digital Book Pricing Page", url: "https://kdp.amazon.com/en_US/help/topic/G200634500" },
+  { title: "Paperback Royalty", url: "https://kdp.amazon.com/en_US/help/topic/G201834330" },
+  { title: "Paperback Printing Cost", url: "https://kdp.amazon.com/en_US/help/topic/G201834340" },
+  { title: "Hardcover Royalty", url: "https://kdp.amazon.com/en_US/help/topic/G77F3WPD3KQLJTFS" },
+  { title: "Hardcover Printing Cost", url: "https://kdp.amazon.com/en_US/help/topic/GHT976ZKSKUXBB6H" },
+  { title: "Print Book Pricing Page", url: "https://kdp.amazon.com/en_US/help/topic/G8BKPU9AGVZSF9QF" },
+  { title: "Royalties in Kindle Unlimited", url: "https://kdp.amazon.com/en_US/help/topic/G201541130" },
+  { title: "When will I get paid?", url: "https://kdp.amazon.com/en_US/help/topic/GK2MKZUL6U3SFBPZ" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does KDP pay per eBook sale?", answer: `At the 70% option, KDP pays 70% of the list price after a delivery cost of $0.15 per MB. A $4.99 eBook of 2.5 MB earns ${formatUsdGrouped(ebook.royaltyCents)} per Amazon.com sale. At the 35% option, it earns 35% of the list price with no delivery cost.` },
+  { question: "What list price gets the 70% royalty?", answer: "On Amazon.com, the 70% option needs a list price from $2.99 to $12.99; the upper limit rose from $9.99 on July 7, 2026. The book also must not be mainly public domain content, and its price must be at least 20% below any physical edition's Amazon price." },
+  { question: "How are paperback royalties calculated?", answer: `KDP pays 50% of the list price at $9.98 or less, or 60% at $9.99 or more, minus the printing cost. A 300-page black-ink paperback costs ${formatUsdGrouped(paperback.printingCostCents)} to print, so at $14.99 it earns ${formatUsdGrouped(paperback.royaltyCents)}.` },
+  { question: "What is the minimum list price for a print book?", answer: "KDP's minimum list price is the printing cost divided by the royalty rate. KDP does not explain how it applies the 50% and 60% rates when that minimum lands near $9.99, so the calculator shows both." },
+  { question: "Does trim size change the printing cost?", answer: "KDP's printing cost tables charge more for large trim sizes, wider than 6.12 inches or taller than 9 inches. Some KDP help pages say trim size does not affect printing cost; this calculator follows the tables." },
+  { question: "Does the calculator include Kindle Unlimited?", answer: "No. Kindle Unlimited pays a share of a monthly fund based on pages read, and KDP does not publish a fixed rate per page." },
+  { question: "What about Expanded Distribution?", answer: "Expanded Distribution pays 40% of the list price minus printing costs, for paperbacks only. KDP does not state the printing cost or minimum list price it uses there, so it is not estimated." },
+  { question: "When does KDP pay royalties?", answer: "Monthly, about 60 days after the end of the month of sale. US authors are paid by direct deposit, which has no minimum payment threshold." },
+];
+---
+<Layout title="KDP Royalty Calculator: eBook, Paperback, Hardcover | MathMyRate" description="Estimate Amazon KDP royalties on Amazon.com: 70% and 35% eBook royalties after delivery costs, and paperback and hardcover royalties after printing costs." ogImage="/og/kdp-royalties.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Work out what Amazon KDP pays per sale on Amazon.com, for Kindle eBooks, paperbacks, and hardcovers, from KDP's published rates and printing costs.</p>
+    <PageByline updatedOn={updatedOn} />
+    <KdpRoyaltyCalculator />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The KDP royalty calculator shows what you earn per sale on Amazon.com. A $4.99 eBook of 2.5 MB at the 70% option earns <strong>{formatUsdGrouped(ebook.royaltyCents)}</strong>. A 300-page black-ink paperback at $14.99 costs {formatUsdGrouped(paperback.printingCostCents)} to print and earns <strong>{formatUsdGrouped(paperback.royaltyCents)}</strong>, and the same book as a $24.99 hardcover costs {formatUsdGrouped(hardcover.printingCostCents)} and earns {formatUsdGrouped(hardcover.royaltyCents)}.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Choose the format: eBook, paperback, or hardcover.</li>
+        <li>For an eBook, choose the royalty option and enter the file size KDP shows.</li>
+        <li>For a print book, choose the ink and paper, the trim size, and the page count.</li>
+        <li>Enter the list price before tax, and optionally the number of copies sold.</li>
+      </ol>
+
+      <h2>eBook royalties</h2>
+      <ul>
+        <li><strong>70% option:</strong> 70% × (list price − delivery cost), for list prices from $2.99 to $12.99 on Amazon.com, and for sales to customers in KDP's 70% territories, which include the US.</li>
+        <li><strong>Delivery cost:</strong> $0.15 per MB, with file sizes rounded up to the nearest kilobyte and a minimum of $0.01.</li>
+        <li><strong>35% option:</strong> 35% of the list price, with no delivery cost. The minimum list price is $0.99 under 3 MB, $1.99 from 3 MB, and $2.99 from 10 MB; the maximum is $200.</li>
+        <li><strong>Other 70% rules:</strong> the book must not be mainly public domain, and its list price must be at least 20% below any physical edition's list price on Amazon.</li>
+      </ul>
+      <DataTable caption="Royalty per Amazon.com sale for a 2.5 MB eBook" headers={["List price", "70% option", "35% option"]} rows={ebookRows} />
+
+      <h2>Paperback and hardcover royalties</h2>
+      <p>KDP pays (royalty rate × list price) − printing cost. The rate is 50% at a list price of $9.98 or less and 60% at $9.99 or more. List prices exclude tax, the maximum is $250, and KDP will not accept a price below the printing cost divided by the rate.</p>
+      <DataTable caption="Royalty on a 300-page black-ink paperback, regular trim" headers={["List price", "Rate", "Royalty"]} rows={paperbackRows} />
+
+      <h2>Printing costs</h2>
+      <p>Amazon.com paperback printing costs: a fixed cost plus a cost per page, depending on ink, paper, and trim size. Black-ink paperbacks with 24 to 110 pages pay only a fixed $2.30, or $2.84 in a large trim.</p>
+      <DataTable caption="Paperback printing cost by page count" headers={["Pages", "Black, regular", "Black, large", "Standard color, regular", "Premium color, regular"]} rows={printingRows} />
+      <p>Hardcovers run from 75 to 550 pages, in black ink or premium color: black ink costs a fixed $6.80 up to 108 pages, then $5.65 plus $0.012 a page in a regular trim.</p>
+
+      <h2>What this calculator leaves out</h2>
+      <ul>
+        <li><strong>Expanded Distribution:</strong> 40% of the list price minus printing costs, for paperbacks. KDP does not state the printing cost or minimum price used there.</li>
+        <li><strong>Kindle Unlimited:</strong> a share of a monthly fund based on pages read, with no published rate per page.</li>
+        <li><strong>Other marketplaces:</strong> prices, VAT, and delivery costs differ outside Amazon.com.</li>
+        <li><strong>Price matching:</strong> if Amazon matches a lower price elsewhere, eBook royalties can use that price.</li>
+        <li><strong>Taxes:</strong> royalties to a US person are not subject to US tax withholding once valid tax information is on file; income tax is still yours to pay.</li>
+      </ul>
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId="kdp-royalties" />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">KDP's help pages were reviewed on 2026-09-15. Some KDP pages disagree on whether trim size changes printing cost; this calculator follows the printing cost tables. MathMyRate is not affiliated with Amazon. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

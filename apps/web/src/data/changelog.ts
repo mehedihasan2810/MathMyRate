@@ -12,6 +12,48 @@ export interface ChangelogEntry {
 
 export const changelog: readonly ChangelogEntry[] = [
   {
+    date: "2026-09-16",
+    title: "Patreon, Ko-fi, and KDP calculators added",
+    changes: [
+      "Patreon: added membership payments on the standard 10% plan with 2.9% + $0.30 processing (3.9% + $0.30 for PayPal or Venmo from outside the US), the 2.5% currency conversion fee, iOS in-app purchases with Apple's 30% or 15% App Store fee, and the legacy 8% Pro plan with its $3-or-less micropayment rate. The web and iOS results match Patreon's own $10 and $14.50 examples. One-time purchases are not included, because Patreon's pages state their fee three different ways.",
+      "Ko-fi: added Ko-fi's 5% service fee and the no-fee case (Ko-fi Gold, or one-off tips without Contributor status), with Stripe's published 2.9% + $0.30 US card rate for payments through Stripe. PayPal payments show Ko-fi's fee only, because Ko-fi does not publish PayPal's fee.",
+      "Amazon KDP: added royalties for Amazon.com eBooks (70% after delivery costs of $0.15 per MB, or 35%), and paperbacks and hardcovers (50% at a list price of $9.98 or less, 60% at $9.99 or more, minus printing costs from KDP's tables). Expanded Distribution and Kindle Unlimited are not estimated.",
+    ],
+    sources: [
+      { title: "Patreon Pricing Plans — Patreon", url: "https://www.patreon.com/pricing" },
+      {
+        title: "Creator fees overview",
+        url: "https://support.patreon.com/hc/en-us/articles/11111747095181-Creator-fees-overview",
+      },
+      {
+        title: "Does Ko-fi take a fee?",
+        url: "https://help.ko-fi.com/hc/en-us/articles/360002506494-Does-Ko-fi-take-a-fee",
+      },
+      {
+        title: "Digital  Book Pricing Page",
+        url: "https://kdp.amazon.com/en_US/help/topic/G200634500",
+      },
+      {
+        title: "Paperback Printing Cost",
+        url: "https://kdp.amazon.com/en_US/help/topic/G201834340",
+      },
+    ],
+  },
+  {
+    date: "2026-09-15",
+    title: "Kickstarter fee calculator added",
+    changes: [
+      "Kickstarter: added collected pledges on successfully funded US projects, with Kickstarter's 5% fee plus payment processing of 3% + $0.30 for pledges of $10 or more, or 5% + $0.08 for pledges under $10. Pledge Manager payments are listed as unsupported, because Kickstarter describes their processing fee only as roughly 3-5%.",
+    ],
+    sources: [
+      { title: "Fees: United States — Kickstarter", url: "https://www.kickstarter.com/help/fees" },
+      {
+        title: "What are the fees? | Kickstarter Help Center",
+        url: "https://help.kickstarter.com/en-us/articles/16236674-what-are-the-fees",
+      },
+    ],
+  },
+  {
     date: "2026-09-15",
     title: "Fiverr fee calculator added",
     changes: [

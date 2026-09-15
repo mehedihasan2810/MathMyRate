@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  decimalToHundredths,
   formatPercentBps,
   formatUsdInput,
   hoursToHundredths,
@@ -174,5 +175,23 @@ describe("formatPercentBps", () => {
     [10_000n, "100.00%"],
   ])("formats %s basis points as %j", (bps, text) => {
     expect(formatPercentBps(bps)).toBe(text);
+  });
+});
+
+describe("decimalToHundredths", () => {
+  it.each([
+    ["2.5", 250],
+    ["0.01", 1],
+    ["12.75", 1_275],
+  ])("reads %j as %s hundredths", (text, hundredths) => {
+    expect(decimalToHundredths(text, "size", "MB", 65_000)).toBe(hundredths);
+  });
+
+  it.each([
+    ["", "Enter a size in MB."],
+    ["0", "Enter from 0.01 to 650 MB."],
+    ["1.234", "Use a number with up to 2 decimal places."],
+  ])("rejects %j", (text, message) => {
+    expect(() => decimalToHundredths(text, "size", "MB", 65_000)).toThrow(message);
   });
 });

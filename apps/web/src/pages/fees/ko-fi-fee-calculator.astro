@@ -1,0 +1,113 @@
+---
+import { calculateFees, effectiveFeeRateBps } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatPercentBps, formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("kofi-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const withFee = requireOfficialPreset("kofi-us-stripe-5-percent");
+
+const noFee = requireOfficialPreset("kofi-us-stripe-no-fee");
+
+const kofiRateBps = withFee.components.find((component) => component.id === "kofi-service")?.rateBps ?? 0;
+
+const ten = calculateFees({ preset: withFee, grossCents: 1_000n });
+
+const tenNoFee = calculateFees({ preset: noFee, grossCents: 1_000n });
+
+// Ko-fi Gold's monthly price for new users, from Ko-fi's Gold help article.
+const goldMonthlyCents = 1_200n;
+
+const goldBreakEvenCents = (goldMonthlyCents * 10_000n) / BigInt(kofiRateBps);
+
+const priceRows = [300n, 500n, 1_000n, 2_500n, 5_000n, 10_000n].map((grossCents) => {
+  const fee = calculateFees({ preset: withFee, grossCents });
+  const gold = calculateFees({ preset: noFee, grossCents });
+
+  return [formatSaleLabel(grossCents), formatUsdGrouped(fee.sellerProceedsCents), formatPercentBps(effectiveFeeRateBps(fee.feeCents, fee.grossCents)), formatUsdGrouped(gold.sellerProceedsCents)];
+});
+
+const updatedOn = "2026-09-16";
+
+const guideSources = [
+  { title: "Does Ko-fi take a fee?", url: "https://help.ko-fi.com/hc/en-us/articles/360002506494-Does-Ko-fi-take-a-fee" },
+  { title: "What is Ko-fi Gold?", url: "https://help.ko-fi.com/hc/en-us/articles/360005506873-What-is-Ko-fi-Gold" },
+  { title: "Connect your Stripe account and start earning ✨", url: "https://help.ko-fi.com/hc/en-us/articles/360007522474-Connect-your-Stripe-account-and-start-earning" },
+  { title: "How do I calculate shipping?", url: "https://help.ko-fi.com/hc/en-us/articles/6900606165777-How-do-I-calculate-shipping" },
+  { title: "How tax works on Ko-fi", url: "https://help.ko-fi.com/hc/en-us/articles/10792069957661-How-tax-works-on-Ko-fi" },
+  { title: "How to issue a refund", url: "https://help.ko-fi.com/hc/en-us/articles/7733731935773-How-to-issue-a-refund" },
+  { title: "Pricing & Fees | Stripe", url: "https://stripe.com/pricing" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Ko-fi take?", answer: `Ko-fi keeps a flat 5% service fee on shop sales, memberships, commissions, and monthly tips, and on one-off tips while Contributor status is on. Your payment processor charges its own fee on top. A $10 shop sale paid by card through Stripe pays ${formatUsdGrouped(ten.feeCents)} in total and leaves ${formatUsdGrouped(ten.sellerProceedsCents)}.` },
+  { question: "Are one-off tips on Ko-fi free?", answer: "Ko-fi takes 0% on one-off tips and Goals if you turn off Contributor status, which new creators start with. Monthly tips pay 5% either way. PayPal or Stripe still charge their own fees." },
+  { question: "Is Ko-fi Gold worth it?", answer: `Ko-fi Gold costs $12 a month for new users and removes Ko-fi's service fee on all payment options. Counting fees alone, it pays for itself once more than ${formatSaleLabel(goldBreakEvenCents)} a month of payments would otherwise pay the 5% fee. Memberships that began before you joined Gold keep the 5% fee.` },
+  { question: "Does Ko-fi charge a fee on shipping or tax?", answer: "Ko-fi says it does not charge a fee on shipping. It does not collect or remit sales tax for you: you can add tax at checkout and receive it in full, and Ko-fi does not say whether its fee applies to that tax, so this calculator covers payments without shipping or tax." },
+  { question: "What does PayPal charge on Ko-fi payments?", answer: "Ko-fi says PayPal and Stripe take their normal transaction fees but does not publish PayPal's rate, so the PayPal scenario shows Ko-fi's 5% only. Check your PayPal account for the rate that applies to you." },
+  { question: "When do I get paid on Ko-fi?", answer: "Ko-fi does not hold your money. Payments go straight to your PayPal or Stripe account, so there is no Ko-fi payout or payout fee; Stripe charges extra for instant transfers to your bank." },
+  { question: "Does Ko-fi return its fee on a refund?", answer: "Refunds made in Ko-fi are for the full amount only, within 180 days, and Ko-fi says PayPal or Stripe usually keep their transaction fee. Ko-fi's pages do not say whether its own 5% is returned." },
+];
+---
+<Layout title="Ko-fi Fee Calculator: 5% Fee and Stripe Costs | MathMyRate" description="Estimate Ko-fi's 5% service fee and Stripe's 2.9% + 30¢ card processing on tips, shop sales, and memberships, and how much Ko-fi Gold saves you." ogImage="/og/kofi.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Ko-fi's service fee and card processing take from a tip, shop sale, or membership, and when Ko-fi Gold pays for itself.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={withFee.checkedOn} />
+    <FeeCalculator calculatorId="kofi" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The Ko-fi fee calculator shows what reaches you from a payment. Ko-fi keeps a <strong>5%</strong> service fee on most payments, and your payment processor charges its own fee. For a card payment through Stripe on its standard 2.9% + 30¢ US rate, a $10 payment pays <strong>{formatUsdGrouped(ten.feeCents)}</strong> and leaves <strong>{formatUsdGrouped(ten.sellerProceedsCents)}</strong>. Without the Ko-fi fee, you keep {formatUsdGrouped(tenNoFee.sellerProceedsCents)}.</p>
+
+      <h2>When Ko-fi charges its 5% fee</h2>
+      <ul>
+        <li><strong>Always 5% without Gold:</strong> shop sales, memberships, commissions, and monthly tips.</li>
+        <li><strong>One-off tips and Goals:</strong> 5% while Contributor status is on, which new creators start with; 0% if you turn it off.</li>
+        <li><strong>Ko-fi Gold:</strong> $12 a month for new users, with 0% service fees on all payment options. You still need to turn off Contributor status, and memberships that started before Gold keep the 5% fee.</li>
+      </ul>
+
+      <h2>How payments reach you</h2>
+      <p>Ko-fi does not process payments or hold your money. Supporters pay you through your own PayPal or Stripe account, and the processor takes Ko-fi's fee out of the payment, labelled an Application Fee by Stripe and a Partner Fee by PayPal. Ko-fi says standard Stripe fees apply, so this calculator uses Stripe's published US card rate of 2.9% + 30¢. Ko-fi does not publish the PayPal rate, so the PayPal scenario shows Ko-fi's fee only.</p>
+
+      <h2>What you keep at common prices</h2>
+      <p>Card payments through Stripe, with no shipping or tax.</p>
+      <DataTable caption="Ko-fi and Stripe fees by payment amount" headers={["Payment", "You keep with the 5% fee", "Total fee share", "You keep with no Ko-fi fee"]} rows={priceRows} />
+
+      <h2>When Ko-fi Gold pays for itself</h2>
+      <p>Gold's $12 a month replaces a 5% fee, so it saves money once more than <strong>{formatSaleLabel(goldBreakEvenCents)}</strong> a month of payments would otherwise pay that fee. If most of your income is one-off tips and you turn off Contributor status, those tips already pay no Ko-fi fee.</p>
+
+      <h2>Shipping, tax, and refunds</h2>
+      <ul>
+        <li><strong>Shipping:</strong> Ko-fi says it does not charge a fee on shipping.</li>
+        <li><strong>Tax:</strong> Ko-fi does not collect or remit sales tax or VAT; you can add it at checkout and receive it in full.</li>
+        <li><strong>Refunds:</strong> refunds made in Ko-fi are full amount only, within 180 days, and PayPal or Stripe usually keep their transaction fee.</li>
+        <li><strong>Currency:</strong> PayPal and Stripe usually add a small percentage to convert payments in another currency.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="kofi" />
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId="kofi-fees" />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{guideSources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Ko-fi's and Stripe's pages were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Ko-fi or Stripe. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

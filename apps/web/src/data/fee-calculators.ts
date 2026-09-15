@@ -11,6 +11,9 @@ export type FeeCalculatorId =
   | "square"
   | "etsy"
   | "ebay"
+  | "kickstarter"
+  | "patreon"
+  | "kofi"
   | "gumroad"
   | "lemon-squeezy";
 
@@ -25,6 +28,34 @@ export interface FeeScenario {
   readonly copyName: string;
 }
 
+/** Wording for the optional same-size volume field and its totals. */
+export interface VolumeLabels {
+  readonly fieldLabel: string;
+  readonly fieldHelp: string;
+  readonly unitSingular: string;
+  readonly unitPlural: string;
+  /** "a month" for recurring sales, or null for a one-off total such as a campaign. */
+  readonly perPeriod: string | null;
+  readonly feesLabel: string;
+  readonly keepLabel: string;
+  readonly yearly: boolean;
+  readonly shareLabel: string;
+  readonly shareNoun: string;
+}
+
+export const salesVolumeLabels: VolumeLabels = {
+  fieldLabel: "Sales per month (optional)",
+  fieldHelp: "Same-size sales. Adds monthly and yearly totals.",
+  unitSingular: "sale",
+  unitPlural: "sales",
+  perPeriod: "a month",
+  feesLabel: "Fees per month",
+  keepLabel: "You keep per month",
+  yearly: true,
+  shareLabel: "Fees as a share of sales",
+  shareNoun: "sales",
+};
+
 export interface FeeCalculatorConfig {
   readonly id: FeeCalculatorId;
   /** The calculator page in the tool registry, used for embeds and credit links. */
@@ -36,6 +67,8 @@ export interface FeeCalculatorConfig {
   /** Help text for the tax field, shown only for scenarios that accept tax. */
   readonly taxHelp: string;
   readonly scenarios: readonly FeeScenario[];
+  /** Wording for the volume field; defaults to monthly sales. */
+  readonly volume?: VolumeLabels;
 }
 
 export const feeCalculators: readonly FeeCalculatorConfig[] = [
@@ -304,6 +337,159 @@ export const feeCalculators: readonly FeeCalculatorConfig[] = [
         description: "Most categories at 12.7%, orders over $10 up to $2,500.",
         note: "Supported scenario: US eBay account with a Basic, Premium, Anchor, or Enterprise Store, one item in an order over $10.00 and up to $2,500.00, in a category charged 12.7%.",
         copyName: "eBay Store sale",
+      },
+    ],
+  },
+  {
+    id: "kickstarter",
+    toolId: "kickstarter-fees",
+    provider: "Kickstarter",
+    formHeading: "Pledge details",
+    scenarioLegend: "How large is the pledge?",
+    panelTone: "navy",
+    taxHelp: "",
+    volume: {
+      fieldLabel: "Number of pledges (optional)",
+      fieldHelp: "Same-size collected pledges. Adds campaign totals.",
+      unitSingular: "pledge",
+      unitPlural: "pledges",
+      perPeriod: null,
+      feesLabel: "Fees on these pledges",
+      keepLabel: "You receive",
+      yearly: false,
+      shareLabel: "Fees as a share of pledges",
+      shareNoun: "pledges",
+    },
+    scenarios: [
+      {
+        id: "standard",
+        presetId: "kickstarter-us-pledge",
+        label: "Pledge of $10 or more",
+        description: "Kickstarter's 5% plus 3% + 30¢ processing.",
+        note: "Supported scenario: US project in USD that is successfully funded, one collected pledge of $10 or more.",
+        copyName: "Kickstarter pledge",
+      },
+      {
+        id: "micro",
+        presetId: "kickstarter-us-micropledge",
+        label: "Pledge under $10",
+        description: "Kickstarter's 5% plus the 5% + 8¢ micropledge rate.",
+        note: "Supported scenario: US project in USD that is successfully funded, one collected pledge under $10.",
+        copyName: "Kickstarter micropledge",
+      },
+    ],
+  },
+  {
+    id: "patreon",
+    toolId: "patreon-fees",
+    provider: "Patreon",
+    formHeading: "Payment details",
+    scenarioLegend: "How is the member paying, and on which plan?",
+    panelTone: "ink",
+    taxHelp: "",
+    volume: {
+      fieldLabel: "Paying members (optional)",
+      fieldHelp: "Members paying this amount each month. Adds monthly and yearly totals.",
+      unitSingular: "member",
+      unitPlural: "members",
+      perPeriod: "a month",
+      feesLabel: "Fees per month",
+      keepLabel: "You keep per month",
+      yearly: true,
+      shareLabel: "Fees as a share of payments",
+      shareNoun: "payments",
+    },
+    scenarios: [
+      {
+        id: "web",
+        presetId: "patreon-us-standard-web",
+        label: "Card or US PayPal, standard plan",
+        description: "10% platform fee plus 2.9% + 30¢.",
+        note: "Supported scenario: US creator on Patreon's standard 10% plan, USD membership payment on the web by card, Apple Pay, or US PayPal or Venmo, with no sales tax.",
+        copyName: "Patreon membership payment",
+      },
+      {
+        id: "non-us-paypal",
+        presetId: "patreon-us-standard-non-us-paypal",
+        label: "PayPal or Venmo from outside the US",
+        description: "10% platform fee plus 3.9% + 30¢.",
+        note: "Supported scenario: US creator on Patreon's standard 10% plan, USD membership payment by PayPal or Venmo from a member outside the US.",
+        copyName: "Patreon PayPal payment from outside the US",
+      },
+      {
+        id: "conversion",
+        presetId: "patreon-us-standard-currency-conversion",
+        label: "Card payment in another currency",
+        description: "Adds Patreon's 2.5% currency conversion fee.",
+        note: "Supported scenario: US creator on Patreon's standard 10% plan, membership paid by card in a currency other than USD.",
+        copyName: "Patreon payment in another currency",
+      },
+      {
+        id: "ios",
+        presetId: "patreon-us-standard-ios-first-year",
+        label: "iOS app purchase",
+        description: "Apple's 30% plus the 10% platform fee.",
+        note: "Supported scenario: US creator on Patreon's standard 10% plan, purchase made in Patreon's iOS app, where Apple takes 30% and Patreon charges no processing fee.",
+        copyName: "Patreon iOS purchase",
+      },
+      {
+        id: "ios-year",
+        presetId: "patreon-us-standard-ios-after-year",
+        label: "iOS membership after a year",
+        description: "Apple's 15% plus the 10% platform fee.",
+        note: "Supported scenario: US creator on Patreon's standard 10% plan, iOS membership billed continuously for more than a year, where Apple takes 15%.",
+        copyName: "Patreon iOS membership after a year",
+      },
+      {
+        id: "pro",
+        presetId: "patreon-us-pro-over-3",
+        label: "Legacy Pro plan, over $3",
+        description: "8% platform fee plus 2.9% + 30¢.",
+        note: "Supported scenario: US creator on Patreon's legacy 8% Pro plan, USD payment over $3 by card or US PayPal.",
+        copyName: "Patreon Pro plan payment",
+      },
+      {
+        id: "pro-small",
+        presetId: "patreon-us-pro-3-or-less",
+        label: "Legacy Pro plan, $3 or less",
+        description: "8% platform fee plus 5% + 10¢.",
+        note: "Supported scenario: US creator on Patreon's legacy 8% Pro plan, USD tier priced at $3 or less.",
+        copyName: "Patreon Pro plan micropayment",
+      },
+    ],
+  },
+  {
+    id: "kofi",
+    toolId: "kofi-fees",
+    provider: "Ko-fi",
+    formHeading: "Payment details",
+    scenarioLegend: "Which fees apply to this payment?",
+    panelTone: "navy",
+    taxHelp: "",
+    scenarios: [
+      {
+        id: "stripe-5",
+        presetId: "kofi-us-stripe-5-percent",
+        label: "5% Ko-fi fee, card through Stripe",
+        description: "Shop, membership, commission, monthly tip, or tip as a Contributor.",
+        note: "Supported scenario: US creator in USD, supporter paying by US card through the creator's own Stripe account, with Ko-fi's 5% service fee.",
+        copyName: "Ko-fi payment through Stripe",
+      },
+      {
+        id: "stripe-0",
+        presetId: "kofi-us-stripe-no-fee",
+        label: "No Ko-fi fee, card through Stripe",
+        description: "Ko-fi Gold, or a one-off tip without Contributor status.",
+        note: "Supported scenario: US creator in USD with Ko-fi Gold or a one-off tip without Contributor status, paid by US card through Stripe.",
+        copyName: "Ko-fi payment with no Ko-fi fee",
+      },
+      {
+        id: "paypal-5",
+        presetId: "kofi-us-paypal-5-percent",
+        label: "5% Ko-fi fee, PayPal",
+        description: "Ko-fi's fee only; PayPal's own fee is not added.",
+        note: "Supported scenario: US creator in USD paid through PayPal. Only Ko-fi's 5% is estimated, because Ko-fi does not publish PayPal's fee.",
+        copyName: "Ko-fi PayPal payment, Ko-fi fee only",
       },
     ],
   },

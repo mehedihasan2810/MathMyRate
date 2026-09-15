@@ -246,6 +246,8 @@ assumptions, exclusions, and inverse tests:
 
 **Update 2026-09-15** (branch `feat/marketplace-fees-embeds`). Added the eBay, Upwork, and Fiverr fee calculators and a "cheapest way to sell digital products" comparison. eBay's rates change at documented amounts, so each eBay scenario carries a `grossRangeCents` range and the engine refuses charges outside it; sales above a category's threshold are blocked. Upwork sets its fee per contract (0% to 15%), so the freelancer enters the rate shown on their contract. Fiverr's 20% commission is fixed, but its buyer small-order fee and one Payoneer withdrawal fee conflict across its own pages, so those are left out. Every provider fact was checked on the provider's own pages on 2026-09-15.
 
+**Update 2026-09-16** (branch `feat/creator-platform-fees`). Added the Kickstarter, Patreon, and Ko-fi fee calculators, a KDP royalty calculator, and an Upwork vs Fiverr comparison. A scenario range can now be open-ended, for Kickstarter's $10 and Patreon's legacy $3 thresholds. Kickstarter's Pledge Manager, Patreon's one-time purchases, and Ko-fi's PayPal processing fee are left out because the providers do not state them consistently or at all. KDP royalties use a new engine module with KDP's Amazon.com royalty rates and printing cost tables; Expanded Distribution and Kindle Unlimited are not estimated.
+
 Add tools inside the niche so topical authority compounds. Verify demand in
 Search Console and Keyword Planner before building; do not publish a tool
 without the eight content sections. Candidates, grouped by hub:
@@ -314,6 +316,8 @@ Comparisons and hubs
 **Status: not started.** It depends on a deployed site with a domain, which is deferred. The site now has 13 calculator and comparison pages with full content, short of the 20-page gate below.
 
 **Update 2026-09-15.** The site has 17 calculator and comparison pages with full content, still short of the 20-page gate, and ads still wait for a deployed domain.
+
+**Update 2026-09-16.** The site now has 22 calculator and comparison pages with full content, past the 20-page gate. Ads still wait for a deployed site with a domain.
 
 - Only after P0.7 and P2.1 have at least 20 tool pages with full content.
 - Reserve fixed-height slots (one below the result panel, one after the
