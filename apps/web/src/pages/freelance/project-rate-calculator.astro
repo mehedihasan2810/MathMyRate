@@ -11,7 +11,7 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
     <div id="transfer-notice" class="mt-8 hidden rounded-xl border border-[#aac7a9] bg-[#e2efe1] px-5 py-4 text-sm text-ink"><strong>Hourly rate brought across.</strong> This is stored only in this browser. Your annual tax reserve is already reflected in this rate and is not added again.</div>
     <div class="mt-10 grid gap-8 lg:grid-cols-[1fr_.85fr]">
       <form id="project-form" class="print-card rounded-[1.5rem] border border-line bg-[#faf8f1] p-6 shadow-[0_16px_45px_rgba(56,71,61,.08)] md:p-8" novalidate>
-        <div class="flex items-baseline justify-between"><h2 class="display text-2xl font-bold">Project ingredients</h2><span class="mono text-xs text-ink/50">USD</span></div>
+        <div class="flex items-baseline justify-between"><h2 class="display text-2xl font-bold">Project ingredients</h2><span class="text-xs text-ink/50">USD</span></div>
         <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
         <div class="mt-7 grid gap-5 sm:grid-cols-2">
           <label class="text-sm font-semibold">Hourly rate <span class="text-clay">*</span><input id="projectHourly" data-field="projectHourly" aria-describedby="projectHourly-error" inputmode="decimal" value="112.50" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" /><span id="projectHourly-error" class="field-error" role="alert"></span></label>

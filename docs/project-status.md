@@ -104,7 +104,7 @@ Open Graph and Twitter card metadata (added 2026-09-15) follows the static
 pre-made-image approach used by pingdotgg/lawn: nine 1200×630 PNGs are
 generated into `apps/web/public/og/` by a satori + resvg build script
 (`apps/web/scripts/generate-og-images.mjs`, `pnpm --filter web og:images`)
-using the site's fonts (Fraunces, DM Sans, DM Mono via Fontsource) and palette
+using the site's font (Inter via Fontsource) and palette
 tokens. The eight money pages (`/`, both freelance calculators, `/fees/`, and
 the four provider calculators) reference per-page images; all other pages,
 including the 404, fall back to `default.png`. `Layout.astro` emits

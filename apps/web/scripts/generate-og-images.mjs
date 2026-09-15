@@ -32,44 +32,12 @@ const palette = {
 const font = (pkg, file) =>
   readFileSync(fileURLToPath(import.meta.resolve(`@fontsource/${pkg}/files/${file}`)));
 
-const fonts = [
-  {
-    name: "DM Sans",
-    data: font("dm-sans", "dm-sans-latin-400-normal.woff"),
-    weight: 400,
-    style: "normal",
-  },
-  {
-    name: "DM Sans",
-    data: font("dm-sans", "dm-sans-latin-500-normal.woff"),
-    weight: 500,
-    style: "normal",
-  },
-  {
-    name: "Fraunces",
-    data: font("fraunces", "fraunces-latin-600-normal.woff"),
-    weight: 600,
-    style: "normal",
-  },
-  {
-    name: "Fraunces",
-    data: font("fraunces", "fraunces-latin-700-normal.woff"),
-    weight: 700,
-    style: "normal",
-  },
-  {
-    name: "DM Mono",
-    data: font("dm-mono", "dm-mono-latin-400-normal.woff"),
-    weight: 400,
-    style: "normal",
-  },
-  {
-    name: "DM Mono",
-    data: font("dm-mono", "dm-mono-latin-500-normal.woff"),
-    weight: 500,
-    style: "normal",
-  },
-];
+const fonts = [400, 500, 600, 700].map((weight) => ({
+  name: "Inter",
+  data: font("inter", `inter-latin-${weight}-normal.woff`),
+  weight,
+  style: "normal",
+}));
 
 /**
  * One card per image. Copy mirrors each page's title/description so the
@@ -192,7 +160,7 @@ function cardToElement({ eyebrow, accent, title, description, path }) {
           "div",
           {
             style: {
-              fontFamily: "DM Mono",
+              fontFamily: "Inter",
               fontWeight: 500,
               fontSize: "22px",
               letterSpacing: "0.11em",
@@ -211,7 +179,7 @@ function cardToElement({ eyebrow, accent, title, description, path }) {
           "div",
           {
             style: {
-              fontFamily: "Fraunces",
+              fontFamily: "Inter",
               fontWeight: 700,
               fontSize: "76px",
               lineHeight: 1.04,
@@ -226,7 +194,7 @@ function cardToElement({ eyebrow, accent, title, description, path }) {
           "div",
           {
             style: {
-              fontFamily: "DM Sans",
+              fontFamily: "Inter",
               fontWeight: 500,
               fontSize: "30px",
               lineHeight: 1.35,
@@ -250,7 +218,7 @@ function cardToElement({ eyebrow, accent, title, description, path }) {
             {
               style: {
                 display: "flex",
-                fontFamily: "Fraunces",
+                fontFamily: "Inter",
                 fontWeight: 700,
                 fontSize: "34px",
                 letterSpacing: "-0.03em",
@@ -264,7 +232,7 @@ function cardToElement({ eyebrow, accent, title, description, path }) {
             "div",
             {
               style: {
-                fontFamily: "DM Mono",
+                fontFamily: "Inter",
                 fontWeight: 400,
                 fontSize: "22px",
                 letterSpacing: "0.02em",
