@@ -1,0 +1,65 @@
+---
+import { convertPay } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import GuideTools from "../../components/GuideTools.astro";
+import PageByline from "../../components/PageByline.astro";
+import { findGuide, guideBreadcrumbs } from "../../data/guides";
+import Layout from "../../layouts/Layout.astro";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const guide = findGuide("salary-vs-freelance-rate");
+
+const breadcrumbs = guideBreadcrumbs(guide.id);
+
+const salaryCents = 7_500_000n;
+
+const salary = convertPay({ amountCents: salaryCents, period: "year", hoursPerWeekHundredths: 4_000, daysPerWeek: 5, weeksPerYear: 52 });
+
+const billable = convertPay({ amountCents: salaryCents, period: "year", hoursPerWeekHundredths: 2_500, daysPerWeek: 5, weeksPerYear: 46 });
+
+const capacityRows = [
+  { hours: 40, weeks: 52 },
+  { hours: 30, weeks: 48 },
+  { hours: 25, weeks: 46 },
+  { hours: 20, weeks: 44 },
+].map(({ hours, weeks }) => {
+  const pay = convertPay({ amountCents: salaryCents, period: "year", hoursPerWeekHundredths: hours * 100, daysPerWeek: 5, weeksPerYear: weeks });
+
+  return [`${hours} hours × ${weeks} weeks`, pay.hoursPerYear.toLocaleString("en-US"), formatUsdGrouped(pay.hourlyCents)];
+});
+---
+<Layout title="Salary vs Freelance Rate: How to Compare Them | MathMyRate" description={guide.description} ogImage="/og/salary-vs-freelance-rate.png" breadcrumbs={breadcrumbs} article={{ headline: guide.title, publishedOn: guide.publishedOn, updatedOn: guide.updatedOn }}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 max-w-3xl text-3xl font-bold md:text-4xl">{guide.title}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">A salary divided by 2,080 hours gives an hourly number. It is a useful start, and a poor freelance rate.</p>
+    <PageByline updatedOn={guide.updatedOn} />
+    <article class="guide mt-8">
+      <h2>Step 1: turn the salary into an hourly figure</h2>
+      <p>Divide the yearly salary by the hours worked in a year. A full-time job of 40 hours a week for 52 weeks is 2,080 hours, so a $75,000 salary is <strong>{formatUsdGrouped(salary.hourlyCents)}</strong> an hour, or {formatUsdGrouped(salary.monthlyCents)} a month. The <a href="/freelance/salary-to-hourly-calculator/">salary to hourly calculator</a> does this for any pay period and any working week.</p>
+
+      <h2>Step 2: see why that number is not a freelance rate</h2>
+      <p>An employee is paid for every one of those 2,080 hours, including paid holidays and the hours spent in meetings. A freelancer is paid only for the hours a client is billed for. The rest still have to be covered:</p>
+      <ul>
+        <li><strong>Unbillable work.</strong> Finding clients, writing proposals, invoicing, and bookkeeping take hours every week that no client pays for.</li>
+        <li><strong>Weeks without client work.</strong> Holidays, sick days, and gaps between projects are unpaid.</li>
+        <li><strong>Costs an employer used to carry.</strong> Equipment, software, insurance, retirement savings, and some taxes an employer would otherwise pay.</li>
+      </ul>
+
+      <h2>Step 3: spread the same income over billable hours</h2>
+      <p>Here is what it takes to bring in $75,000 of revenue, before any business costs or taxes, at different levels of billable work.</p>
+      <DataTable caption="Hourly rate needed for $75,000 of yearly revenue" headers={["Billable time", "Hours a year", "Rate needed"]} rows={capacityRows} />
+      <p>Billing 25 hours a week for 46 weeks, the same revenue needs <strong>{formatUsdGrouped(billable.hourlyCents)}</strong> an hour, well above the {formatUsdGrouped(salary.hourlyCents)} the salary works out to. And that is revenue, not take-home pay: business costs and taxes still come out of it.</p>
+
+      <h2>Step 4: work out a rate that covers everything</h2>
+      <p>The <a href="/freelance/hourly-rate-calculator/">freelance hourly rate calculator</a> starts from the take-home income you want and your realistic working year, and works out the hourly and day rate that supports it. Use your own numbers for billable hours and weeks off; the table above only shows how much they matter.</p>
+
+      <h2>Step 5: price ongoing clients</h2>
+      <p>Once you have a rate, a monthly retainer turns it into predictable income. The <a href="/freelance/retainer-calculator/">retainer calculator</a> shows the monthly fee, any discount in dollars, and what each hour earns if the client uses fewer hours than agreed.</p>
+
+      <p class="text-sm text-ink/60">Planning estimate only; not tax, payroll, or legal advice.</p>
+    </article>
+    <GuideTools guide={guide.id} />
+  </main>
+</Layout>

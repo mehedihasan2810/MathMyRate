@@ -1,0 +1,132 @@
+---
+import { calculateFees, grossUpFees } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findFeeCalculator } from "../../data/fee-calculators";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatFeeRate } from "../../lib/fee-labels";
+import { commonSaleAmounts, feeRowsByAmount, requireOfficialPreset, scenarioRowsAt } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("etsy-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const config = findFeeCalculator("etsy");
+
+const withListing = requireOfficialPreset("etsy-us-order-with-listing-fee");
+
+const orderOnly = requireOfficialPreset("etsy-us-order-fees-only");
+
+const headlineRate = orderOnly.components.map(formatFeeRate).join(" + ");
+
+const sale = calculateFees({ preset: withListing, grossCents: 10000n });
+
+const example = calculateFees({ preset: withListing, grossCents: 5_400n, taxCents: 400n });
+
+function exampleLine(index: number): string {
+  return formatUsdGrouped(example.lineItems[index]?.feeCents ?? 0n);
+}
+
+const target = grossUpFees({ preset: withListing, targetProceedsCents: 5_000n });
+
+const smallSale = calculateFees({ preset: withListing, grossCents: 1_000n });
+
+const fee = formatUsdGrouped(sale.feeCents);
+
+const kept = formatUsdGrouped(sale.sellerProceedsCents);
+
+const amountRows = feeRowsByAmount(withListing, commonSaleAmounts);
+
+const scenarioRows = scenarioRowsAt(config.scenarios, 10000n);
+
+const updatedOn = "2026-09-15";
+
+const title = `${tool.name} (${headlineRate}) | MathMyRate`;
+
+const description = "Estimate Etsy's 6.5% transaction fee, 3% + 25¢ processing fee, and $0.20 listing fee on an order, with sales tax handled the way Etsy charges it.";
+
+const guideSources = [
+  { title: "Fees & Payments Policy | Etsy", url: "https://www.etsy.com/legal/fees/" },
+  { title: "Etsy Payments Policy | Etsy", url: "https://www.etsy.com/legal/etsy-payments/" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Etsy take from a sale?", answer: `For a US shop paid through Etsy Payments, Etsy charges a 6.5% transaction fee on the item price, shipping, and gift wrap, a 3% + 25¢ payment processing fee on the whole order, and $0.20 to list the item. A $100 order with no sales tax pays ${fee} in total and leaves ${kept}.` },
+  { question: "Does Etsy charge fees on shipping?", answer: "Yes. Etsy's transaction fee applies to the price you display plus what you charge for shipping and gift wrapping, and its processing fee applies to the total amount of the sale, including shipping." },
+  { question: "Does Etsy charge fees on sales tax?", answer: "Partly. Etsy's fees policy says that if you sell from the US, the transaction fee does not apply to sales tax. Its payments policy says the processing fee is assessed on the gross order amount, including tax. The calculator follows both rules when you enter the tax." },
+  { question: "Is the $0.20 listing fee charged when an item sells?", answer: "You pay it when you create or renew a listing, whether or not the item sells. If a listing has more than one of the item, Etsy renews it at $0.20 after each one sells. Choose Order plus its listing fee to count it against the sale, or Per-order fees only to leave it out." },
+  { question: "Does the calculator include Offsite Ads fees?", answer: "No. Etsy charges 15% on orders attributed to Offsite Ads, or 12% for shops that have reached $10,000 in sales over a prior 365 days, and the fee on one order never exceeds $100. The calculator does not model that cap, so it does not estimate Offsite Ads." },
+  { question: "Does Etsy refund its fees when I refund an order?", answer: "Etsy's payments policy says that on a partial or full refund, the processing fee is recalculated on the adjusted sale price and the difference is credited, and other applicable fees are refunded. Fees are not credited back for full refunds that Etsy itself covers." },
+  { question: "Does Etsy charge to deposit money to a US bank account?", answer: "Etsy's payments policy lists the 3% + 0.25 USD processing fee for US bank accounts with no deposit fee." },
+  { question: "How do I price an item to cover Etsy's fees?", answer: `Choose I want to keep a target and enter the amount you want to receive. To keep $50.00 from an order with no sales tax, counting the listing fee, the buyer needs to pay ${formatUsdGrouped(target.grossCents)}, including shipping.` },
+  { question: "Why do small Etsy orders lose a bigger share?", answer: `The 25¢ processing charge and the 20¢ listing fee are the same on every order. A $10 order pays ${formatUsdGrouped(smallSale.feeCents)} in fees, while a $100 order pays ${fee}.` },
+];
+---
+<Layout title={title} description={description} ogImage="/og/etsy.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Etsy keeps from an order: the 6.5% transaction fee, the 3% + 25¢ processing fee, and the $0.20 listing fee, with sales tax handled the way Etsy charges it.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={withListing.checkedOn} />
+    <FeeCalculator calculatorId="etsy" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The Etsy fee calculator shows what Etsy keeps from an order and what reaches you. For a US shop paid through Etsy Payments, a $100 order with no sales tax pays <strong>{fee}</strong> in Etsy fees, including the listing fee, and leaves <strong>{kept}</strong>. It can also work backward from the amount you want to keep.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Enter the full amount the buyer paid: the item price, shipping, gift wrap, and any sales tax.</li>
+        <li>Enter the sales tax Etsy collected, if any. Etsy passes it on to the state, and its transaction fee does not apply to it.</li>
+        <li>Choose whether to count the item's $0.20 listing fee against this order.</li>
+        <li>To find a price instead, choose I want to keep a target and enter what you want to receive.</li>
+      </ol>
+
+      <h2>How the fee is built</h2>
+      <p>Here is a $54.00 order: $50.00 of item and shipping, plus $4.00 of sales tax. The numbers come from the same code as the calculator.</p>
+      <ol>
+        <li><strong>Transaction fee.</strong> 6.5% of the $50.00 before tax is {exampleLine(0)}.</li>
+        <li><strong>Processing fee.</strong> 3% of the full $54.00 is $1.62, plus 25¢, for {exampleLine(1)}.</li>
+        <li><strong>Listing fee.</strong> {exampleLine(2)} for the item.</li>
+        <li><strong>Result.</strong> Etsy's fees total {formatUsdGrouped(example.feeCents)}. After the $4.00 of tax is passed on, you keep {formatUsdGrouped(example.sellerProceedsCents)}.</li>
+        <li><strong>Working backward.</strong> To keep $50.00 from an order with no sales tax, the buyer needs to pay {formatUsdGrouped(target.grossCents)}.</li>
+      </ol>
+
+      <h2>Etsy fees at common order amounts</h2>
+      <p>Orders with no sales tax, counting the $0.20 listing fee. The fixed 25¢ and 20¢ are why small orders lose a larger share.</p>
+      <DataTable caption="Etsy fees by order amount, including the listing fee" headers={["Order", "Etsy fees", "You keep", "Fee share"]} rows={amountRows} />
+
+      <h2>The same $100 order in each scenario</h2>
+      <DataTable caption="Etsy fees on a $100 order with no sales tax" headers={["Scenario", "Rate", "Etsy fees", "You keep"]} rows={scenarioRows} />
+
+      <h2>Other Etsy fees this calculator does not add</h2>
+      <p>These come from Etsy's Fees &amp; Payments Policy for US sellers. They apply in their own situations, so they are not part of the order above.</p>
+      <ul>
+        <li><strong>Offsite Ads:</strong> 15% of an order attributed to an Offsite Ad, or 12% for shops that have reached $10,000 in sales over a prior 365 days. For US sellers it does not apply to sales tax, and it never exceeds $100 on one order. Not estimated here, because the calculator does not model the cap.</li>
+        <li><strong>Extra units and renewals:</strong> a listing with more than one of the item renews at $0.20 after each sale, and automatic renewals charge $0.20 every four months whether or not the item sells.</li>
+        <li><strong>Currency conversion:</strong> 2.5% of the sale amount if you list in a currency other than your payment account's.</li>
+        <li><strong>Etsy Plus:</strong> $10 a month, if you subscribe.</li>
+        <li><strong>Etsy Ads and shipping labels:</strong> Etsy Ads cost up to the daily budget you set, and label prices depend on the carrier and the package.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="etsy" blockedPresetIds={["etsy-us-offsite-ads"]} />
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId="etsy-fees" />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{guideSources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Etsy's policies were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Etsy. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

@@ -3,6 +3,7 @@ import "../styles/global.css";
 import Header from "../components/Header.astro";
 import { hubs, infoLinks, toolsInHub, type Crumb } from "../data/tools";
 import {
+  articleNode,
   breadcrumbListNode,
   organizationNode,
   serializeStructuredData,
@@ -23,6 +24,8 @@ interface Props {
   applicationName?: string;
   /** The home page also describes the site and its calculator search. */
   isHome?: boolean;
+  /** Guides pass their H1 and the dates printed on the page, emitted as an Article. */
+  article?: { headline: string; publishedOn: string; updatedOn: string };
 }
 
 const {
@@ -33,6 +36,7 @@ const {
   breadcrumbs,
   applicationName,
   isHome = false,
+  article,
 } = Astro.props;
 
 const canonicalUrl = Astro.site && !noindex ? new URL(Astro.url.pathname, Astro.site).href : null;
@@ -49,6 +53,19 @@ if (Astro.site && canonicalUrl) {
 
   if (applicationName) {
     structuredData.push(webApplicationNode(Astro.site, applicationName, description, Astro.url.pathname));
+  }
+
+  if (article) {
+    structuredData.push(
+      articleNode(Astro.site, {
+        headline: article.headline,
+        description,
+        path: Astro.url.pathname,
+        image: ogImage,
+        publishedOn: article.publishedOn,
+        updatedOn: article.updatedOn,
+      }),
+    );
   }
 
   if (breadcrumbs && breadcrumbs.length > 1) structuredData.push(breadcrumbListNode(Astro.site, breadcrumbs));
@@ -71,7 +88,7 @@ if (Astro.site && canonicalUrl) {
     <meta property="og:site_name" content="MathMyRate" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={article ? "article" : "website"} />
     {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
     {ogImageUrl ? (
       <>

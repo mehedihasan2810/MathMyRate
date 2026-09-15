@@ -1,0 +1,195 @@
+---
+import { calculateFees, grossUpFees, type FeePreset } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findFeeCalculator } from "../../data/fee-calculators";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatCombinedRate } from "../../lib/fee-labels";
+import { commonSaleAmounts, feeRowsByAmount, formatSaleLabel, requireOfficialPreset, scenarioRowsAt } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("square-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const config = findFeeCalculator("square");
+
+const freeInPerson = requireOfficialPreset("square-us-free-in-person-card");
+
+const plusInPerson = requireOfficialPreset("square-us-plus-in-person-card");
+
+const premiumInPerson = requireOfficialPreset("square-us-premium-in-person-card");
+
+const freeOnline = requireOfficialPreset("square-us-free-online-card");
+
+const paidOnline = requireOfficialPreset("square-us-paid-plan-online-card");
+
+const international = requireOfficialPreset("square-us-free-in-person-international-card");
+
+const afterpay = requireOfficialPreset("square-us-afterpay");
+
+const rate = formatCombinedRate(freeInPerson.components);
+
+const onlineRate = formatCombinedRate(freeOnline.components);
+
+const sale = calculateFees({ preset: freeInPerson, grossCents: 10000n });
+
+const onlineSale = calculateFees({ preset: freeOnline, grossCents: 10000n });
+
+const taxedSale = calculateFees({ preset: freeInPerson, grossCents: 10800n, taxCents: 800n });
+
+const internationalSale = calculateFees({ preset: international, grossCents: 10000n });
+
+const afterpaySale = calculateFees({ preset: afterpay, grossCents: 10000n });
+
+const smallSale = calculateFees({ preset: freeInPerson, grossCents: 500n });
+
+const target = grossUpFees({ preset: freeInPerson, targetProceedsCents: 10000n });
+
+const fee = formatUsdGrouped(sale.feeCents);
+
+const kept = formatUsdGrouped(sale.sellerProceedsCents);
+
+// Monthly plan prices per location, from Square's pricing page.
+const plusPriceCents = 4_900n;
+
+const premiumPriceCents = 14_900n;
+
+function totalRateBps(preset: FeePreset): number {
+  return preset.components.reduce((sum, component) => sum + component.rateBps, 0);
+}
+
+function totalFixedCents(preset: FeePreset): number {
+  return preset.components.reduce((sum, component) => sum + component.fixedCents, 0);
+}
+
+/**
+ * The monthly card volume at which a paid plan's lower percentage saves as much
+ * as the plan costs, rounded up to the dollar. The plans share each fixed
+ * charge, so only the percentage differs.
+ */
+function breakEven(planPriceCents: bigint, free: FeePreset, paid: FeePreset): string {
+  if (totalFixedCents(free) !== totalFixedCents(paid)) {
+    throw new Error(`${free.id} and ${paid.id} have different fixed charges.`);
+  }
+
+  const savingBps = BigInt(totalRateBps(free) - totalRateBps(paid));
+  const cents = (planPriceCents * 10_000n + savingBps - 1n) / savingBps;
+
+  return formatSaleLabel(((cents + 99n) / 100n) * 100n);
+}
+
+const plusInPersonBreakEven = breakEven(plusPriceCents, freeInPerson, plusInPerson);
+
+const premiumInPersonBreakEven = breakEven(premiumPriceCents, freeInPerson, premiumInPerson);
+
+const plusOnlineBreakEven = breakEven(plusPriceCents, freeOnline, paidOnline);
+
+const planRows = [
+  ["Square Free", "$0", rate, onlineRate],
+  ["Square Plus", "$49", formatCombinedRate(plusInPerson.components), formatCombinedRate(paidOnline.components)],
+  ["Square Premium", "$149", formatCombinedRate(premiumInPerson.components), formatCombinedRate(paidOnline.components)],
+];
+
+const amountRows = feeRowsByAmount(freeInPerson, commonSaleAmounts);
+
+const scenarioRows = scenarioRowsAt(config.scenarios, 10000n);
+
+const updatedOn = "2026-09-15";
+
+const title = `${tool.name} (${rate}) | MathMyRate`;
+
+const description = `Estimate Square's ${rate} in-person fee, plus online, keyed-in, international, and Afterpay fees on Free, Plus, and Premium, and what you keep.`;
+
+const guideSources = [
+  { title: "Square Processing Fees, Plans, and Software Pricing | Square", url: "https://squareup.com/us/en/pricing" },
+  { title: "Learn about Square fees | Square Support Center", url: "https://squareup.com/help/us/en/article/5068-what-are-square-s-fees" },
+  { title: "Manage customer refunds | Square Support Center", url: "https://squareup.com/help/us/en/article/6116-process-refunds" },
+  { title: "Manage payment disputes | Square Support Center", url: "https://squareup.com/help/us/en/article/3882-payment-disputes-walkthrough" },
+  { title: "Set up and edit transfer options | Square Support Center", url: "https://squareup.com/help/us/en/article/3807-deposit-options-with-square" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Square charge per transaction?", answer: `On the Square Free plan, Square charges ${rate} for in-person card payments and ${onlineRate} for card payments made online or through an invoice. Manually entered and card-on-file payments are 3.5% + 15¢ on every plan.` },
+  { question: "Does Square take its fee from sales tax and tips?", answer: `Yes. Square's fees article says processing fees are taken out of the total amount of each transaction, including tax and tip. A $108.00 in-person payment that includes $8.00 of sales tax pays ${formatUsdGrouped(taxedSale.feeCents)} on Square Free.` },
+  { question: "Is Square Plus or Premium cheaper than Square Free?", answer: `Only at higher volume, counting processing fees alone. Square Plus costs $49 a month per location and lowers the in-person rate by 0.1%, so it pays for itself at about ${plusInPersonBreakEven} of in-person card sales a month. On online and invoice payments it lowers the rate by 0.4%, which covers the plan at about ${plusOnlineBreakEven} a month. The plans also add software features, which this comparison ignores.` },
+  { question: "Does Square return its fee when I refund a customer?", answer: "No. Square's refund help says that when you refund a payment, the processing fees for the payment are not refunded to you." },
+  { question: "Does Square charge a chargeback fee?", answer: "No. Square says it charges no fees for chargebacks or dispute management. If a dispute is decided for your customer, the processing fees are not returned; if it is decided for you, the funds come back with the processing fees." },
+  { question: "How much does a Square instant transfer cost?", answer: "Instant and same-day transfers cost 1.95% per transfer, on top of processing fees. Next-business-day transfers are free." },
+  { question: "What does Square charge for international cards?", answer: `Square adds a 1.5% international card transaction fee to payments made with cards issued outside the US, on every plan. A $100 in-person payment on Square Free pays ${formatUsdGrouped(internationalSale.feeCents)}. The fee does not apply to Afterpay, ACH, or Cash App Pay payments.` },
+  { question: "What is Square's Afterpay fee?", answer: `Afterpay payments cost 6% + 30¢ on every plan, so a $100 Afterpay sale pays ${formatUsdGrouped(afterpaySale.feeCents)}. Square says no processing fees apply to the remaining installments or to late payments.` },
+  { question: "Does this calculator cover Cash App Pay?", answer: "No. Square's current fee table for Free, Plus, and Premium has no Cash App Pay row, so this calculator does not estimate it rather than guess." },
+];
+---
+<Layout title={title} description={description} ogImage="/og/square.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Square keeps from a payment on Square Free, Plus, or Premium: in person, online, keyed in, or through Afterpay, worked out in cents.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={freeInPerson.checkedOn} />
+    <FeeCalculator calculatorId="square" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The Square fee calculator shows what Square keeps from a payment and what reaches you. On the Square Free plan, an in-person card payment costs <strong>{rate}</strong>, so a $100 sale pays <strong>{fee}</strong> and leaves <strong>{kept}</strong>. The same $100 paid online or through an invoice pays {formatUsdGrouped(onlineSale.feeCents)}. It also covers the paid plans, keyed-in and card-on-file payments, international cards, and Afterpay, and it can work backward from the amount you want to keep.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Choose how the customer paid and which Square plan you are on.</li>
+        <li>Choose whether you know what the customer paid, or what you want to keep.</li>
+        <li>Enter the amount. If it includes sales tax, enter the tax too, so it is not counted as yours. Square's fee still applies to the whole payment.</li>
+        <li>To see monthly and yearly totals, enter how many same-size sales you make a month.</li>
+      </ol>
+
+      <h2>How the fee is built</h2>
+      <p>Here is a $100.00 payment on Square Free, using the same code as the calculator.</p>
+      <ol>
+        <li><strong>Percentage.</strong> 2.6% of $100.00 is $2.60.</li>
+        <li><strong>Fixed charge.</strong> Adding 15¢ gives a fee of {fee}, so you keep {kept}.</li>
+        <li><strong>Sales tax.</strong> If $8.00 of a $108.00 payment is tax, the fee is on the full $108.00: {formatUsdGrouped(taxedSale.feeCents)}. After the tax is set aside, you keep {formatUsdGrouped(taxedSale.sellerProceedsCents)}.</li>
+        <li><strong>Working backward.</strong> To keep $100.00 from an in-person payment, charge {formatUsdGrouped(target.grossCents)}. Its fee is {formatUsdGrouped(target.feeCents)}.</li>
+      </ol>
+
+      <h2>Square fees at common sale amounts</h2>
+      <p>In-person card payments on Square Free. The fixed 15¢ is why the share of a small sale is higher: a $5 sale pays {formatUsdGrouped(smallSale.feeCents)}.</p>
+      <DataTable caption={`Square Free in-person fee (${rate}) by sale amount`} headers={["Sale", "Square fee", "You keep", "Fee share"]} rows={amountRows} />
+
+      <h2>The same $100 payment in every scenario</h2>
+      <DataTable caption="Square fee on a $100 payment by scenario" headers={["Scenario", "Rate", "Square fee", "You keep"]} rows={scenarioRows} />
+
+      <h2>Is a paid Square plan cheaper?</h2>
+      <p>Square Plus and Square Premium charge a monthly price for each location and lower some card rates. Manually entered and card-on-file payments, Afterpay, and the international card fee cost the same on every plan.</p>
+      <DataTable caption="Square plan prices and card rates" headers={["Plan", "Per location, monthly", "In person", "Online and invoices"]} rows={planRows} />
+      <p>Counting processing fees alone, Square Plus saves as much as it costs at about <strong>{plusInPersonBreakEven}</strong> of in-person card sales a month, or about <strong>{plusOnlineBreakEven}</strong> of online and invoice card sales. Square Premium saves as much as it costs at about <strong>{premiumInPersonBreakEven}</strong> of in-person card sales a month. Most sellers take a mix of payments, and the plans include software features that may matter more than the rate.</p>
+
+      <h2>Other Square fees this calculator does not add</h2>
+      <p>These come from Square's pricing page and support articles for US sellers. They apply in their own situations, so they are not part of the payment above.</p>
+      <ul>
+        <li><strong>Invoices paid by ACH bank transfer:</strong> 1% with a $1 minimum. On Plus and Premium the fee is capped at $10. Square lists no fee when the money is deposited into Square Checking. Not estimated here, because the calculator does not model minimums or caps.</li>
+        <li><strong>Payments through Square's APIs:</strong> 2.9% + 30¢ on every plan.</li>
+        <li><strong>Refunds:</strong> no fee to refund, but the original processing fees are not returned.</li>
+        <li><strong>Disputes and chargebacks:</strong> no fee. If you lose, the processing fees are not returned.</li>
+        <li><strong>Transfers:</strong> next-business-day transfers are free; instant and same-day transfers cost 1.95% per transfer.</li>
+        <li><strong>Plan prices:</strong> $49 a month per location for Square Plus and $149 for Square Premium, which per-sale results leave out.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="square" blockedPresetIds={["square-us-invoice-ach"]} />
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId="square-fees" />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{guideSources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Square's pages were reviewed on the date shown at the top of this page. Square Pro and other custom pricing can differ. MathMyRate is not affiliated with Square. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

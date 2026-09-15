@@ -7,7 +7,7 @@ const MAX_CENTS = 100_000_000_000_000n;
 
 const MONEY_NOISE = /[\s$,]/gu;
 
-const PERCENT_NOISE = /[\s%]/gu;
+const PERCENT_NOISE = /[,\s%]/gu;
 
 const COUNT_NOISE = /[\s,]/gu;
 
@@ -47,6 +47,16 @@ export function requireHtmlInput(id: string): HTMLInputElement {
 
   if (!(element instanceof HTMLInputElement)) {
     throw new InputProblem(id, `Missing input ${id}.`);
+  }
+
+  return element;
+}
+
+export function requireHtmlSelect(id: string): HTMLSelectElement {
+  const element = document.getElementById(id);
+
+  if (!(element instanceof HTMLSelectElement)) {
+    throw new InputProblem(id, `Missing menu ${id}.`);
   }
 
   return element;
@@ -96,7 +106,7 @@ export function percentToBps(value: string, field: FieldName, maximumBps: number
 
   if (clean.length === 0) throw new InputProblem(field, "Enter a percentage.");
 
-  if (!/^(0|[1-9]\d?|100)(\.\d{1,2})?$/u.test(clean)) {
+  if (!/^\d+(\.\d{1,2})?$/u.test(clean)) {
     throw new InputProblem(field, "Use a percentage with up to 2 decimal places.");
   }
 
@@ -104,7 +114,10 @@ export function percentToBps(value: string, field: FieldName, maximumBps: number
   const bps = Number(whole) * 100 + Number(decimal.padEnd(2, "0"));
 
   if (bps > maximumBps) {
-    throw new InputProblem(field, `Enter a value no higher than ${maximumBps / 100}%.`);
+    throw new InputProblem(
+      field,
+      `Enter a value no higher than ${(maximumBps / 100).toLocaleString("en-US")}%.`,
+    );
   }
 
   return bps;
@@ -130,6 +143,33 @@ export function wholeNumber(
   }
 
   return parsed;
+}
+
+/** Reads hours with up to two decimals as hundredths of an hour, so "37.5" becomes 3750. */
+export function hoursToHundredths(
+  value: string,
+  field: FieldName,
+  maximumHundredths: number,
+): number {
+  const clean = tidyNumber(value, HOURS_NOISE);
+
+  if (clean.length === 0) throw new InputProblem(field, "Enter a number of hours.");
+
+  if (!/^\d+(\.\d{1,2})?$/u.test(clean)) {
+    throw new InputProblem(field, "Use hours with up to 2 decimal places.");
+  }
+
+  const [whole, decimal = ""] = clean.split(".");
+  const hundredths = Number(whole) * 100 + Number(decimal.padEnd(2, "0"));
+
+  if (hundredths < 1 || hundredths > maximumHundredths) {
+    throw new InputProblem(
+      field,
+      `Enter from 0.01 to ${(maximumHundredths / 100).toLocaleString("en-US")} hours.`,
+    );
+  }
+
+  return hundredths;
 }
 
 export function hoursToMinutes(value: string, field: FieldName): number {
@@ -163,9 +203,12 @@ export function formatUsdGrouped(cents: bigint): string {
   return `${sign}$${(absolute / 100n).toLocaleString("en-US")}.${String(absolute % 100n).padStart(2, "0")}`;
 }
 
-/** Formats basis points as a percentage with two decimals, so 292n becomes "2.92%". */
+/** Formats basis points as a percentage with two decimals, so 292n becomes "2.92%" and -3333n "-33.33%". */
 export function formatPercentBps(bps: bigint): string {
-  return `${bps / 100n}.${String(bps % 100n).padStart(2, "0")}%`;
+  const sign = bps < 0n ? "-" : "";
+  const absolute = bps < 0n ? -bps : bps;
+
+  return `${sign}${(absolute / 100n).toLocaleString("en-US")}.${String(absolute % 100n).padStart(2, "0")}%`;
 }
 
 /** Formats cents for an input field: digit groups and two decimals, without a currency sign. */

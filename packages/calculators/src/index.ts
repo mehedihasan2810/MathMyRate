@@ -4,6 +4,8 @@ export * from "./money.ts";
 
 export * from "./freelance.ts";
 
+export * from "./pricing.ts";
+
 export * from "./fee-presets.ts";
 
 export * from "./fee-schema.ts";

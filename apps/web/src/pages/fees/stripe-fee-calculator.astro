@@ -2,6 +2,7 @@
 import { calculateFees, grossUpFees } from "@MathMyRate/calculators";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
 import FaqSection from "../../components/FaqSection.astro";
 import FeeCalculator from "../../components/FeeCalculator.astro";
 import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
@@ -122,6 +123,8 @@ const faq: readonly FaqEntry[] = [
       <FeeRuleDetails calculatorId="stripe" />
 
       <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId="stripe-fees" />
 
       <h2>Sources</h2>
       <ul class="text-base">{guideSources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>

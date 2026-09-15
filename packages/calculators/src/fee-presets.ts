@@ -5,7 +5,11 @@ export interface FeeComponent {
   readonly label: string;
   readonly rateBps: number;
   readonly fixedCents: number;
-  readonly base: "gross";
+  /**
+   * The amount the percentage applies to: the whole charge, or the charge
+   * less the caller-supplied tax, for fees a provider documents as excluding tax.
+   */
+  readonly base: "gross" | "gross-excluding-tax";
   readonly rounding: "half-up";
 }
 
@@ -77,6 +81,26 @@ const lemonFees = {
 const lemonSalesTax = {
   url: "https://docs.lemonsqueezy.com/help/payments/sales-tax-vat",
   title: "Docs: Sales Tax and VAT • Lemon Squeezy",
+};
+
+const squarePricing = {
+  url: "https://squareup.com/us/en/pricing",
+  title: "Square Processing Fees, Plans, and Software Pricing | Square",
+};
+
+const squareFees = {
+  url: "https://squareup.com/help/us/en/article/5068-what-are-square-s-fees",
+  title: "Learn about Square fees | Square Support Center - United States",
+};
+
+const etsyFeesPolicy = {
+  url: "https://www.etsy.com/legal/fees/",
+  title: "Fees & Payments Policy - Our House Rules | Etsy",
+};
+
+const etsyPaymentsPolicy = {
+  url: "https://www.etsy.com/legal/etsy-payments/",
+  title: "Etsy Payments Policy - Our House Rules | Etsy",
 };
 
 const lemonGettingPaid = {
@@ -574,6 +598,371 @@ const officialPresetRecords: FeePreset[] = [
     status: "blocked",
     blockedReason:
       "Gumroad documents separate pre-threshold and new post-threshold rates, but it does not provide a blended calculation for the transaction that crosses the threshold.",
+  }),
+  official({
+    id: "square-us-free-in-person-card",
+    label: "Square Free in-person card payment",
+    provider: "square",
+    taxMode: "caller-supplied",
+    paymentProduct: "Square Free",
+    channel: "in-person",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "square-in-person-processing",
+        label: "Square in-person processing",
+        rateBps: 260,
+        fixedCents: 15,
+        base: "gross",
+      },
+    ],
+    sources: [squarePricing, squareFees],
+    assumptions: [
+      "US Square account on the Square Free plan, charging USD for a US-issued card that is tapped, dipped, or swiped in person.",
+      "Square's fees article says processing fees are taken out of the total amount of each transaction, including tax and tip.",
+      "The estimator rounds each component to cents; Square's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Cards issued outside the US, online and invoice payments, manually entered and card-on-file payments, Afterpay, Cash App Pay, and ACH bank transfers.",
+      "Monthly plan fees, refunds, disputes, instant and same-day transfers, Square Pro, and custom pricing.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "square-us-plus-in-person-card",
+    label: "Square Plus in-person card payment",
+    provider: "square",
+    taxMode: "caller-supplied",
+    paymentProduct: "Square Plus",
+    channel: "in-person",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "square-in-person-processing",
+        label: "Square in-person processing",
+        rateBps: 250,
+        fixedCents: 15,
+        base: "gross",
+      },
+    ],
+    sources: [squarePricing, squareFees],
+    assumptions: [
+      "US Square account on the Square Plus plan ($49 a month per location, not included), charging USD for a US-issued card that is tapped, dipped, or swiped in person.",
+      "Square's fees article says processing fees are taken out of the total amount of each transaction, including tax and tip.",
+      "The estimator rounds each component to cents; Square's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Cards issued outside the US, online and invoice payments, manually entered and card-on-file payments, Afterpay, Cash App Pay, and ACH bank transfers.",
+      "Monthly plan fees, refunds, disputes, instant and same-day transfers, Square Pro, and custom pricing.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "square-us-premium-in-person-card",
+    label: "Square Premium in-person card payment",
+    provider: "square",
+    taxMode: "caller-supplied",
+    paymentProduct: "Square Premium",
+    channel: "in-person",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "square-in-person-processing",
+        label: "Square in-person processing",
+        rateBps: 240,
+        fixedCents: 15,
+        base: "gross",
+      },
+    ],
+    sources: [squarePricing, squareFees],
+    assumptions: [
+      "US Square account on the Square Premium plan ($149 a month per location, not included), charging USD for a US-issued card that is tapped, dipped, or swiped in person.",
+      "Square's fees article says processing fees are taken out of the total amount of each transaction, including tax and tip.",
+      "The estimator rounds each component to cents; Square's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Cards issued outside the US, online and invoice payments, manually entered and card-on-file payments, Afterpay, Cash App Pay, and ACH bank transfers.",
+      "Monthly plan fees, refunds, disputes, instant and same-day transfers, Square Pro, and custom pricing.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "square-us-free-online-card",
+    label: "Square Free online or invoice card payment",
+    provider: "square",
+    taxMode: "caller-supplied",
+    paymentProduct: "Square Free",
+    channel: "online or invoice",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "square-online-processing",
+        label: "Square online processing",
+        rateBps: 330,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    sources: [squarePricing, squareFees],
+    assumptions: [
+      "US Square account on the Square Free plan, charging USD for a US-issued card paid online or through a Square invoice.",
+      "Square's fees article says processing fees are taken out of the total amount of each transaction, including tax and tip.",
+      "The estimator rounds each component to cents; Square's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Payments through Square's payments APIs (2.9% + 30¢ on every plan), cards issued outside the US, card-on-file payments, Afterpay, Cash App Pay, and ACH bank transfers.",
+      "Monthly plan fees, refunds, disputes, instant and same-day transfers, Square Pro, and custom pricing.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "square-us-paid-plan-online-card",
+    label: "Square Plus or Premium online or invoice card payment",
+    provider: "square",
+    taxMode: "caller-supplied",
+    paymentProduct: "Square Plus or Square Premium",
+    channel: "online or invoice",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "square-online-processing",
+        label: "Square online processing",
+        rateBps: 290,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    sources: [squarePricing, squareFees],
+    assumptions: [
+      "US Square account on Square Plus ($49 a month per location) or Square Premium ($149 a month per location), charging USD for a US-issued card paid online or through a Square invoice. Both plans list the same online rate.",
+      "Square's fees article says processing fees are taken out of the total amount of each transaction, including tax and tip.",
+      "The estimator rounds each component to cents; Square's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Cards issued outside the US, card-on-file payments, Afterpay, Cash App Pay, and ACH bank transfers.",
+      "Monthly plan fees, refunds, disputes, instant and same-day transfers, Square Pro, and custom pricing.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "square-us-manual-or-card-on-file",
+    label: "Square manually entered or card-on-file payment",
+    provider: "square",
+    taxMode: "caller-supplied",
+    paymentProduct: "Square Free, Plus, or Premium",
+    channel: "manual entry or card on file",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "square-manual-processing",
+        label: "Square manual entry or card-on-file processing",
+        rateBps: 350,
+        fixedCents: 15,
+        base: "gross",
+      },
+    ],
+    sources: [squarePricing, squareFees],
+    assumptions: [
+      "US Square account on any of Square Free, Plus, or Premium, which list the same rate, charging USD to a US-issued card whose number is entered manually or saved on file.",
+      "Square's fees article says processing fees are taken out of the total amount of each transaction, including tax and tip.",
+      "The estimator rounds each component to cents; Square's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Cards issued outside the US, in-person and online card payments, Afterpay, Cash App Pay, and ACH bank transfers.",
+      "Monthly plan fees, refunds, disputes, instant and same-day transfers, Square Pro, and custom pricing.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "square-us-free-in-person-international-card",
+    label: "Square Free in-person payment with an international card",
+    provider: "square",
+    taxMode: "caller-supplied",
+    paymentProduct: "Square Free",
+    channel: "in-person",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "square-in-person-processing",
+        label: "Square in-person processing",
+        rateBps: 260,
+        fixedCents: 15,
+        base: "gross",
+      },
+      {
+        id: "square-international-card",
+        label: "Square international card transaction fee",
+        rateBps: 150,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    sources: [squarePricing, squareFees],
+    assumptions: [
+      "US Square account on the Square Free plan, charging USD in person to a card issued outside the US.",
+      "Square lists a 1.5% international card transaction fee in addition to its base processing fees. This estimate adds the two, because no page states the combined rate in words.",
+      "Square's fees article says processing fees are taken out of the total amount of each transaction, including tax and tip.",
+      "The estimator rounds each component to cents; Square's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Currency conversion charged to the cardholder by their own card issuer, which Square does not collect.",
+      "Paid-plan rates, online, manual, and card-on-file international payments, Afterpay, Cash App Pay, and ACH bank transfers.",
+      "Monthly plan fees, refunds, disputes, instant and same-day transfers, Square Pro, and custom pricing.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "square-us-afterpay",
+    label: "Square Afterpay payment",
+    provider: "square",
+    taxMode: "caller-supplied",
+    paymentProduct: "Afterpay on Square",
+    channel: "Afterpay",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "square-afterpay",
+        label: "Square Afterpay fee",
+        rateBps: 600,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    sources: [squarePricing, squareFees],
+    assumptions: [
+      "US Square account taking a USD Afterpay payment. Square states Afterpay rates are fixed and do not vary by subscription type, hardware, or custom pricing.",
+      "The fee is charged once on the order; Square states no processing fees apply to the remaining installments or to late payments.",
+      "Square's fees article says processing fees are taken out of the total amount of each transaction, including tax and tip.",
+      "The estimator rounds each component to cents; Square's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Card, Cash App Pay, and ACH payments, and the international card fee, which Square says does not apply to Afterpay.",
+      "Monthly plan fees, refunds, disputes, instant and same-day transfers, Square Pro, and custom pricing.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "square-us-invoice-ach",
+    label: "Square invoice paid by ACH bank transfer",
+    provider: "square",
+    taxMode: "zero-only",
+    paymentProduct: "Square Invoices",
+    channel: "ACH bank transfer",
+    tierPolicy: "explicitly-excluded",
+    components: [],
+    sources: [squarePricing, squareFees],
+    assumptions: [
+      "Square lists ACH bank transfer payments on invoices at 1% with a $1 minimum on Square Free, and 1% with a $1 minimum and a $10 fee cap on Plus and Premium.",
+      "Square lists $0 fees for ACH payments deposited into Square Checking.",
+    ],
+    exclusions: [
+      "No linear estimate is given, because the fee has a minimum, a plan-dependent cap, and a waiver that depends on where funds are deposited.",
+    ],
+    status: "blocked",
+    blockedReason:
+      "Square's ACH invoice fee has a $1 minimum and, on paid plans, a $10 cap. The fee engine models percentage and fixed charges only, so it does not estimate minimums or caps.",
+  }),
+  official({
+    id: "etsy-us-order-with-listing-fee",
+    label: "Etsy US shop order with its listing fee",
+    provider: "etsy",
+    taxMode: "caller-supplied",
+    paymentProduct: "Etsy Payments",
+    channel: "Etsy.com marketplace",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "etsy-transaction",
+        label: "Etsy transaction fee",
+        rateBps: 650,
+        fixedCents: 0,
+        base: "gross-excluding-tax",
+      },
+      {
+        id: "etsy-payment-processing",
+        label: "Etsy Payments processing fee",
+        rateBps: 300,
+        fixedCents: 25,
+        base: "gross",
+      },
+      {
+        id: "etsy-listing",
+        label: "Etsy listing fee",
+        rateBps: 0,
+        fixedCents: 20,
+        base: "gross",
+      },
+    ],
+    sources: [etsyFeesPolicy, etsyPaymentsPolicy],
+    assumptions: [
+      "US shop with a US bank account, listing in USD and paid through Etsy Payments, so no currency conversion fee applies.",
+      "The amount is the order total the buyer paid: item price, shipping, gift wrap, and any sales tax Etsy collected. The 6.5% transaction fee applies to that total less sales tax, because Etsy's Fees & Payments Policy says it does not apply to sales tax for US sellers. The 3% + 25¢ processing fee applies to the gross order amount, including shipping and tax, as Etsy's Payments Policy states.",
+      "One $0.20 listing fee is counted for the item sold: the fee paid to list it, or the automatic renewal Etsy charges after an item sells from a listing with quantity left.",
+      "The estimator rounds each component to cents; Etsy's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Offsite Ads, Etsy Ads, shipping labels, Etsy Plus and Pattern subscriptions, the one-time shop set-up fee, and instant transfers.",
+      "Coupons and discounts, refunds, cancellations, orders with more than one unit from a listing (each extra unit sold is charged another $0.20), and regulatory operating fees charged to sellers outside the US.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "etsy-us-order-fees-only",
+    label: "Etsy US shop order, transaction and processing fees",
+    provider: "etsy",
+    taxMode: "caller-supplied",
+    paymentProduct: "Etsy Payments",
+    channel: "Etsy.com marketplace",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "etsy-transaction",
+        label: "Etsy transaction fee",
+        rateBps: 650,
+        fixedCents: 0,
+        base: "gross-excluding-tax",
+      },
+      {
+        id: "etsy-payment-processing",
+        label: "Etsy Payments processing fee",
+        rateBps: 300,
+        fixedCents: 25,
+        base: "gross",
+      },
+    ],
+    sources: [etsyFeesPolicy, etsyPaymentsPolicy],
+    assumptions: [
+      "US shop with a US bank account, listing in USD and paid through Etsy Payments, so no currency conversion fee applies.",
+      "The amount is the order total the buyer paid: item price, shipping, gift wrap, and any sales tax Etsy collected. The 6.5% transaction fee applies to that total less sales tax, because Etsy's Fees & Payments Policy says it does not apply to sales tax for US sellers. The 3% + 25¢ processing fee applies to the gross order amount, including shipping and tax, as Etsy's Payments Policy states.",
+      "The $0.20 listing fee is left out, for sellers who count it as a cost of listing rather than of each sale.",
+      "The estimator rounds each component to cents; Etsy's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Offsite Ads, Etsy Ads, shipping labels, Etsy Plus and Pattern subscriptions, the one-time shop set-up fee, and instant transfers.",
+      "Coupons and discounts, refunds, cancellations, orders with more than one unit from a listing (each extra unit sold is charged another $0.20), and regulatory operating fees charged to sellers outside the US.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "etsy-us-offsite-ads",
+    label: "Etsy order attributed to Offsite Ads",
+    provider: "etsy",
+    taxMode: "zero-only",
+    paymentProduct: "Etsy Offsite Ads",
+    channel: "Etsy.com marketplace",
+    tierPolicy: "explicitly-excluded",
+    components: [],
+    sources: [etsyFeesPolicy],
+    assumptions: [
+      "Etsy charges 15% on orders attributed to Offsite Ads, or 12% for the lifetime of a shop that has reached $10,000 in sales over a prior 365 days.",
+      "For US sellers the Offsite Ads fee does not apply to sales tax, and the fee on a single order will not exceed $100.",
+    ],
+    exclusions: [
+      "No estimate is given, because the fee is capped per order and its rate depends on the shop's sales history.",
+    ],
+    status: "blocked",
+    blockedReason:
+      "Etsy's Offsite Ads fee is 15% or 12% depending on the shop's sales history and is capped at $100 per order. The fee engine does not model caps, so it does not estimate Offsite Ads.",
   }),
   official({
     id: "lemon-squeezy-us-domestic-card",

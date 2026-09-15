@@ -1,4 +1,5 @@
 ---
+import { guidesForTool } from "../data/guides";
 import { findHub, relatedTools, type ToolId } from "../data/tools";
 
 interface Props {
@@ -6,6 +7,8 @@ interface Props {
 }
 
 const related = relatedTools(Astro.props.current);
+
+const guides = guidesForTool(Astro.props.current);
 ---
 
 <section aria-labelledby="related-calculators" class="no-print mt-14 border-t border-line pt-10">
@@ -21,4 +24,17 @@ const related = relatedTools(Astro.props.current);
       </li>
     ))}
   </ul>
+  {guides.length > 0 ? (
+    <div class="mt-10">
+      <h3 class="display text-xl font-bold">Guides that use this calculator</h3>
+      <ul class="mt-4 space-y-3">
+        {guides.map((guide) => (
+          <li>
+            <a href={guide.href} class="font-semibold text-navy underline underline-offset-2 hover:text-ink">{guide.title}</a>
+            <span class="mt-0.5 block text-sm leading-relaxed text-ink/65">{guide.summary}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ) : null}
 </section>

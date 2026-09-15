@@ -1,9 +1,11 @@
 /**
- * Scenario menus for the four fee calculators. Each scenario points at one
+ * Scenario menus for the fee calculators. Each scenario points at one
  * official preset; rates, assumptions, and sources live in the preset, never here.
  */
 
-export type FeeCalculatorId = "stripe" | "paypal" | "gumroad" | "lemon-squeezy";
+import type { ToolId } from "./tools";
+
+export type FeeCalculatorId = "stripe" | "paypal" | "square" | "etsy" | "gumroad" | "lemon-squeezy";
 
 export interface FeeScenario {
   readonly id: string;
@@ -18,6 +20,8 @@ export interface FeeScenario {
 
 export interface FeeCalculatorConfig {
   readonly id: FeeCalculatorId;
+  /** The calculator page in the tool registry, used for embeds and credit links. */
+  readonly toolId: ToolId;
   readonly provider: string;
   readonly formHeading: string;
   readonly scenarioLegend: string;
@@ -30,6 +34,7 @@ export interface FeeCalculatorConfig {
 export const feeCalculators: readonly FeeCalculatorConfig[] = [
   {
     id: "stripe",
+    toolId: "stripe-fees",
     provider: "Stripe",
     formHeading: "Payment details",
     scenarioLegend: "What kind of card payment is it?",
@@ -65,6 +70,7 @@ export const feeCalculators: readonly FeeCalculatorConfig[] = [
   },
   {
     id: "paypal",
+    toolId: "paypal-fees",
     provider: "PayPal",
     formHeading: "Payment details",
     scenarioLegend: "How did the customer pay?",
@@ -123,7 +129,112 @@ export const feeCalculators: readonly FeeCalculatorConfig[] = [
     ],
   },
   {
+    id: "square",
+    toolId: "square-fees",
+    provider: "Square",
+    formHeading: "Payment details",
+    scenarioLegend: "How was it paid, and on which plan?",
+    panelTone: "ink",
+    taxHelp:
+      "Sales tax included in this payment. Square takes its fee from the full total, including tax and tip; this calculator never computes tax.",
+    scenarios: [
+      {
+        id: "free-in-person",
+        presetId: "square-us-free-in-person-card",
+        label: "In person, Square Free",
+        description: "A US card tapped, dipped, or swiped.",
+        note: "Supported scenario: US Square account on Square Free, USD in-person payment with a US-issued card that is tapped, dipped, or swiped.",
+        copyName: "Square Free in-person payment",
+      },
+      {
+        id: "plus-in-person",
+        presetId: "square-us-plus-in-person-card",
+        label: "In person, Square Plus",
+        description: "The same payment on the $49 a month plan.",
+        note: "Supported scenario: US Square account on Square Plus, USD in-person payment with a US-issued card. The $49 monthly plan price is not included.",
+        copyName: "Square Plus in-person payment",
+      },
+      {
+        id: "premium-in-person",
+        presetId: "square-us-premium-in-person-card",
+        label: "In person, Square Premium",
+        description: "The same payment on the $149 a month plan.",
+        note: "Supported scenario: US Square account on Square Premium, USD in-person payment with a US-issued card. The $149 monthly plan price is not included.",
+        copyName: "Square Premium in-person payment",
+      },
+      {
+        id: "free-online",
+        presetId: "square-us-free-online-card",
+        label: "Online or invoice, Square Free",
+        description: "A US card paid online or on a Square invoice.",
+        note: "Supported scenario: US Square account on Square Free, USD card payment made online or through a Square invoice.",
+        copyName: "Square Free online payment",
+      },
+      {
+        id: "paid-online",
+        presetId: "square-us-paid-plan-online-card",
+        label: "Online or invoice, Plus or Premium",
+        description: "The same online payment on a paid plan.",
+        note: "Supported scenario: US Square account on Square Plus or Premium, USD card payment made online or through a Square invoice.",
+        copyName: "Square Plus or Premium online payment",
+      },
+      {
+        id: "manual",
+        presetId: "square-us-manual-or-card-on-file",
+        label: "Keyed in or card on file",
+        description: "Any plan. The card number is typed in or saved.",
+        note: "Supported scenario: US Square account on any plan, USD payment with a US-issued card entered manually or saved on file.",
+        copyName: "Square keyed-in or card-on-file payment",
+      },
+      {
+        id: "international",
+        presetId: "square-us-free-in-person-international-card",
+        label: "International card in person, Square Free",
+        description: "A card issued outside the US, tapped, dipped, or swiped.",
+        note: "Supported scenario: US Square account on Square Free, USD in-person payment with a card issued outside the US.",
+        copyName: "Square Free in-person international card payment",
+      },
+      {
+        id: "afterpay",
+        presetId: "square-us-afterpay",
+        label: "Afterpay",
+        description: "Any plan. The customer pays over time.",
+        note: "Supported scenario: US Square account on any plan, USD payment made with Afterpay.",
+        copyName: "Square Afterpay payment",
+      },
+    ],
+  },
+  {
+    id: "etsy",
+    toolId: "etsy-fees",
+    provider: "Etsy",
+    formHeading: "Order details",
+    scenarioLegend: "Which fees should the result include?",
+    panelTone: "navy",
+    taxHelp:
+      "Sales tax Etsy collected on this order. Etsy's 6.5% transaction fee leaves it out, its 3% + 25¢ processing fee includes it, and the tax itself is passed on, not kept.",
+    scenarios: [
+      {
+        id: "with-listing",
+        presetId: "etsy-us-order-with-listing-fee",
+        label: "Order plus its listing fee",
+        description: "Transaction, processing, and the item's $0.20 listing fee.",
+        note: "Supported scenario: US shop with a US bank account, one item sold in USD through Etsy Payments, counting its $0.20 listing fee.",
+        copyName: "Etsy order with its listing fee",
+      },
+      {
+        id: "order-only",
+        presetId: "etsy-us-order-fees-only",
+        label: "Per-order fees only",
+        description: "Transaction and processing fees, without the listing fee.",
+        note: "Supported scenario: US shop with a US bank account, order paid in USD through Etsy Payments, transaction and processing fees only.",
+        copyName: "Etsy order",
+      },
+    ],
+  },
+  {
     id: "gumroad",
+    toolId: "gumroad-fees",
     provider: "Gumroad",
     formHeading: "Sale details",
     scenarioLegend: "What kind of sale was it?",
@@ -158,6 +269,7 @@ export const feeCalculators: readonly FeeCalculatorConfig[] = [
   },
   {
     id: "lemon-squeezy",
+    toolId: "lemon-squeezy-fees",
     provider: "Lemon Squeezy",
     formHeading: "Order details",
     scenarioLegend: "What kind of order is it?",

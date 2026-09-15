@@ -1,0 +1,256 @@
+---
+import { calculateRetainer } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import NumberField from "../../components/NumberField.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import ResultRow from "../../components/ResultRow.astro";
+import StickyResult from "../../components/StickyResult.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("retainer");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const exampleInput = { hourlyRateCents: 10_000n, includedMinutes: 1_200, discountBps: 1_000, usedMinutes: 900, months: 3 };
+
+const example = calculateRetainer(exampleInput);
+
+const oddExample = calculateRetainer({ hourlyRateCents: 11_250n, includedMinutes: 450, discountBps: 1_500, usedMinutes: 0, months: 1 });
+
+const rowLabel = "text-[#f3f5fa]/80";
+
+const hoursHelp = "Quarter hours such as 7.25 and 7.5 are accepted.";
+
+const discountRows = [0, 500, 1_000, 1_500, 2_000].map((discountBps) => {
+  const result = calculateRetainer({ ...exampleInput, discountBps });
+
+  return [`${discountBps / 100}%`, formatUsdGrouped(result.monthlyFeeCents), formatUsdGrouped(result.clientSavingsCents), formatUsdGrouped(result.ratePerIncludedHourCents)];
+});
+
+const usageRows = [1_200, 1_050, 900, 600, 300].map((usedMinutes) => {
+  const result = calculateRetainer({ ...exampleInput, usedMinutes });
+
+  return [`${usedMinutes / 60} of 20`, formatUsdGrouped(result.ratePerUsedHourCents ?? 0n)];
+});
+
+const updatedOn = "2026-09-15";
+
+const faq: readonly FaqEntry[] = [
+  { question: "What is a freelance retainer?", answer: "A retainer is a fixed monthly fee a client pays for a set amount of your time or ongoing work. The client gets reserved capacity, and you get predictable income." },
+  { question: "How do I calculate a monthly retainer fee?", answer: `Multiply your hourly rate by the hours included each month, then take off any discount. At $100 an hour for 20 hours with a 10% discount, the fee is ${formatUsdGrouped(example.monthlyFeeCents)} a month.` },
+  { question: "Should I discount a retainer?", answer: "It is your choice. A discount can reward a client for committing to several months of work, but it lowers every hour you deliver. Check that the rate per included hour still meets the floor rate from the hourly rate calculator." },
+  { question: "What happens to hours the client does not use?", answer: "This calculator assumes unused hours do not carry over to the next month. The rate per hour used shows what that means: if the client uses fewer hours, each hour you work earns more. If you let hours roll over, say so in the agreement." },
+  { question: "What if the client uses more hours than the retainer includes?", answer: "Agree how extra hours are billed before the work starts, usually at your full hourly rate. Otherwise the rate per hour used falls below the rate you set." },
+  { question: "Why is the fee rounded up?", answer: `The fee is rounded up to the whole cent, so the discount never ends up larger than the one you agreed. $112.50 an hour for 7.5 hours at 15% off is $717.1875, so the fee is ${formatUsdGrouped(oddExample.monthlyFeeCents)}.` },
+  { question: "Does the fee include payment processing costs?", answer: "No. If the client pays by card, use a fee calculator in keep-a-target mode with the monthly fee as the amount you want to keep, to see what to invoice." },
+  { question: "Is my information saved or sent anywhere?", answer: "No. Everything is calculated in your browser, and nothing is stored." },
+];
+---
+<Layout title="Freelance Retainer Calculator: Monthly Fee | MathMyRate" description="Price a monthly retainer from your hourly rate, included hours, and discount. See the fee, what the client saves, your effective rate, and the contract total." ogImage="/og/retainer.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Turn your hourly rate into a monthly retainer. See the fee, the discount in dollars, what each hour really earns, and the whole contract.</p>
+    <PageByline updatedOn={updatedOn} />
+    <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
+      <form id="retainer-form" data-calculator-form class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate>
+        <div class="flex items-baseline justify-between gap-3"><h2 class="display text-2xl font-bold">Retainer terms</h2><span class="shrink-0 text-xs text-ink/50">USD / per month</span></div>
+        <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
+        <div class="mt-7 grid gap-5 sm:grid-cols-2">
+          <NumberField id="retainerRate" label="Hourly rate" value="100.00" unit="usd" required />
+          <NumberField id="includedHours" label="Hours included each month" value="20" required help={hoursHelp} />
+          <NumberField id="retainerDiscount" label="Retainer discount" value="10" unit="percent" required help="Enter 0 for no discount." />
+          <NumberField id="contractMonths" label="Contract length in months" value="3" inputMode="numeric" required />
+          <NumberField id="usedHours" label="Hours used in a month (optional)" value="15" help="Shows what each hour you work earns." />
+        </div>
+        <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="retainer-update">Update retainer</button><button id="retainer-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
+      </form>
+      <aside id="retainer-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
+        <p class="eyebrow !text-[#f2e3bd]" data-primary-label>Monthly retainer fee</p><p id="retainer-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.monthlyFeeCents)}</p><p class="mt-1 text-[#f3f5fa]/80">before any payment processing fees</p>
+        <div class="my-7 border-t border-[#f3f5fa]/30"></div>
+        <div class="[&>:first-child]:mt-0">
+          <ResultRow label="Full value at your hourly rate" valueId="full-value-result" value={formatUsdGrouped(example.fullValueCents)} labelClass={rowLabel} />
+          <ResultRow label="Client saves each month" valueId="savings-result" value={formatUsdGrouped(example.clientSavingsCents)} labelClass={rowLabel} />
+          <ResultRow label="Rate per included hour" valueId="included-rate-result" value={formatUsdGrouped(example.ratePerIncludedHourCents)} labelClass={rowLabel} />
+          <ResultRow label="Rate per hour used" valueId="used-rate-result" value={formatUsdGrouped(example.ratePerUsedHourCents ?? 0n)} labelClass={rowLabel} />
+          <ResultRow label="Contract total" valueId="contract-result" value={formatUsdGrouped(example.contractTotalCents)} labelClass={rowLabel} />
+        </div>
+        <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-retainer" type="button" class="rounded-full bg-[#f3f5fa] px-4 py-2.5 text-sm font-bold text-ink">Copy retainer</button><button type="button" data-print class="rounded-full border border-[#f3f5fa]/45 px-4 py-2.5 text-sm font-bold">Print</button></div><p id="retainer-message" class="mt-4 text-sm text-[#f2e3bd]"></p>
+      </aside>
+    </div>
+    <StickyResult />
+    <noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The example shows 20 hours a month at $100 an hour with a 10% discount; enable JavaScript to calculate your own retainer locally.</p></noscript>
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The freelance retainer calculator turns an hourly rate into a fixed monthly fee. At $100 an hour, 20 hours a month with a 10% discount is <strong>{formatUsdGrouped(example.monthlyFeeCents)}</strong> a month, which works out to <strong>{formatUsdGrouped(example.ratePerIncludedHourCents)}</strong> per included hour. Over a three-month contract, that is <strong>{formatUsdGrouped(example.contractTotalCents)}</strong>.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Enter your hourly rate, or find it first with the <a href="/freelance/hourly-rate-calculator/">freelance hourly rate calculator</a>.</li>
+        <li>Enter the hours the client can use each month.</li>
+        <li>Enter any discount you offer for the commitment, or 0.</li>
+        <li>Enter the contract length, and optionally the hours the client really uses in a month.</li>
+      </ol>
+
+      <h2>How the fee is built</h2>
+      <p>Here is the example worked through, using the same code as the calculator.</p>
+      <ol>
+        <li><strong>Full value.</strong> 20 hours at $100 is {formatUsdGrouped(example.fullValueCents)}.</li>
+        <li><strong>Discount.</strong> 10% off leaves {formatUsdGrouped(example.monthlyFeeCents)}, so the client saves {formatUsdGrouped(example.clientSavingsCents)} a month.</li>
+        <li><strong>Rate per included hour.</strong> {formatUsdGrouped(example.monthlyFeeCents)} ÷ 20 hours is {formatUsdGrouped(example.ratePerIncludedHourCents)}.</li>
+        <li><strong>Rate per hour used.</strong> If the client uses 15 hours, each one earns {formatUsdGrouped(example.ratePerUsedHourCents ?? 0n)}.</li>
+        <li><strong>Contract total.</strong> Three months at {formatUsdGrouped(example.monthlyFeeCents)} is {formatUsdGrouped(example.contractTotalCents)}.</li>
+      </ol>
+
+      <h2>Retainer fees at different discounts</h2>
+      <p>These rows keep 20 hours a month at $100 an hour.</p>
+      <DataTable caption="Monthly retainer fee by discount" headers={["Discount", "Monthly fee", "Client saves", "Rate per included hour"]} rows={discountRows} />
+
+      <h2>What each hour earns when hours go unused</h2>
+      <p>These rows keep the {formatUsdGrouped(example.monthlyFeeCents)} fee for 20 hours and change the hours the client uses.</p>
+      <DataTable caption="Rate per hour used on a monthly retainer" headers={["Hours used", "Rate per hour used"]} rows={usageRows} />
+
+      <h2>Setting the terms</h2>
+      <p>A retainer works best when the agreement answers three questions before the first month: how many hours are included, whether unused hours carry over, and how extra hours are billed. This calculator assumes unused hours expire at the end of each month. If you allow them to roll over, the rate per hour used across the contract falls toward the rate per included hour.</p>
+      <p>There is no standard discount. Whatever you offer, the rate per included hour is the number to protect: keep it at or above the floor rate that covers your costs, time off, and taxes.</p>
+
+      <FaqSection entries={faq} />
+
+      <p class="text-sm text-ink/60">Planning estimate only; not tax, accounting, or legal advice. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+  <script>
+    import { calculateRetainer, type RetainerResult } from "@MathMyRate/calculators";
+    import {
+      type CalculationTrigger,
+      focusProblemField,
+      formatUsdGrouped,
+      hoursToMinutes,
+      InputProblem,
+      markResultsCurrent,
+      markResultsStale,
+      percentToBps,
+      requireHtmlButton,
+      requireHtmlElement,
+      requireHtmlForm,
+      requireHtmlInput,
+      setFieldState,
+      shouldDeferProblem,
+      usdToCents,
+      watchCalculatorFields,
+      wholeNumber,
+    } from "../../scripts/calculator-form";
+
+    // The most minutes any month can hold: 31 days of 24 hours.
+    const MONTH_MINUTES = 44_640;
+
+    const form = requireHtmlForm("retainer-form");
+
+    const panel = requireHtmlElement("retainer-panel");
+
+    const copyButton = requireHtmlButton("copy-retainer");
+
+    let latest: { readonly includedMinutes: number; readonly months: number; readonly result: RetainerResult } | null = null;
+
+    function setText(id: string, text: string): void {
+      requireHtmlElement(id).textContent = text;
+    }
+
+    function monthMinutes(field: string, minimum: number): number {
+      const minutes = hoursToMinutes(requireHtmlInput(field).value, field);
+
+      if (minutes < minimum) throw new InputProblem(field, "Include at least one minute.");
+
+      if (minutes > MONTH_MINUTES) throw new InputProblem(field, "A month has at most 744 hours.");
+
+      return minutes;
+    }
+
+    function clear(): void {
+      for (const id of ["retainer-result", "full-value-result", "savings-result", "included-rate-result", "used-rate-result", "contract-result"]) {
+        setText(id, "—");
+      }
+
+      latest = null;
+      markResultsCurrent(panel, []);
+      copyButton.disabled = true;
+    }
+
+    function calculate(trigger: CalculationTrigger): void {
+      try {
+        const hourlyRateCents = usdToCents(requireHtmlInput("retainerRate").value, "retainerRate");
+        const includedMinutes = monthMinutes("includedHours", 1);
+        const discountBps = percentToBps(requireHtmlInput("retainerDiscount").value, "retainerDiscount", 9_999);
+        const months = wholeNumber(requireHtmlInput("contractMonths").value, "contractMonths", 1, 120);
+        const usedMinutes = requireHtmlInput("usedHours").value.trim().length === 0 ? 0 : monthMinutes("usedHours", 0);
+        const result = calculateRetainer({ hourlyRateCents, includedMinutes, discountBps, usedMinutes, months });
+
+        setText("retainer-result", formatUsdGrouped(result.monthlyFeeCents));
+        setText("full-value-result", formatUsdGrouped(result.fullValueCents));
+        setText("savings-result", formatUsdGrouped(result.clientSavingsCents));
+        setText("included-rate-result", formatUsdGrouped(result.ratePerIncludedHourCents));
+        setText("used-rate-result", result.ratePerUsedHourCents === null ? "—" : formatUsdGrouped(result.ratePerUsedHourCents));
+        setText("contract-result", formatUsdGrouped(result.contractTotalCents));
+        latest = { includedMinutes, months, result };
+        markResultsCurrent(panel, [copyButton]);
+        setText(
+          "retainer-message",
+          usedMinutes > includedMinutes ? "The client used more hours than the retainer includes. Bill the extra hours separately, or each hour earns less." : "",
+        );
+        setFieldState(form);
+      } catch (error) {
+        const problem = error instanceof InputProblem ? error : new InputProblem("retainerRate", "Check your inputs.");
+
+        if (shouldDeferProblem(form, trigger)) {
+          markResultsStale(panel, [copyButton]);
+
+          return;
+        }
+
+        clear();
+        setFieldState(form, problem);
+
+        if (trigger === "submit") focusProblemField(form, problem);
+        setText("retainer-message", "");
+      }
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      calculate("submit");
+    });
+
+    requireHtmlButton("retainer-update").addEventListener("click", () => calculate("submit"));
+
+    watchCalculatorFields(form, calculate);
+
+    requireHtmlButton("retainer-reset").addEventListener("click", () => {
+      form.reset();
+      calculate("commit");
+    });
+
+    copyButton.addEventListener("click", async () => {
+      if (latest === null) return;
+
+      const { includedMinutes, months, result } = latest;
+      const hours = (includedMinutes / 60).toLocaleString("en-US", { maximumFractionDigits: 2 });
+      const text = `Monthly retainer: ${formatUsdGrouped(result.monthlyFeeCents)} for ${hours} hours (${formatUsdGrouped(result.ratePerIncludedHourCents)} per included hour). ${months}-month total: ${formatUsdGrouped(result.contractTotalCents)}.`;
+
+      try {
+        await navigator.clipboard.writeText(text);
+        setText("retainer-message", "Retainer copied.");
+      } catch {
+        setText("retainer-message", "Copy was unavailable. Select the result to copy it manually.");
+      }
+    });
+
+    calculate("commit");
+  </script>
+</Layout>

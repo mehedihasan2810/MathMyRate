@@ -1,0 +1,81 @@
+---
+import { analyzePrice, priceFromMargin, priceFromMarkup } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import GuideTools from "../../components/GuideTools.astro";
+import PageByline from "../../components/PageByline.astro";
+import { findGuide, guideBreadcrumbs } from "../../data/guides";
+import Layout from "../../layouts/Layout.astro";
+import { formatPercentBps, formatUsdGrouped } from "../../scripts/calculator-form";
+
+const guide = findGuide("markup-vs-margin");
+
+const breadcrumbs = guideBreadcrumbs(guide.id);
+
+const fromMarkup = priceFromMarkup({ costCents: 4_000n, markupBps: 5_000 });
+
+const fromMargin = priceFromMargin({ costCents: 4_000n, marginBps: 5_000 });
+
+const mistake = analyzePrice({ costCents: 10_000n, priceCents: 13_000n });
+
+const thirtyMargin = priceFromMargin({ costCents: 10_000n, marginBps: 3_000 });
+
+const subcontract = priceFromMargin({ costCents: 100_000n, marginBps: 2_500 });
+
+function percent(bps: bigint | null): string {
+  return bps === null ? "Not defined" : formatPercentBps(bps);
+}
+
+const markupRows = [2_500, 5_000, 10_000, 15_000, 20_000].map((markupBps) => {
+  const result = priceFromMarkup({ costCents: 10_000n, markupBps });
+
+  return [`${markupBps / 100}%`, formatUsdGrouped(result.priceCents), percent(result.marginBps)];
+});
+
+const marginRows = [2_000, 3_000, 4_000, 5_000, 6_000].map((marginBps) => {
+  const result = priceFromMargin({ costCents: 10_000n, marginBps });
+
+  return [`${marginBps / 100}%`, formatUsdGrouped(result.priceCents), percent(result.markupBps)];
+});
+---
+<Layout title="Markup vs Margin: The Difference, With Examples | MathMyRate" description={guide.description} ogImage="/og/markup-vs-margin.png" breadcrumbs={breadcrumbs} article={{ headline: guide.title, publishedOn: guide.publishedOn, updatedOn: guide.updatedOn }}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 max-w-3xl text-3xl font-bold md:text-4xl">{guide.title}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Markup and margin describe the same profit from two directions. Mixing them up is one of the easiest ways to underprice.</p>
+    <PageByline updatedOn={guide.updatedOn} />
+    <article class="guide mt-8">
+      <h2>The short answer</h2>
+      <p><strong>Markup</strong> is profit as a share of what something costs you. <strong>Margin</strong> is profit as a share of what the customer pays. Because the price is always larger than the cost, the margin on a sale is always smaller than its markup.</p>
+      <p>Take an item that costs $40.00 and sells for {formatUsdGrouped(fromMarkup.priceCents)}. The profit is {formatUsdGrouped(fromMarkup.profitCents)}. Compared with the $40.00 cost, that is a <strong>{percent(fromMarkup.markupBps)} markup</strong>. Compared with the {formatUsdGrouped(fromMarkup.priceCents)} price, it is a <strong>{percent(fromMarkup.marginBps)} margin</strong>.</p>
+
+      <h2>The formulas</h2>
+      <ul>
+        <li><strong>Markup</strong> = (price − cost) ÷ cost</li>
+        <li><strong>Margin</strong> = (price − cost) ÷ price</li>
+        <li><strong>Price for a markup</strong> = cost × (1 + markup)</li>
+        <li><strong>Price for a margin</strong> = cost ÷ (1 − margin)</li>
+        <li><strong>Markup to margin</strong> = markup ÷ (1 + markup)</li>
+        <li><strong>Margin to markup</strong> = margin ÷ (1 − margin)</li>
+      </ul>
+      <p>So a 50% margin on the same $40.00 cost needs a price of {formatUsdGrouped(fromMargin.priceCents)}, which is a {percent(fromMargin.markupBps)} markup.</p>
+
+      <h2>Conversion tables</h2>
+      <p>Each row starts from a $100.00 cost. Prices are rounded up to the cent.</p>
+      <DataTable caption="Margin for common markups on a $100 cost" headers={["Markup", "Price", "Margin"]} rows={markupRows} />
+      <DataTable caption="Markup for common margins on a $100 cost" headers={["Margin", "Price", "Markup"]} rows={marginRows} />
+
+      <h2>Why the difference costs money</h2>
+      <p>Suppose you want to keep 30% of every sale, and you add 30% to a $100 cost. The price is $130.00, and the profit is $30.00. But $30 is only <strong>{percent(mistake.marginBps)}</strong> of $130, so you keep less than you planned on every sale. To keep 30% of the price, you need to charge <strong>{formatUsdGrouped(thirtyMargin.priceCents)}</strong>.</p>
+      <p>The gap grows as the percentage grows. A 100% markup is a 50% margin, and no markup, however large, reaches a 100% margin.</p>
+
+      <h2>A freelance example</h2>
+      <p>You bring in a subcontractor for $1,000.00 of work and want 25% of what the client pays to stay with you. Pricing for a 25% margin gives <strong>{formatUsdGrouped(subcontract.priceCents)}</strong>: a profit of {formatUsdGrouped(subcontract.profitCents)}, which is a {percent(subcontract.markupBps)} markup on the subcontractor's invoice. Adding 25% to the invoice would have given $1,250.00 and a 20% margin.</p>
+
+      <h2>Which one to use</h2>
+      <p>Markup is natural when you start from a cost and add to it, as with resold products or passed-through expenses. Margin is useful when you plan in shares of revenue, because rent, software, and payment fees are also paid out of what the customer pays. Neither is wrong, as long as you know which one you are quoting.</p>
+      <p>The <a href="/freelance/markup-margin-calculator/">markup and margin calculator</a> shows both for any price. If the subcontracted work is part of a larger job, the <a href="/freelance/project-rate-calculator/">project rate calculator</a> adds your own hours and contingency around it.</p>
+    </article>
+    <GuideTools guide={guide.id} />
+  </main>
+</Layout>

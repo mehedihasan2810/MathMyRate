@@ -13,6 +13,32 @@ export interface ChangelogEntry {
 export const changelog: readonly ChangelogEntry[] = [
   {
     date: "2026-09-15",
+    title: "Square and Etsy fee calculators added",
+    changes: [
+      "Square: added in-person card payments on Square Free (2.6% + 15¢), Square Plus (2.5% + 15¢), and Square Premium (2.4% + 15¢); online and invoice card payments on Square Free (3.3% + 30¢) and on Plus or Premium (2.9% + 30¢); manually entered and card-on-file payments (3.5% + 15¢); in-person payments on Square Free with a card issued outside the US (2.6% + 15¢ plus 1.5%); and Afterpay (6% + 30¢). Invoices paid by ACH bank transfer are listed as unsupported, because their $1 minimum and $10 cap are not modeled.",
+      "Etsy: added US shop orders paid through Etsy Payments, with the 6.5% transaction fee on the order less sales tax, the 3% + 25¢ processing fee on the whole order, and an optional $0.20 listing fee. Orders attributed to Offsite Ads are listed as unsupported, because their $100 cap is not modeled.",
+    ],
+    sources: [
+      {
+        title: "Square Processing Fees, Plans, and Software Pricing | Square",
+        url: "https://squareup.com/us/en/pricing",
+      },
+      {
+        title: "Learn about Square fees | Square Support Center - United States",
+        url: "https://squareup.com/help/us/en/article/5068-what-are-square-s-fees",
+      },
+      {
+        title: "Fees & Payments Policy - Our House Rules | Etsy",
+        url: "https://www.etsy.com/legal/fees/",
+      },
+      {
+        title: "Etsy Payments Policy - Our House Rules | Etsy",
+        url: "https://www.etsy.com/legal/etsy-payments/",
+      },
+    ],
+  },
+  {
+    date: "2026-09-15",
     title: "Every fee source re-reviewed; new scenarios added",
     changes: [
       "Stripe: added international cards (2.9% + 30¢ plus 1.5%) and manually entered domestic cards (2.9% + 30¢ plus 0.5%). The domestic online card rate is unchanged. The source is now stripe.com/pricing, which the old US pricing address redirects to.",

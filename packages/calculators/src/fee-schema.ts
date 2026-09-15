@@ -38,7 +38,7 @@ const FeeComponent = Schema.Struct({
   label: RequiredText,
   rateBps: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 9999 })),
   fixedCents: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 100_000_000 })),
-  base: Schema.Literal("gross"),
+  base: Schema.Literals(["gross", "gross-excluding-tax"]),
   rounding: Schema.Literal("half-up"),
 });
 

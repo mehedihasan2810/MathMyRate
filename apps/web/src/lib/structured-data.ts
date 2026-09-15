@@ -65,6 +65,30 @@ export interface BreadcrumbListNode {
   }[];
 }
 
+export interface ArticleNode {
+  readonly "@context": "https://schema.org";
+  readonly "@type": "Article";
+  readonly headline: string;
+  readonly description: string;
+  readonly url: string;
+  readonly mainEntityOfPage: string;
+  readonly image: string;
+  readonly datePublished: string;
+  readonly dateModified: string;
+  readonly author: OrganizationReference;
+  readonly publisher: OrganizationReference;
+}
+
+/** The visible facts of a guide: its H1, summary, path, social image, and real dates. */
+export interface ArticleFacts {
+  readonly headline: string;
+  readonly description: string;
+  readonly path: string;
+  readonly image: string;
+  readonly publishedOn: string;
+  readonly updatedOn: string;
+}
+
 /**
  * A question and answer shown visibly on a page. Google stopped showing FAQ rich
  * results on May 7, 2026, so these are not emitted as FAQPage structured data.
@@ -78,7 +102,8 @@ export type StructuredDataNode =
   | OrganizationNode
   | WebSiteNode
   | WebApplicationNode
-  | BreadcrumbListNode;
+  | BreadcrumbListNode
+  | ArticleNode;
 
 function publisher(site: URL): OrganizationReference {
   return { "@type": "Organization", name: SITE_NAME, url: new URL("/", site).href };
@@ -141,6 +166,25 @@ export function breadcrumbListNode(site: URL, crumbs: readonly Crumb[]): Breadcr
       name: crumb.name,
       item: new URL(crumb.href, site).href,
     })),
+  };
+}
+
+/** A guide, credited to the site; the dates must be the ones printed on the page. */
+export function articleNode(site: URL, facts: ArticleFacts): ArticleNode {
+  const url = new URL(facts.path, site).href;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: facts.headline,
+    description: facts.description,
+    url,
+    mainEntityOfPage: url,
+    image: new URL(facts.image, site).href,
+    datePublished: facts.publishedOn,
+    dateModified: facts.updatedOn,
+    author: publisher(site),
+    publisher: publisher(site),
   };
 }
 

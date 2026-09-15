@@ -32,10 +32,11 @@ send user-entered financial values to analytics or automatic share URLs.
 ## Repository roles
 
 - `apps/web` is the Astro presentation and content application. It now contains
-  the static home and freelance information pages plus
-  `/freelance/hourly-rate-calculator/`, `/freelance/project-rate-calculator/`,
-  the `/fees/` hub, `/fees/stripe-fee-calculator/`, and
-  `/fees/paypal-fee-calculator/`. Login, signup, and dashboard pages are not
+  the static home page, the `/freelance/` and `/fees/` hubs, every calculator
+  registered in `src/data/tools.ts`, the guides registered in
+  `src/data/guides.ts`, and noindex `/embed/` copies of the fee calculators.
+  The registries drive navigation, related links, and the sitemap, so the
+  route list lives there and in the project overview. Login, signup, and dashboard pages are not
   part of the product: every tool is free. Better Auth remains in
   `packages/auth`, the server mount, and `apps/web/src/lib/auth-client.ts`.
 - The freelance pages use labeled native HTML controls and page scripts rather

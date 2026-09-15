@@ -80,12 +80,16 @@ function usablePreset(preset: FeePreset): FeePreset {
 }
 
 function evaluate(preset: FeePreset, grossCents: bigint, taxCents: bigint) {
-  const lineItems = preset.components.map((component) => ({
-    id: component.id,
-    label: component.label,
-    feeCents:
-      (grossCents * BigInt(component.rateBps) + 5000n) / 10000n + BigInt(component.fixedCents),
-  }));
+  const lineItems = preset.components.map((component) => {
+    const baseCents = component.base === "gross-excluding-tax" ? grossCents - taxCents : grossCents;
+
+    return {
+      id: component.id,
+      label: component.label,
+      feeCents:
+        (baseCents * BigInt(component.rateBps) + 5000n) / 10000n + BigInt(component.fixedCents),
+    };
+  });
 
   const feeCents = lineItems.reduce((sum, item) => sum + item.feeCents, 0n);
 
@@ -165,7 +169,15 @@ export function grossUpFees(input: {
   const fixed = preset.components.reduce((sum, item) => sum + BigInt(item.fixedCents), 0n);
   const denominator = 10000n - totalRate;
   const errorBound = BigInt(preset.components.length) * 5000n;
-  const numerator = (target + tax + fixed) * 10000n;
+
+  // A percentage charged on the amount before tax never applies to the tax, so
+  // the exact inverse takes that share of the tax back out of the numerator.
+  const taxExcludedRate = preset.components.reduce(
+    (sum, item) => (item.base === "gross-excluding-tax" ? sum + BigInt(item.rateBps) : sum),
+    0n,
+  );
+
+  const numerator = (target + tax + fixed) * 10000n - tax * taxExcludedRate;
   const lower = ceilDivide(numerator > errorBound ? numerator - errorBound : 0n, denominator);
   const upper = ceilDivide(numerator + errorBound, denominator);
   const start = lower > tax ? lower : tax;

@@ -1,0 +1,37 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  /** Site-root-relative path of the full calculator page this embed credits. */
+  toolHref: string;
+  toolName: string;
+}
+
+const { title, toolHref, toolName } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, follow" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+  </head>
+  <body class="min-h-[100dvh] px-4 pb-6">
+    <main id="main-content">
+      <h1 class="sr-only">{toolName}</h1>
+      <slot />
+    </main>
+    <p class="mt-6 text-center text-xs text-ink/60">
+      <a href={toolHref} target="_blank" rel="noopener" class="underline underline-offset-2 hover:text-navy">{toolName}</a> by MathMyRate. Estimates from official published rates.
+    </p>
+    <script>
+      document.querySelectorAll<HTMLButtonElement>("button[data-print]").forEach((button) => {
+        button.addEventListener("click", () => window.print());
+      });
+    </script>
+  </body>
+</html>

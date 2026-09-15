@@ -242,6 +242,8 @@ assumptions, exclusions, and inverse tests:
 
 ### P2.1 New calculators, one keyword each (M each)
 
+**Status: partly done 2026-09-15** (branch `feat/growth-calculators-guides`). Added the Freelance Retainer, Markup and Margin, and Salary to Hourly calculators, and the Square and Etsy fee calculators, each with the full content template. Square and Etsy rates were read from their official pricing, help, and policy pages on 2026-09-15. Shopify Payments was not built: its official pricing pages show no card rate, so no sourced rate exists to model. The engine now supports a fee charged on the amount before tax (Etsy's transaction fee). Fees with a minimum or a cap (Square ACH invoices, Etsy Offsite Ads) are recorded as blocked presets. Demand was not checked in Search Console or Keyword Planner, because the site has no domain or Search Console property yet.
+
 Add tools inside the niche so topical authority compounds. Verify demand in
 Search Console and Keyword Planner before building; do not publish a tool
 without the eight content sections. Candidates, grouped by hub:
@@ -274,12 +276,16 @@ Comparisons and hubs
 
 ### P2.2 Hub pages with real content (M)
 
+**Status: done 2026-09-15** (branch `feat/growth-calculators-guides`). `/fees/` (about 830 words) has a registry-driven table of every fee calculator's default rate, scenario count, and review date, plus a fee comparison at $10, $100, and $1,000. `/freelance/` (about 570 words) shows how the five calculators connect, with engine-computed examples. The freelance hub is below the 800-word target.
+
 - `/freelance/` and `/fees/` gain 800 to 1,200 words: who the tools are for,
   how they connect, and a summary table of every tool with its rate and
   review date. Hubs link to every child and every child links back in the
   breadcrumb and related block.
 
 ### P2.3 Guides that feed the calculators (M each)
+
+**Status: first three done 2026-09-15** (branch `feat/growth-calculators-guides`). `/guides/` lists "Markup vs Margin", "How to Compare a Salary With a Freelance Rate", and "How to Charge Enough to Cover Payment Processing Fees". Each guide computes its numbers with the engine, emits `Article` JSON-LD with the dates printed on the page, and links to two or more calculators. Calculator pages list the guides that name them, from `apps/web/src/data/guides.ts`.
 
 - Short, sourced guides that answer a question and hand off to a tool: "How
   to set a freelance hourly rate", "Stripe fees explained", "How Gumroad's
@@ -288,12 +294,16 @@ Comparisons and hubs
 
 ### P2.4 Links (ongoing)
 
+**Status: embed snippet done 2026-09-15** (branch `feat/growth-calculators-guides`). Each fee calculator has a noindex `/embed/<calculator>/` page with no header, footer, or pinned result bar, and a credit link. The copyable snippet appears on fee pages only when `PUBLIC_SITE_URL` is set, because it needs absolute URLs. Freelance calculators do not have embeds yet.
+
 - An "Embed this calculator" snippet (iframe with a credit link) on each
   tool. Free tools with embeds earn links from blogs and course sites.
 - List the exact-math and sourced-rules approach on the methodology page as a
   citable resource; that page is the one most likely to earn links.
 
 ### P2.5 Ads rollout (M)
+
+**Status: not started.** It depends on a deployed site with a domain, which is deferred. The site now has 13 calculator and comparison pages with full content, short of the 20-page gate below.
 
 - Only after P0.7 and P2.1 have at least 20 tool pages with full content.
 - Reserve fixed-height slots (one below the result panel, one after the

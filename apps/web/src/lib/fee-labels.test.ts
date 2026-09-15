@@ -51,3 +51,13 @@ describe("formatCombinedRate", () => {
     expect(formatCombinedRate(preset.components)).toBe(label);
   });
 });
+
+describe("formatCombinedRate with fees on different amounts", () => {
+  it("lists a fee charged before tax separately instead of adding it", () => {
+    const preset = getFeePreset("etsy-us-order-with-listing-fee");
+
+    if (!preset) throw new Error("The Etsy preset is missing.");
+
+    expect(formatCombinedRate(preset.components)).toBe("6.5% plus 3% + 25¢ plus 20¢");
+  });
+});

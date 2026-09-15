@@ -83,6 +83,16 @@ const expectedFees = new Map([
   ["lemon-squeezy-us-international-card", 700n], // 500 + 50 + 150
   ["lemon-squeezy-us-paypal", 700n], // 500 + 50 + 150
   ["lemon-squeezy-us-subscription", 600n], // 500 + 50 + 0.5% = 50
+  ["square-us-free-in-person-card", 275n], // 2.6% = 260, + 15
+  ["square-us-plus-in-person-card", 265n], // 2.5% = 250, + 15
+  ["square-us-premium-in-person-card", 255n], // 2.4% = 240, + 15
+  ["square-us-free-online-card", 360n], // 3.3% = 330, + 30
+  ["square-us-paid-plan-online-card", 320n], // 2.9% = 290, + 30
+  ["square-us-manual-or-card-on-file", 365n], // 3.5% = 350, + 15
+  ["square-us-free-in-person-international-card", 425n], // 260 + 15 + 1.5% = 150
+  ["square-us-afterpay", 630n], // 6% = 600, + 30
+  ["etsy-us-order-with-listing-fee", 995n], // 6.5% = 650, + 3% = 300, + 25, + 20
+  ["etsy-us-order-fees-only", 975n], // 650 + 300 + 25
 ]);
 
 for (const preset of feePresets) {
@@ -169,4 +179,32 @@ test("PayPal's international Checkout fee is the domestic fee plus 1.50%", () =>
   // $250.00: domestic 3.49% is 872.5, rounded to 873, + 49 = 922; the add-on is 1.50% = 375.
   assert.equal(calculateFees({ preset: domestic, grossCents: 25_000n }).feeCents, 922n);
   assert.equal(calculateFees({ preset: international, grossCents: 25_000n }).feeCents, 1_297n);
+});
+
+test("Square takes its fee from the total, including tax", () => {
+  const preset = getFeePreset("square-us-free-in-person-card");
+
+  assert.ok(preset);
+
+  // $108.00 including $8.00 tax: 2.6% of 10,800 is 280.8, rounded to 281, + 15 = 296; 10,800 - 296 - 800 = 9,704.
+  const sale = calculateFees({ preset, grossCents: 10_800n, taxCents: 800n });
+
+  assert.equal(sale.feeCents, 296n);
+  assert.equal(sale.sellerProceedsCents, 9_704n);
+});
+
+test("Etsy's transaction fee leaves out sales tax while its processing fee includes it", () => {
+  const preset = getFeePreset("etsy-us-order-with-listing-fee");
+
+  assert.ok(preset);
+
+  // $54.00 order with $4.00 tax: 6.5% of 5,000 = 325; 3% of 5,400 = 162, + 25 = 187; listing 20.
+  const order = calculateFees({ preset, grossCents: 5_400n, taxCents: 400n });
+
+  assert.deepEqual(
+    order.lineItems.map((item) => item.feeCents),
+    [325n, 187n, 20n],
+  );
+  assert.equal(order.feeCents, 532n);
+  assert.equal(order.sellerProceedsCents, 4_468n);
 });

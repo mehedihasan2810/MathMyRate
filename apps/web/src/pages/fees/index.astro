@@ -1,24 +1,91 @@
 ---
+import { calculateFees, getFeePreset } from "@MathMyRate/calculators";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
-import { hubBreadcrumbs } from "../../data/tools";
+import DataTable from "../../components/DataTable.astro";
+import { feeCalculators } from "../../data/fee-calculators";
+import { hubBreadcrumbs, toolsInHub } from "../../data/tools";
 import Layout from "../../layouts/Layout.astro";
+import { formatReadableDate } from "../../lib/dates";
+import { formatCombinedRate } from "../../lib/fee-labels";
+import { requireOfficialPreset } from "../../lib/fee-tables";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
 
 const breadcrumbs = hubBreadcrumbs("fees");
+
+const feeTools = toolsInHub("fees");
+
+const summaryRows = feeCalculators.map((config) => {
+  const [first] = config.scenarios;
+
+  if (!first) throw new Error(`${config.provider} has no fee scenarios.`);
+
+  const preset = requireOfficialPreset(first.presetId);
+
+  return [config.provider, first.label, formatCombinedRate(preset.components), String(config.scenarios.length), preset.checkedOn ? formatReadableDate(preset.checkedOn) : "Not reviewed"];
+});
+
+const smallSaleRows = feeCalculators.map((config) => {
+  const [first] = config.scenarios;
+  const preset = first ? getFeePreset(first.presetId) : undefined;
+
+  if (!first || !preset) throw new Error(`${config.provider} has no usable fee scenario.`);
+
+  const at = (grossCents: bigint) => formatUsdGrouped(calculateFees({ preset, grossCents }).feeCents);
+
+  return [`${config.provider}: ${first.label}`, at(1_000n), at(10_000n), at(100_000n)];
+});
 ---
-<Layout title="Stripe, PayPal & Gumroad Fee Calculators | MathMyRate" description="Free fee calculators for Stripe, PayPal, Gumroad, and Lemon Squeezy: see what each takes from a sale and what you keep, from published pricing." ogImage="/og/fees.png" breadcrumbs={breadcrumbs}>
+<Layout title="Stripe, PayPal, Square & Etsy Fee Calculators | MathMyRate" description="Free fee calculators for Stripe, PayPal, Square, Etsy, Gumroad, and Lemon Squeezy: see what each takes from a sale and what you keep, from official pricing." ogImage="/og/fees.png" breadcrumbs={breadcrumbs}>
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-10 md:px-8 md:py-16">
     <Breadcrumbs items={breadcrumbs} />
     <h1 class="display mt-4 max-w-3xl text-4xl font-bold leading-tight md:text-5xl">Payment Fee Calculators</h1>
     <p class="mt-4 max-w-2xl text-xl font-semibold text-ink">Know what a sale really pays you.</p>
-    <p class="mt-3 max-w-2xl text-lg leading-relaxed text-ink/70">Fee tools are built only for documented, sourced scenarios. When a case is unsupported, the tool says so plainly instead of guessing a rate.</p>
-    <div class="mt-12 grid gap-4 md:grid-cols-2">
-      <a href="/fees/stripe-fee-calculator/" class="rounded-[1.5rem] border border-line bg-[#fafbfd] p-8 transition-transform hover:-translate-y-1"><p class="eyebrow">01 / Card processing</p><h2 class="display mt-5 text-3xl font-bold">Stripe Fee Calculator</h2><p class="mt-4 text-ink/65">US online card pricing for domestic, international, and manually entered cards: the fee, what you keep, and what to charge.</p><span class="mt-8 block font-semibold text-navy">Open calculator →</span></a>
-      <a href="/fees/paypal-fee-calculator/" class="rounded-[1.5rem] border border-line bg-[#fafbfd] p-8 transition-transform hover:-translate-y-1"><p class="eyebrow">02 / Wallet checkout</p><h2 class="display mt-5 text-3xl font-bold">PayPal Fee Calculator</h2><p class="mt-4 text-ink/65">PayPal Checkout, card, invoice, international, and QR code payments: the fee, what you keep, and what to charge.</p><span class="mt-8 block font-semibold text-navy">Open calculator →</span></a>
-      <a href="/fees/gumroad-fee-calculator/" class="rounded-[1.5rem] border border-line bg-[#fafbfd] p-8 transition-transform hover:-translate-y-1"><p class="eyebrow">03 / Digital marketplace</p><h2 class="display mt-5 text-3xl font-bold">Gumroad Fee Calculator</h2><p class="mt-4 text-ink/65">Direct sales versus Discover marketplace sales, with the documented volume threshold.</p><span class="mt-8 block font-semibold text-navy">Open calculator →</span></a>
-      <a href="/fees/lemon-squeezy-fee-calculator/" class="rounded-[1.5rem] border border-line bg-[#fafbfd] p-8 transition-transform hover:-translate-y-1"><p class="eyebrow">04 / Digital products</p><h2 class="display mt-5 text-3xl font-bold">Lemon Squeezy Fee Calculator</h2><p class="mt-4 text-ink/65">Order fees on the order total, including tax, for US, international, PayPal, and subscription orders.</p><span class="mt-8 block font-semibold text-navy">Open calculator →</span></a>
-      <a href="/fees/stripe-vs-paypal-fees/" class="rounded-[1.5rem] border border-line bg-[#fafbfd] p-8 transition-transform hover:-translate-y-1"><p class="eyebrow">Compare / Payments</p><h2 class="display mt-5 text-3xl font-bold">Stripe vs PayPal Fees</h2><p class="mt-4 text-ink/65">Price the same sale under Stripe's and PayPal's published US rates, side by side.</p><span class="mt-8 block font-semibold text-navy">Compare fees →</span></a>
-      <a href="/fees/gumroad-vs-lemon-squeezy-fees/" class="rounded-[1.5rem] border border-line bg-[#fafbfd] p-8 transition-transform hover:-translate-y-1"><p class="eyebrow">Compare / Digital products</p><h2 class="display mt-5 text-3xl font-bold">Gumroad vs Lemon Squeezy Fees</h2><p class="mt-4 text-ink/65">See what each platform keeps from the same digital product sale.</p><span class="mt-8 block font-semibold text-navy">Compare fees →</span></a>
-    </div>
-    <section class="mt-14 max-w-3xl border-t border-line pt-10"><h2 class="display text-3xl font-bold">Sourced scenarios only</h2><p class="mt-4 leading-relaxed text-ink/70">Each fee tool is limited to the account market, currency, product, and channel its official source documents. Anything outside that scope is labeled unsupported, never filled in with a guessed rate.</p></section>
+    <p class="mt-3 max-w-2xl text-lg leading-relaxed text-ink/70">Each calculator uses a provider's official published rates for the scenarios it documents. When a case is not documented well enough to estimate, the calculator says so instead of guessing.</p>
+    <ul class="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {feeTools.map((tool) => (
+        <li>
+          <a href={tool.href} class="block h-full rounded-[1.5rem] border border-line bg-[#fafbfd] p-7 transition-transform hover:-translate-y-1">
+            <h2 class="display text-2xl font-bold">{tool.name}</h2>
+            <p class="mt-3 text-ink/65">{tool.summary}</p>
+            <span class="mt-6 block font-semibold text-navy">Open →</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <article class="guide mt-16 max-w-3xl border-t border-line pt-4">
+      <h2>Every fee calculator at a glance</h2>
+      <p>The first scenario each calculator opens with, its published rate, how many scenarios it covers, and when its official source was last reviewed.</p>
+      <DataTable caption="Fee calculators, headline rates, and source review dates" headers={["Provider", "Default scenario", "Rate", "Scenarios", "Source reviewed"]} rows={summaryRows} />
+
+      <h2>Who these calculators are for</h2>
+      <p>They are for anyone who gets paid through a payment processor or marketplace and wants to know the real number: freelancers invoicing clients by card, makers selling on Etsy, shops taking payments in person with Square, and creators selling digital products on Gumroad or Lemon Squeezy. Each one answers the same three questions: what the provider keeps from a sale, what reaches you, and what to charge to keep a set amount.</p>
+
+      <h2>Choosing the right calculator</h2>
+      <ul>
+        <li><strong>Card processors</strong> charge a percentage and a fixed amount per payment. Use <a href="/fees/stripe-fee-calculator/">Stripe</a> or <a href="/fees/paypal-fee-calculator/">PayPal</a> for online payments and invoices, and <a href="/fees/square-fee-calculator/">Square</a> for in-person payments or when your plan matters.</li>
+        <li><strong>Marketplaces</strong> add their own fees on top of payment processing. The <a href="/fees/etsy-fee-calculator/">Etsy calculator</a> combines Etsy's transaction, processing, and listing fees, and handles sales tax the way Etsy does.</li>
+        <li><strong>Digital product platforms</strong> handle checkout for you and take a larger share. <a href="/fees/gumroad-fee-calculator/">Gumroad</a> separates direct sales from Discover marketplace sales, and <a href="/fees/lemon-squeezy-fee-calculator/">Lemon Squeezy</a> charges on the order total including tax.</li>
+        <li><strong>Deciding between two?</strong> <a href="/fees/stripe-vs-paypal-fees/">Stripe vs PayPal</a> and <a href="/fees/gumroad-vs-lemon-squeezy-fees/">Gumroad vs Lemon Squeezy</a> price the same sale under both.</li>
+      </ul>
+
+      <h2>What every calculator does</h2>
+      <ul>
+        <li><strong>Fee and take-home.</strong> Enter what the customer paid to see the fee, broken into its parts, and what you keep.</li>
+        <li><strong>Keep a target.</strong> Enter what you want to receive to find the smallest price that leaves you that amount.</li>
+        <li><strong>Sales tax.</strong> Where a provider charges its fee on an amount that includes tax, enter the tax so it is not counted as yours.</li>
+        <li><strong>Monthly totals.</strong> Enter how many same-size sales you make to see fees per month and per year.</li>
+      </ul>
+
+      <h2>Why small sales lose a bigger share</h2>
+      <p>Most providers add a fixed charge to every payment, so the same fee structure takes a larger share of a $10 sale than of a $1,000 sale. The table shows each calculator's default scenario at three amounts, with no sales tax.</p>
+      <DataTable caption="Fee on a $10, $100, and $1,000 sale in each default scenario" headers={["Provider and scenario", "$10 sale", "$100 sale", "$1,000 sale"]} rows={smallSaleRows} />
+      <p>If your average sale is small, the fixed part matters more than the percentage when you compare providers.</p>
+
+      <h2>How the rates are sourced</h2>
+      <p>Every rate comes from the provider's own pricing page, help center, or policy, and each calculator lists its sources and the date they were reviewed. A scenario is included only when its official source documents it clearly. Fees with minimums, caps, or rates that depend on history the calculator cannot know, such as Etsy's Offsite Ads or Square's ACH invoice fee, are listed as unsupported instead of estimated. Changes are recorded in the <a href="/changelog/">changelog</a>, and the full approach is on <a href="/methodology/">how the numbers are made</a>.</p>
+
+      <h2>Pricing to cover fees</h2>
+      <p>If you want to pass fees on in your price, read <a href="/guides/how-to-cover-payment-processing-fees/">how to charge enough to cover payment processing fees</a>. It explains why adding the fee to the price falls a few cents short, and what to charge instead.</p>
+    </article>
   </main>
 </Layout>

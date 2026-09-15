@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 
+import { guides } from "../data/guides";
 import { hubs, infoLinks, tools } from "../data/tools";
 
 const lastModified = new Map(__SITEMAP_LASTMOD__);
@@ -9,6 +10,7 @@ const publicRoutes = [
   ...hubs.map((hub) => hub.href),
   ...tools.map((tool) => tool.href),
   ...infoLinks.map((link) => link.href),
+  ...guides.map((guide) => guide.href),
 ];
 
 /**

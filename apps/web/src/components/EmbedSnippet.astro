@@ -1,0 +1,46 @@
+---
+import { findTool, type ToolId } from "../data/tools";
+import { embedSnippet } from "../lib/embed";
+
+interface Props {
+  toolId: ToolId;
+}
+
+const tool = findTool(Astro.props.toolId);
+
+// An embed code needs absolute addresses, so it only appears once a production site is configured.
+const snippet = Astro.site ? embedSnippet(Astro.site, tool) : null;
+---
+
+{snippet ? (
+  <section aria-labelledby="embed-heading">
+    <h2 id="embed-heading">Embed this calculator</h2>
+    <p>Add this free calculator to your own site or course page. Paste the code below into your HTML; the calculator runs entirely in your visitors' browsers and collects nothing. Increase the height if your page is narrow.</p>
+    <label for="embed-code" class="mt-4 block text-sm font-semibold text-ink">Embed code</label>
+    <textarea id="embed-code" readonly rows="5" class="mt-2 w-full rounded-lg border border-line bg-white p-3 font-mono text-xs text-ink">{snippet}</textarea>
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button type="button" id="copy-embed" class="rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-ink">Copy embed code</button>
+      <span id="copy-embed-message" class="text-sm text-ink/60" aria-live="polite"></span>
+    </div>
+  </section>
+) : null}
+
+<script>
+  const button = document.getElementById("copy-embed");
+
+  const code = document.getElementById("embed-code");
+
+  const message = document.getElementById("copy-embed-message");
+
+  if (button && code instanceof HTMLTextAreaElement && message) {
+    button.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(code.value);
+        message.textContent = "Embed code copied.";
+      } catch {
+        code.select();
+        message.textContent = "Copy was unavailable. The code is selected; copy it manually.";
+      }
+    });
+  }
+</script>
