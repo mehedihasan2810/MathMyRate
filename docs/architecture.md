@@ -132,8 +132,10 @@ preserves the static example on load, supports reset/copy/print and local
 hourly-rate transfer, and never ships mock financial results. Reconsider a
 framework island only if a later interaction has a demonstrated need.
 
-The current public information architecture links the home page to the
-freelance tools and the Stripe fee calculator. There is no account navigation.
+The current public information architecture makes the home page a searchable
+directory of every calculator: a client-side search input filters six tool
+cards (both freelance tools and the four fee calculators), each opening through
+its own button link. There is no account navigation.
 Calculator results stay in the browser; the transfer uses local storage rather
 than a query string, and the UI makes no calculator fetch, XHR, or beacon calls.
 
