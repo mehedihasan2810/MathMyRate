@@ -4,7 +4,9 @@ export type FeeComparisonId =
   | "stripe-vs-paypal"
   | "gumroad-vs-lemon-squeezy"
   | "digital-products"
-  | "patreon-vs-kofi";
+  | "patreon-vs-kofi"
+  | "substack-vs-patreon"
+  | "payhip-vs-gumroad";
 
 export interface ComparisonOption {
   readonly id: string;
@@ -120,6 +122,13 @@ export const feeComparisons: readonly FeeComparisonConfig[] = [
         href: "/fees/gumroad-fee-calculator/",
       },
       {
+        id: "payhip",
+        presetId: "payhip-us-free-stripe-card",
+        label: "Payhip Free Forever plan, card through Stripe",
+        shortLabel: "Payhip",
+        href: "/fees/payhip-fee-calculator/",
+      },
+      {
         id: "etsy",
         presetId: "etsy-us-order-with-listing-fee",
         label: "Etsy, order with listing fee",
@@ -173,6 +182,74 @@ export const feeComparisons: readonly FeeComparisonConfig[] = [
         label: "Ko-fi, no Ko-fi fee, card through Stripe",
         shortLabel: "Ko-fi, no fee",
         href: "/fees/ko-fi-fee-calculator/",
+      },
+    ],
+  },
+  {
+    id: "substack-vs-patreon",
+    caption: "Substack and Patreon fees on the same web payment, USD, no tax",
+    options: [
+      {
+        id: "substack-us",
+        presetId: "substack-us-web-domestic-card",
+        label: "Substack, US card",
+        shortLabel: "Substack",
+        href: "/fees/substack-fee-calculator/",
+      },
+      {
+        id: "patreon-web",
+        presetId: "patreon-us-standard-web",
+        label: "Patreon, standard plan on the web",
+        shortLabel: "Patreon",
+        href: "/fees/patreon-fee-calculator/",
+      },
+      {
+        id: "substack-international",
+        presetId: "substack-us-web-international-card",
+        label: "Substack, international card in USD",
+        shortLabel: "Substack, international card",
+        href: "/fees/substack-fee-calculator/",
+      },
+    ],
+  },
+  {
+    id: "payhip-vs-gumroad",
+    caption: "Payhip and Gumroad fees on the same card sale, USD, no tax",
+    options: [
+      {
+        id: "payhip-free",
+        presetId: "payhip-us-free-stripe-card",
+        label: "Payhip, Free Forever plan",
+        shortLabel: "Payhip Free",
+        href: "/fees/payhip-fee-calculator/",
+      },
+      {
+        id: "payhip-plus",
+        presetId: "payhip-us-plus-stripe-card",
+        label: "Payhip, Plus plan (plus $29 a month)",
+        shortLabel: "Payhip Plus",
+        href: "/fees/payhip-fee-calculator/",
+      },
+      {
+        id: "payhip-pro",
+        presetId: "payhip-us-pro-stripe-card",
+        label: "Payhip, Pro plan (plus $99 a month)",
+        shortLabel: "Payhip Pro",
+        href: "/fees/payhip-fee-calculator/",
+      },
+      {
+        id: "gumroad-direct",
+        presetId: "gumroad-us-direct-card",
+        label: "Gumroad, direct sale",
+        shortLabel: "Gumroad direct",
+        href: "/fees/gumroad-fee-calculator/",
+      },
+      {
+        id: "gumroad-discover",
+        presetId: "gumroad-us-discover",
+        label: "Gumroad, Discover sale",
+        shortLabel: "Gumroad Discover",
+        href: "/fees/gumroad-fee-calculator/",
       },
     ],
   },

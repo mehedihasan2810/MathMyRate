@@ -3,12 +3,16 @@ import { test } from "vitest";
 
 import {
   analyzePrice,
+  calculateEarlyPaymentDiscount,
   calculateRetainer,
   calculateServiceFee,
+  changeRateTo,
   convertPay,
   earningsForTarget,
+  PaymentTermsError,
   priceFromMargin,
   priceFromMarkup,
+  raiseRateByPercent,
 } from "./pricing.ts";
 
 test("a 50% markup and a 50% margin give different prices", () => {
@@ -213,4 +217,126 @@ test("earnings for a target are the least that still reach it", () => {
       }
     }
   }
+});
+
+test("2/10 net 30 gives a $20 discount on $1,000 and costs 37.24% a year to skip", () => {
+  const result = calculateEarlyPaymentDiscount({
+    invoiceCents: 100_000n,
+    discountBps: 200,
+    discountDays: 10,
+    netDays: 30,
+  });
+
+  assert.equal(result.discountCents, 2_000n);
+  assert.equal(result.discountedTotalCents, 98_000n);
+  assert.equal(result.daysEarlier, 20);
+  // 2 ÷ 98 × 365 ÷ 20 = 37.244%.
+  assert.equal(result.annualizedCostBps, 3_724n);
+});
+
+test("early payment discounts round half up to the cent", () => {
+  const terms = { discountDays: 10, netDays: 30 };
+
+  // 1 ÷ 99 × 365 ÷ 20 = 18.434%.
+  assert.equal(
+    calculateEarlyPaymentDiscount({ invoiceCents: 100_000n, discountBps: 100, ...terms })
+      .annualizedCostBps,
+    1_843n,
+  );
+  // 2% of $999.99 is 1,999.98 cents.
+  assert.equal(
+    calculateEarlyPaymentDiscount({ invoiceCents: 99_999n, discountBps: 200, ...terms })
+      .discountCents,
+    2_000n,
+  );
+  // 2% of $0.25 is half a cent.
+  assert.equal(
+    calculateEarlyPaymentDiscount({ invoiceCents: 25n, discountBps: 200, ...terms }).discountCents,
+    1n,
+  );
+});
+
+test("a discount period that does not end before the due date is refused", () => {
+  assert.throws(
+    () =>
+      calculateEarlyPaymentDiscount({
+        invoiceCents: 100_000n,
+        discountBps: 200,
+        discountDays: 30,
+        netDays: 30,
+      }),
+    PaymentTermsError,
+  );
+  assert.throws(() =>
+    calculateEarlyPaymentDiscount({
+      invoiceCents: 100_000n,
+      discountBps: 10_000,
+      discountDays: 10,
+      netDays: 30,
+    }),
+  );
+});
+
+test("a 10% raise from $80 over 100 hours adds $800 a month", () => {
+  const result = raiseRateByPercent({
+    currentRateCents: 8_000n,
+    increaseBps: 1_000,
+    billableMinutesPerMonth: 6_000,
+  });
+
+  assert.equal(result.newRateCents, 8_800n);
+  assert.equal(result.changePerHourCents, 800n);
+  assert.equal(result.changeBps, 1_000n);
+  assert.equal(result.monthlyBeforeCents, 800_000n);
+  assert.equal(result.monthlyAfterCents, 880_000n);
+  assert.equal(result.monthlyChangeCents, 80_000n);
+  assert.equal(result.yearlyChangeCents, 960_000n);
+  // $8 ÷ $88 = 9.0909%, rounded down.
+  assert.equal(result.hoursLossShareBps, 909n);
+  // $8,000 ÷ $88 = 90.909 hours = 5,454.5 minutes, rounded up.
+  assert.equal(result.minutesForSameRevenue, 5_455n);
+});
+
+test("a percentage raise rounds the new rate up to the cent", () => {
+  // $75.55 × 1.07 = $80.8385.
+  const result = raiseRateByPercent({
+    currentRateCents: 7_555n,
+    increaseBps: 700,
+    billableMinutesPerMonth: 60,
+  });
+
+  assert.equal(result.newRateCents, 8_084n);
+});
+
+test("a lower new rate shows a negative change and no hours to spare", () => {
+  const result = changeRateTo({
+    currentRateCents: 10_000n,
+    newRateCents: 9_000n,
+    billableMinutesPerMonth: 3_000,
+  });
+
+  assert.equal(result.changeBps, -1_000n);
+  // 50 hours: $5,000 before, $4,500 after.
+  assert.equal(result.monthlyChangeCents, -50_000n);
+  assert.equal(result.hoursLossShareBps, null);
+  // $5,000 ÷ $90 = 55.56 hours = 3,333.3 minutes, rounded up.
+  assert.equal(result.minutesForSameRevenue, 3_334n);
+  assert.equal(
+    changeRateTo({ currentRateCents: 8_000n, newRateCents: 0n, billableMinutesPerMonth: 60 })
+      .minutesForSameRevenue,
+    null,
+  );
+});
+
+test("monthly revenue rounds half up for part-hour totals", () => {
+  // $80.84 × 90.5 hours = $7,316.02.
+  const result = changeRateTo({
+    currentRateCents: 8_084n,
+    newRateCents: 8_084n,
+    billableMinutesPerMonth: 5_430,
+  });
+
+  assert.equal(result.monthlyBeforeCents, 731_602n);
+  assert.equal(result.monthlyChangeCents, 0n);
+  assert.equal(result.hoursLossShareBps, null);
 });

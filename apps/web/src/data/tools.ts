@@ -12,6 +12,8 @@ export type ToolId =
   | "retainer"
   | "markup-margin"
   | "salary-to-hourly"
+  | "early-payment-discount"
+  | "rate-increase"
   | "stripe-fees"
   | "paypal-fees"
   | "square-fees"
@@ -31,7 +33,9 @@ export type ToolId =
   | "gumroad-vs-lemon-squeezy"
   | "digital-product-fees"
   | "upwork-vs-fiverr"
-  | "patreon-vs-kofi";
+  | "patreon-vs-kofi"
+  | "substack-vs-patreon"
+  | "payhip-vs-gumroad";
 
 export interface Crumb {
   readonly name: string;
@@ -107,6 +111,28 @@ export const tools: readonly Tool[] = [
     menuLabel: "Salary to hourly",
     summary: "Convert a salary or wage into hourly, daily, weekly, monthly, and yearly pay.",
     searchTerms: "salary hourly wage annual monthly weekly biweekly pay convert paycheck job offer",
+  },
+  {
+    id: "early-payment-discount",
+    hub: "freelance",
+    href: "/freelance/early-payment-discount-calculator/",
+    name: "Early Payment Discount Calculator",
+    menuLabel: "Early payment discount",
+    summary:
+      "What terms like 2/10 net 30 cost you, and the yearly rate a client gives up by paying late.",
+    searchTerms:
+      "early payment discount 2/10 net 30 invoice payment terms prompt payment cash discount annualized cost",
+  },
+  {
+    id: "rate-increase",
+    hub: "freelance",
+    href: "/freelance/rate-increase-calculator/",
+    name: "Rate Increase Calculator",
+    menuLabel: "Rate increase",
+    summary:
+      "What a higher hourly rate adds each month and year, and how many hours you could lose.",
+    searchTerms:
+      "raise rates rate increase hourly rate price increase percentage freelancer clients revenue",
   },
   {
     id: "stripe-fees",
@@ -307,6 +333,27 @@ export const tools: readonly Tool[] = [
     summary: "Compare what Patreon and Ko-fi keep from the same membership or tip, side by side.",
     searchTerms:
       "patreon ko-fi kofi compare comparison creator membership tips fees which is cheaper gold",
+  },
+  {
+    id: "substack-vs-patreon",
+    hub: "fees",
+    href: "/fees/substack-vs-patreon-fees/",
+    name: "Substack vs Patreon Fees",
+    menuLabel: "Substack vs Patreon",
+    summary: "Substack's and Patreon's fees on the same subscription or membership payment.",
+    searchTerms:
+      "substack patreon compare comparison newsletter paid subscription membership writer fees which is cheaper",
+  },
+  {
+    id: "payhip-vs-gumroad",
+    hub: "fees",
+    href: "/fees/payhip-vs-gumroad-fees/",
+    name: "Payhip vs Gumroad Fees",
+    menuLabel: "Payhip vs Gumroad",
+    summary:
+      "Payhip's plans and Gumroad's direct and Discover fees on the same digital product sale.",
+    searchTerms:
+      "payhip gumroad compare comparison digital products ebook course fees which is cheaper discover plus pro",
   },
 ];
 

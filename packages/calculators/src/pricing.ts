@@ -264,3 +264,151 @@ export function earningsForTarget(input: {
 
   throw new RangeError("No earnings reach the target");
 }
+
+/* --------------------------- Early payment discount -------------------------- */
+
+const EarlyPaymentInput = Schema.Struct({
+  invoiceCents: Cents,
+  discountBps: Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 9_999 })),
+  discountDays: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 364 })),
+  netDays: Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 365 })),
+});
+
+export type EarlyPaymentInput = typeof EarlyPaymentInput.Type;
+
+/** Payment terms whose discount period does not end before the net due date. */
+export class PaymentTermsError extends RangeError {
+  constructor() {
+    super("The discount period must end before the net due date.");
+    this.name = "PaymentTermsError";
+  }
+}
+
+/**
+ * Terms such as 2/10 net 30: a discount for paying within the discount period,
+ * or the full invoice by the net due date. The discount is rounded half up to
+ * the cent. The annualized cost is the simple yearly rate of the discount given
+ * up by paying on the due date instead, d ÷ (1 − d) × 365 ÷ days, in basis
+ * points rounded half up.
+ */
+export interface EarlyPaymentResult {
+  readonly invoiceCents: bigint;
+  readonly discountCents: bigint;
+  readonly discountedTotalCents: bigint;
+  readonly daysEarlier: number;
+  readonly annualizedCostBps: bigint;
+}
+
+export function calculateEarlyPaymentDiscount(input: EarlyPaymentInput): EarlyPaymentResult {
+  const values = Schema.decodeSync(EarlyPaymentInput)(input);
+
+  if (values.discountDays >= values.netDays) throw new PaymentTermsError();
+
+  const discountBps = BigInt(values.discountBps);
+  const discountCents = (values.invoiceCents * discountBps + 5_000n) / BASIS_POINTS;
+  const daysEarlier = values.netDays - values.discountDays;
+
+  return {
+    invoiceCents: values.invoiceCents,
+    discountCents,
+    discountedTotalCents: values.invoiceCents - discountCents,
+    daysEarlier,
+    annualizedCostBps: roundHalfAwayFromZero(
+      discountBps * 365n * BASIS_POINTS,
+      (BASIS_POINTS - discountBps) * BigInt(daysEarlier),
+    ),
+  };
+}
+
+/* -------------------------------- Rate change ------------------------------- */
+
+const BillableMinutes = Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 100_000 }));
+
+const RaiseByPercentInput = Schema.Struct({
+  currentRateCents: Cents,
+  increaseBps: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 1_000_000 })),
+  billableMinutesPerMonth: BillableMinutes,
+});
+
+const ChangeRateInput = Schema.Struct({
+  currentRateCents: Cents,
+  newRateCents: Cents,
+  billableMinutesPerMonth: BillableMinutes,
+});
+
+/**
+ * An hourly rate change over one month of billable time. Monthly revenue is
+ * rounded half up to the cent, and the yearly change is twelve such months.
+ * The share of hours that could be lost is (new − current) ÷ new, rounded down
+ * so losing that share still earns at least as much; it is null unless the rate
+ * rises. The minutes needed for the same revenue are rounded up.
+ */
+export interface RateChangeResult {
+  readonly currentRateCents: bigint;
+  readonly newRateCents: bigint;
+  readonly changePerHourCents: bigint;
+  readonly changeBps: bigint | null;
+  readonly monthlyBeforeCents: bigint;
+  readonly monthlyAfterCents: bigint;
+  readonly monthlyChangeCents: bigint;
+  readonly yearlyChangeCents: bigint;
+  readonly hoursLossShareBps: bigint | null;
+  readonly minutesForSameRevenue: bigint | null;
+}
+
+function rateChange(
+  currentRateCents: bigint,
+  newRateCents: bigint,
+  billableMinutes: number,
+): RateChangeResult {
+  const minutes = BigInt(billableMinutes);
+  const changePerHourCents = newRateCents - currentRateCents;
+  const monthlyBeforeCents = roundHalfAwayFromZero(currentRateCents * minutes, 60n);
+  const monthlyAfterCents = roundHalfAwayFromZero(newRateCents * minutes, 60n);
+  const monthlyChangeCents = monthlyAfterCents - monthlyBeforeCents;
+
+  return {
+    currentRateCents,
+    newRateCents,
+    changePerHourCents,
+    changeBps:
+      currentRateCents === 0n
+        ? null
+        : roundHalfAwayFromZero(changePerHourCents * BASIS_POINTS, currentRateCents),
+    monthlyBeforeCents,
+    monthlyAfterCents,
+    monthlyChangeCents,
+    yearlyChangeCents: monthlyChangeCents * 12n,
+    hoursLossShareBps:
+      changePerHourCents > 0n ? (changePerHourCents * BASIS_POINTS) / newRateCents : null,
+    minutesForSameRevenue:
+      newRateCents === 0n ? null : ceilDivide(currentRateCents * minutes, newRateCents),
+  };
+}
+
+/** Raise a rate by a percentage, rounded up to the cent so the raise is never below it. */
+export function raiseRateByPercent(input: {
+  currentRateCents: bigint;
+  increaseBps: number;
+  billableMinutesPerMonth: number;
+}): RateChangeResult {
+  const values = Schema.decodeSync(RaiseByPercentInput)(input);
+
+  const newRateCents = ceilDivide(
+    values.currentRateCents * (BASIS_POINTS + BigInt(values.increaseBps)),
+    BASIS_POINTS,
+  );
+
+  return rateChange(values.currentRateCents, newRateCents, values.billableMinutesPerMonth);
+}
+
+/** Compare a current rate with a chosen new rate, which may be lower. */
+export function changeRateTo(input: {
+  currentRateCents: bigint;
+  newRateCents: bigint;
+  billableMinutesPerMonth: number;
+}): RateChangeResult {
+  const values = Schema.decodeSync(ChangeRateInput)(input);
+
+  return rateChange(values.currentRateCents, values.newRateCents, values.billableMinutesPerMonth);
+}

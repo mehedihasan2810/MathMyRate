@@ -283,6 +283,22 @@ On branch `feat/creator-guides-more-platforms`, based on `49a749d`:
 - The fee calculator and the comparisons say when fees are at least as large
   as the payment.
 
+### Freelance invoice tools and more comparisons (2026-09-16)
+
+On branch `feat/creator-comparisons-freelance-tools`, based on `0e45b05`:
+
+- Early Payment Discount calculator: `calculateEarlyPaymentDiscount` gives the
+  discount (rounded half up), the early payment, the days saved, and the
+  simple annualized cost d ÷ (1 − d) × 365 ÷ days, refusing a discount period
+  that does not end before the net due date.
+- Rate Increase calculator: `raiseRateByPercent` (new rate rounded up) and
+  `changeRateTo` give monthly and yearly revenue change, the share of billable
+  hours that could be lost for the same revenue (rounded down), and the hours
+  needed at the new rate (rounded up).
+- `/fees/substack-vs-patreon-fees/` and `/fees/payhip-vs-gumroad-fees/` reuse
+  the sourced presets; Payhip joins `/fees/digital-product-platform-fees/`.
+- About, Methodology, Privacy, and Terms have descriptive titles.
+
 ### Infrastructure and deployment
 
 Alchemy remains the infrastructure owner for the existing Cloudflare Workers,
@@ -825,6 +841,51 @@ the published rates):
   sales count makes a fee embed 176 to 242 px taller, which scrolls inside the
   frame. The Substack, Payhip, and KDP pages do not scroll sideways.
 - No console errors on the tested pages.
+
+Local checks on 2026-09-16 for the early payment discount and rate increase
+calculators and the Substack vs Patreon and Payhip vs Gumroad comparisons
+(branch `feat/creator-comparisons-freelance-tools`, based on `0e45b05`; browser
+work on the preview build at `:4321`, in Chrome 153 over the DevTools protocol
+and in iOS Safari on the iPhone 17 simulator through Argent):
+
+| Check                                                      | Observed result                                                                                                           |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run lint`                                            | Passed with 0 findings                                                                                                    |
+| `pnpm run format:check`                                    | Passed                                                                                                                    |
+| `pnpm run check-types`                                     | Passed: 7 of 7 tasks; `astro check` 0 errors                                                                              |
+| `pnpm run test`                                            | Passed: 116 calculator tests (2/10 net 30, rounding, refused terms, raises, cuts, and part-hour months) and 110 web tests |
+| Guard build (`REQUIRE_SITE_URL=true`, no site)             | Failed as intended                                                                                                        |
+| Site build (`PUBLIC_SITE_URL=https://calculators.example`) | Passed; 68 pages; SEO audit 0 problems; 45 sitemap URLs with no embed pages                                               |
+| Preview build                                              | Passed; 68 pages                                                                                                          |
+
+Browser evidence (each value checked against an independent calculation):
+
+- Early payment discount: 2/10 net 30 on $1,000 pays $980.00 early, 20 days
+  sooner, at 37.24% a year; $999.99 gives a $20.00 discount; $0.25 gives
+  $0.01; $0.24 gives $0.00 with a note; 1/10 net 30 is 18.43%; 2/364 net 365
+  is 744.90%; a 0-day period reads "on the invoice date". A discount period
+  equal to the due date, a 0% or 100% discount, 2.555%, 0 or 366 days, "abc",
+  and an empty or zero invoice are field errors with the result cleared and
+  copy disabled.
+- Rate increase: 10% on $80 over 100 hours gives $88.00, $800.00 a month,
+  $9,600.00 a year, 9.09% (9.08 hours) that could be lost, and 90.92 hours for
+  today's revenue; 7% on $75.55 gives $80.84; 10,000% is accepted and
+  10,000.01% refused; 87.5 and 1,666.65 hours work, while 0, 0.01, and 1,667
+  hours are errors. Comparing $72 shows -$800.00 a month and the lower-rate
+  message; $80 says the rate does not change; $0 says no hours match today's
+  revenue. In iOS Safari the radio switch shows the new-rate field and typing
+  72 on the decimal keypad shows -$800.00.
+- Comparisons: $100 costs $13.90 on Substack, $13.20 on Patreon (lowest), and
+  $15.40 by international card; the page's payout break-even reads $35.72.
+  Payhip Free, Plus, and Pro pay $8.20, $5.20, and $3.20 against $13.70 for a
+  Gumroad direct sale and $30.00 on Discover, and 12 Plus sales at $25 cover
+  its price. $0.01 and $0.10 show the loss message. Payhip joins the digital
+  product comparison at $8.20.
+- The About, Methodology, Privacy, and Terms titles read in full; the new
+  tools appear in the menu and hubs; copy, reset, Enter, and arrow keys work;
+  pages and embeds do not scroll sideways at 360 px; the two embeds calculate
+  inside a page on another origin ($490.00 and $110.00) and fit their
+  suggested heights; no console errors.
 
 For every future status update, record:
 
