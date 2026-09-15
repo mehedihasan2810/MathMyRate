@@ -18,19 +18,18 @@ const fields = [
 ] as const;
 ---
 <Layout title="Freelance Hourly Rate Calculator | MathMyRate" description="Turn an annual take-home target into a practical floor rate." ogImage="/og/hourly-rate.png">
-  <main id="main-content" class="mx-auto max-w-6xl px-5 py-12 md:px-8 md:py-16">
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
     <p class="eyebrow">Freelance pricing / 01</p>
-    <h1 class="display mt-4 max-w-3xl text-5xl font-bold leading-none md:text-6xl">Build a rate with room to work.</h1>
-    <p class="mt-5 max-w-2xl text-lg leading-relaxed text-ink/70">A clear annual-capacity estimate with exact cents, named assumptions, and no hidden tax logic.</p>
-    <div class="mt-10 grid gap-8 lg:grid-cols-[1fr_.85fr]">
-      <form id="hourly-form" class="print-card rounded-[1.5rem] border border-line bg-[#faf8f1] p-6 shadow-[0_16px_45px_rgba(56,71,61,.08)] md:p-8" novalidate>
+    <h1 class="display mt-2 text-2xl font-bold md:text-3xl">Build a rate with room to work.</h1>
+    <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
+      <form id="hourly-form" class="print-card rounded-[1.5rem] border border-line bg-[#faf8f1] p-6 shadow-[0_16px_45px_rgba(56,71,61,.08)] md:p-8" novalidate onsubmit="return false">
         <div class="flex items-baseline justify-between"><h2 class="display text-2xl font-bold">Example working year</h2><span class="text-xs text-ink/50">USD / annual</span></div>
         <p class="mt-2 text-sm text-ink/60">Example defaults: $85,000 take-home, 46 weeks, and 65% billable time.</p>
         <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
         <div class="mt-6 grid gap-5 sm:grid-cols-2">
           {fields.map(([id, label, value, help]) => <label class="text-sm font-semibold">{label}<input id={id} data-field={id} aria-describedby={`${id}-help ${id}-error`} inputmode={["weeks","hoursWeek","hoursDay"].includes(id) ? "numeric" : "decimal"} value={value} class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" /><span id={`${id}-help`} class="mt-1 block text-xs font-normal text-ink/55">{help}</span><span id={`${id}-error`} class="field-error" role="alert"></span></label>)}
         </div>
-        <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="submit">Update rate</button><button id="hourly-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
+        <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="hourly-update">Update rate</button><button id="hourly-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
       </form>
       <aside aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-moss p-7 text-paper shadow-[0_16px_45px_rgba(56,71,61,.16)] md:p-9">
         <p class="eyebrow !text-[#c6d9c6]">Minimum sustainable rate</p><p id="hourly-result" class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.hourlyRateCents)}</p><p class="mt-1 text-paper/70">per hour before project-specific payment fees</p>
@@ -45,6 +44,7 @@ const fields = [
     import { calculateFreelanceRate } from "@MathMyRate/calculators";
     import {
       formatUsdGrouped,
+      focusProblemField,
       InputProblem,
       percentToBps,
       requireHtmlButton,
@@ -76,7 +76,7 @@ const fields = [
       requireHtmlButton("transfer-rate").disabled = true;
     }
 
-    function update(): void {
+    function update(focusProblem = false): void {
       try {
         const result = calculateFreelanceRate({
           annualTakeHomeCents: usdToCents(requireHtmlInput("takeHome").value, "takeHome"),
@@ -106,15 +106,19 @@ const fields = [
             : new InputProblem("billable", "Working capacity must be greater than zero.");
 
         setFieldState(form, problem);
+
+        if (focusProblem) focusProblemField(form, problem);
       }
     }
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      update();
+      update(true);
     });
 
-    form.querySelectorAll("input").forEach((element) => element.addEventListener("input", update));
+    requireHtmlButton("hourly-update").addEventListener("click", () => update(true));
+
+    form.querySelectorAll("input").forEach((element) => element.addEventListener("input", () => update()));
 
     requireHtmlButton("hourly-reset").addEventListener("click", () => {
       form.reset();

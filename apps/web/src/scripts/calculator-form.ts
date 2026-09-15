@@ -161,3 +161,13 @@ export function setFieldState(form: HTMLFormElement, problem?: InputProblem): vo
     summary.hidden = !problem;
   }
 }
+
+/** Scrolls the first invalid field into view and moves focus to it. */
+export function focusProblemField(form: HTMLFormElement, problem: InputProblem): void {
+  const field = form.querySelector<HTMLInputElement>(`[data-field="${problem.field}"]`);
+
+  if (field instanceof HTMLInputElement) {
+    field.scrollIntoView({ block: "center" });
+    field.focus({ preventScroll: true });
+  }
+}

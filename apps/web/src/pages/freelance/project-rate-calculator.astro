@@ -6,11 +6,12 @@ import { formatUsdGrouped } from "../../scripts/calculator-form";
 const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes: 1320, directExpensesCents: 18000n, contingencyBps: 1500 });
 ---
 <Layout title="Freelance Project Rate Calculator | MathMyRate" description="Turn scope, contingency, and expenses into a clear project quote." ogImage="/og/project-rate.png">
-  <main id="main-content" class="mx-auto max-w-6xl px-5 py-12 md:px-8 md:py-16">
-    <div class="max-w-2xl"><p class="eyebrow">Freelance pricing / 02</p><h1 class="display mt-4 text-5xl font-bold leading-none md:text-6xl">Give the scope a number.</h1><p class="mt-5 text-lg leading-relaxed text-ink/70">Build a receipt target from the work, the necessary admin time, a deliberate contingency, and costs you need reimbursed.</p></div>
-    <div id="transfer-notice" class="mt-8 hidden rounded-xl border border-[#aac7a9] bg-[#e2efe1] px-5 py-4 text-sm text-ink"><strong>Hourly rate brought across.</strong> This is stored only in this browser. Your annual tax reserve is already reflected in this rate and is not added again.</div>
-    <div class="mt-10 grid gap-8 lg:grid-cols-[1fr_.85fr]">
-      <form id="project-form" class="print-card rounded-[1.5rem] border border-line bg-[#faf8f1] p-6 shadow-[0_16px_45px_rgba(56,71,61,.08)] md:p-8" novalidate>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <p class="eyebrow">Freelance pricing / 02</p>
+    <h1 class="display mt-2 text-2xl font-bold md:text-3xl">Give the scope a number.</h1>
+    <div id="transfer-notice" class="mt-6 hidden rounded-xl border border-[#aac7a9] bg-[#e2efe1] px-5 py-4 text-sm text-ink"><strong>Hourly rate brought across.</strong> This is stored only in this browser. Your annual tax reserve is already reflected in this rate and is not added again.</div>
+    <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
+      <form id="project-form" class="print-card rounded-[1.5rem] border border-line bg-[#faf8f1] p-6 shadow-[0_16px_45px_rgba(56,71,61,.08)] md:p-8" novalidate onsubmit="return false">
         <div class="flex items-baseline justify-between"><h2 class="display text-2xl font-bold">Project ingredients</h2><span class="text-xs text-ink/50">USD</span></div>
         <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
         <div class="mt-7 grid gap-5 sm:grid-cols-2">
@@ -20,7 +21,7 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
           <label class="text-sm font-semibold">Contingency <div class="relative mt-2"><input id="contingency" data-field="contingency" aria-describedby="contingency-error" inputmode="decimal" value="15.00" class="w-full rounded-lg border border-line bg-paper px-3 py-3 pr-9 text-base font-medium" /><span class="absolute right-3 top-3.5 text-ink/50">%</span></div><span id="contingency-error" class="field-error" role="alert"></span></label>
           <label class="text-sm font-semibold">Direct project expenses <input id="directExpenses" data-field="directExpenses" aria-describedby="directExpenses-error" inputmode="decimal" value="180.00" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" /><span id="directExpenses-error" class="field-error" role="alert"></span></label>
         </div>
-        <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="submit">Update quote</button><button id="project-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
+        <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="project-update">Update quote</button><button id="project-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
       </form>
       <aside aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-[#934332] p-7 text-[#fff7eb] shadow-[0_16px_45px_rgba(128,69,47,.18)] md:p-9">
         <p class="eyebrow !text-[#fee1c9]">Target project receipts</p><p id="quote-result" class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.targetReceiptsCents)}</p><p class="mt-1 text-[#fff7eb]/80">before any project-specific payment processing fees</p>
@@ -36,6 +37,7 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
     import { calculateProjectRate } from "@MathMyRate/calculators";
     import {
       formatUsdGrouped,
+      focusProblemField,
       formatUsdInput,
       hoursToMinutes,
       InputProblem,
@@ -73,7 +75,7 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
       requireHtmlButton("copy-project").disabled = true;
     }
 
-    function calc(): bigint | null {
+    function calc(focusProblem = false): bigint | null {
       try {
         const delivery = hoursToMinutes(requireHtmlInput("deliveryHours").value, "deliveryHours");
         const admin = hoursToMinutes(requireHtmlInput("adminHours").value, "adminHours");
@@ -107,6 +109,8 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
           error instanceof InputProblem ? error : new InputProblem("projectHourly", "Check your inputs.");
 
         setFieldState(form, problem);
+
+        if (focusProblem) focusProblemField(form, problem);
         requireHtmlElement("project-message").textContent = "";
 
         return null;
@@ -130,11 +134,13 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      calc();
+      calc(true);
     });
 
+    requireHtmlButton("project-update").addEventListener("click", () => calc(true));
+
     for (const id of ["projectHourly", "deliveryHours", "adminHours", "contingency", "directExpenses"]) {
-      requireHtmlInput(id).addEventListener("input", calc);
+      requireHtmlInput(id).addEventListener("input", () => calc());
     }
 
     requireHtmlButton("project-reset").addEventListener("click", () => {

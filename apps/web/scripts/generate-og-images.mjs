@@ -56,7 +56,7 @@ const cards = [
     file: "home",
     eyebrow: "Price your independent work",
     accent: palette.moss,
-    title: "Price work that can carry your life.",
+    title: "Every calculator, one page.",
     description: "Practical, transparent rate planning for independent work.",
     path: "/",
   },

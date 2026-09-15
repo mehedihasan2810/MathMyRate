@@ -24,10 +24,11 @@ const fixedFee = formatUsdGrouped(BigInt(component.fixedCents));
 const reviewedOn = preset.checkedOn ?? "date not recorded";
 ---
 <Layout title="Stripe Fee Calculator | MathMyRate" description="Estimate Stripe's US standard online card fee, what you keep from a sale, and what to charge to net a target amount." ogImage="/og/stripe.png">
-  <main id="main-content" class="mx-auto max-w-6xl px-5 py-12 md:px-8 md:py-16">
-    <div class="max-w-2xl"><p class="eyebrow">Platform fees / 01</p><h1 class="display mt-4 text-5xl font-bold leading-none md:text-6xl">Know the fee before you quote.</h1><p class="mt-5 text-lg leading-relaxed text-ink/70">Stripe's US standard online card pricing, applied with exact cents: see what a sale costs, or work backwards from what you want to keep.</p></div>
-    <div class="mt-10 grid gap-8 lg:grid-cols-[1fr_.85fr]">
-      <form id="stripe-fee-form" class="print-card rounded-[1.5rem] border border-line bg-[#faf8f1] p-6 shadow-[0_16px_45px_rgba(56,71,61,.08)] md:p-8" novalidate>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <p class="eyebrow">Platform fees / 01</p>
+    <h1 class="display mt-2 text-2xl font-bold md:text-3xl">Know the fee before you quote.</h1>
+    <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
+      <form id="stripe-fee-form" class="print-card rounded-[1.5rem] border border-line bg-[#faf8f1] p-6 shadow-[0_16px_45px_rgba(56,71,61,.08)] md:p-8" novalidate onsubmit="return false">
         <div class="flex items-baseline justify-between"><h2 class="display text-2xl font-bold">Card sale details</h2><span class="text-xs text-ink/50">USD / per transaction</span></div>
         <p class="mt-2 text-sm text-ink/60">Supported scenario: US Stripe account, USD charge, standard online card payment, domestically issued card.</p>
         <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
@@ -42,7 +43,7 @@ const reviewedOn = preset.checkedOn ?? "date not recorded";
           <label class="text-sm font-semibold"><span id="amount-label">Amount the customer paid</span> <input id="amount" data-field="amount" aria-describedby="amount-help amount-error" inputmode="decimal" value="100.00" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" /><span id="amount-help" class="mt-1 block text-xs font-normal text-ink/55">The full amount processed, including any sales tax you collected.</span><span id="amount-error" class="field-error" role="alert"></span></label>
           <label class="text-sm font-semibold">Sales tax collected (optional) <input id="taxIncluded" data-field="taxIncluded" aria-describedby="taxIncluded-help taxIncluded-error" inputmode="decimal" value="" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" placeholder="0.00" /><span id="taxIncluded-help" class="mt-1 block text-xs font-normal text-ink/55">A pass-through you enter; this calculator never computes tax. The fee applies to the amount that includes it.</span><span id="taxIncluded-error" class="field-error" role="alert"></span></label>
         </div>
-        <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="submit">Update fees</button><button id="stripe-fee-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
+        <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="stripe-fee-update">Update fees</button><button id="stripe-fee-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
       </form>
       <aside aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-moss p-7 text-paper shadow-[0_16px_45px_rgba(56,71,61,.16)] md:p-9">
         <p class="eyebrow !text-[#c6d9c6]" id="primary-label">You keep from this sale</p>
@@ -79,6 +80,7 @@ const reviewedOn = preset.checkedOn ?? "date not recorded";
     } from "@MathMyRate/calculators";
     import {
       formatUsdGrouped,
+      focusProblemField,
       InputProblem,
       requireHtmlButton,
       requireHtmlElement,
@@ -148,7 +150,7 @@ const reviewedOn = preset.checkedOn ?? "date not recorded";
       return value.length === 0 ? 0n : usdToCents(value, "taxIncluded");
     }
 
-    function calc(activePreset: FeePreset): void {
+    function calc(activePreset: FeePreset, focusProblem = false): void {
       const mode = currentMode();
 
       try {
@@ -208,13 +210,17 @@ const reviewedOn = preset.checkedOn ?? "date not recorded";
               );
 
         setFieldState(form, problem);
+
+        if (focusProblem) focusProblemField(form, problem);
       }
     }
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      calc(preset);
+      calc(preset, true);
     });
+
+    requireHtmlButton("stripe-fee-update").addEventListener("click", () => calc(preset, true));
 
     form.querySelectorAll('input[name="feeMode"]').forEach((element) => {
       element.addEventListener("change", () => {

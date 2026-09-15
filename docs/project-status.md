@@ -253,6 +253,43 @@ built `dist/`, driven through Argent):
 | `pnpm run build:web`                           | Passed; fourteen static pages emitted with `og:site_name/title/description/type` on every page. Without a configured site, `og:url`/`og:image`/`twitter:*` stay gated exactly like the canonical link; a temporary `--site` verification build emitted absolute per-page `og:image` URLs (`/og/home.png`, `/og/stripe.png`, `/og/default.png`, …), after which the config was reverted and rebuilt.                                                                                                                      |
 | Browser end-to-end                             | Exercised on Astro dev `:4399` via a headless Chromium (CDP) browser with an isolated profile: home, hourly, project, PayPal, and the 404 render with no error overlay; all nine `/og/*.png` URLs return `200 image/png`; the hourly calculator recalculated `$85,000 → $103.63` to `$100,000 → $120.81` (hand-derived revenue `$144,486.31` matched); the hourly-to-project transfer prefilled `$120.81`; the PayPal page kept its `$100 → $3.98 / $96.02` engine result; the 404 page still serves its recovery cards. |
 
+Local checks on 2026-09-15 for the home tool grid, compact page heroes, and
+form-submit hardening (working tree on `main`, commit `2081c79`, no PR yet;
+browser work run against Astro dev `:4399` after a dev-server restart and
+against Astro preview `:4321`, driven through Argent):
+
+| Check                                                              | Observed result                                                                                                                           |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run lint`                                                    | Passed with 0 findings (Oxlint + anti-slop); the new home script needed `lint:fix` + `format` for readable-spacing findings, re-run clean |
+| `pnpm run format:check`                                            | Passed                                                                                                                                    |
+| `pnpm run check-types`                                             | Passed: turbo check-types, including web `astro check` 0 errors, 0 warnings, 0 hints                                                      |
+| `pnpm run test` / Vitest calculator unit tests                     | 35 passed in `packages/calculators`                                                                                                       |
+| `pnpm build:web` (`PUBLIC_SERVER_URL=https://api.example.invalid`) | Passed; fourteen static pages emitted, including the rebuilt home page and regenerated `/og/home.png`                                     |
+| Browser end-to-end                                                 | See below                                                                                                                                 |
+
+Browser evidence: the home page lists all six calculators as cards with a
+labeled search filter (live count, empty state with a clear-search button that
+restores the grid and refocuses the field; matching tried case-insensitively
+against names and keywords; 375px viewport stays single-column). Page heroes
+were compacted on the home and all six calculator pages (small h1, no
+description paragraph); measured heights and search width confirmed in the
+browser. Submit hardening: every calculator now submits only through a plain
+`type="button"` update button with a click handler, with `onsubmit="return
+false"` as a guard, so a dead script can never trigger a native form
+submission; explicit submits focus and scroll to the first invalid field
+(`focusProblemField`), and the verified error flow shows the summary alert,
+field error, cleared results, disabled copy/transfer, and `aria-invalid`.
+
+Root-cause note for the reported "submit reloads the page": on a long-running
+dev server the page scripts silently failed to execute because Vite served a
+stale optimized dependency (`node_modules/.vite/deps/effect.js`) with HTTP 504
+after a dependency swap, so no event handlers attached and the browser fell
+back to the native form GET. The fix was `astro dev stop`, deleting
+`apps/web/node_modules/.vite`, and restarting the dev server; the hardened
+buttons and inline guard above now prevent the symptom even when a script
+fails to load. No rebuild was needed for production output, which never
+serves the dev dependency cache.
+
 For every future status update, record:
 
 1. date, branch, commit, and PR;

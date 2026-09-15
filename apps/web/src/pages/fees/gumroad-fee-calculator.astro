@@ -42,10 +42,11 @@ const sources = [...sourceByUrl.values()];
 const reviewedOn = directPreset.checkedOn ?? "date not recorded";
 ---
 <Layout title="Gumroad Fee Calculator | MathMyRate" description="Estimate Gumroad's direct-sale and Discover marketplace fees, what you keep from a sale, and what to charge to net a target amount." ogImage="/og/gumroad.png">
-  <main id="main-content" class="mx-auto max-w-6xl px-5 py-12 md:px-8 md:py-16">
-    <div class="max-w-2xl"><p class="eyebrow">Platform fees / 03</p><h1 class="display mt-4 text-5xl font-bold leading-none md:text-6xl">Gumroad's cut, worked out in cents.</h1><p class="mt-5 text-lg leading-relaxed text-ink/70">Gumroad's documented direct-sale and Discover pricing, applied with exact cents: see what a sale costs, or work backwards from what you want to keep.</p></div>
-    <div class="mt-10 grid gap-8 lg:grid-cols-[1fr_.85fr]">
-      <form id="gumroad-fee-form" class="print-card rounded-[1.5rem] border border-line bg-[#faf8f1] p-6 shadow-[0_16px_45px_rgba(56,71,61,.08)] md:p-8" novalidate>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <p class="eyebrow">Platform fees / 03</p>
+    <h1 class="display mt-2 text-2xl font-bold md:text-3xl">Gumroad's cut, worked out in cents.</h1>
+    <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
+      <form id="gumroad-fee-form" class="print-card rounded-[1.5rem] border border-line bg-[#faf8f1] p-6 shadow-[0_16px_45px_rgba(56,71,61,.08)] md:p-8" novalidate onsubmit="return false">
         <div class="flex items-baseline justify-between"><h2 class="display text-2xl font-bold">Sale details</h2><span class="text-xs text-ink/50">USD / per transaction</span></div>
         <p id="scenario-note" class="mt-2 text-sm text-ink/60"></p>
         <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
@@ -65,7 +66,7 @@ const reviewedOn = directPreset.checkedOn ?? "date not recorded";
           </div>
         </fieldset>
         <label class="mt-6 block text-sm font-semibold"><span id="amount-label">Amount the customer paid</span> <input id="amount" data-field="amount" aria-describedby="amount-help amount-error" inputmode="decimal" value="100.00" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" /><span id="amount-help" class="mt-1 block text-xs font-normal text-ink/55">The customer's full order amount.</span><span id="amount-error" class="field-error" role="alert"></span></label>
-        <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="submit">Update fees</button><button id="gumroad-fee-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
+        <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="gumroad-fee-update">Update fees</button><button id="gumroad-fee-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
       </form>
       <aside aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-ink p-7 text-paper shadow-[0_16px_45px_rgba(56,71,61,.16)] md:p-9">
         <p class="eyebrow !text-[#c6d9c6]" id="primary-label">You keep from this sale</p>
@@ -100,6 +101,7 @@ const reviewedOn = directPreset.checkedOn ?? "date not recorded";
     } from "@MathMyRate/calculators";
     import {
       formatUsdGrouped,
+      focusProblemField,
       InputProblem,
       requireHtmlButton,
       requireHtmlElement,
@@ -227,7 +229,7 @@ const reviewedOn = directPreset.checkedOn ?? "date not recorded";
       latestCopy = null;
     }
 
-    function calc(): void {
+    function calc(focusProblem = false): void {
       const mode = currentMode();
       const scenario = currentScenario();
       const preset = PRESETS[scenario];
@@ -276,13 +278,17 @@ const reviewedOn = directPreset.checkedOn ?? "date not recorded";
               );
 
         setFieldState(form, problem);
+
+        if (focusProblem) focusProblemField(form, problem);
       }
     }
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      calc();
+      calc(true);
     });
+
+    requireHtmlButton("gumroad-fee-update").addEventListener("click", () => calc(true));
 
     form.querySelectorAll('input[name="feeMode"]').forEach((element) => {
       element.addEventListener("change", () => {
