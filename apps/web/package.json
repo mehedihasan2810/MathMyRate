@@ -10,7 +10,8 @@
     "dev:bare": "astro dev",
     "env:generate": "varlock codegen",
     "og:images": "node scripts/generate-og-images.mjs",
-    "icons:generate": "node scripts/generate-icons.mjs"
+    "icons:generate": "node scripts/generate-icons.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@MathMyRate/api": "workspace:*",
@@ -32,6 +33,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "satori": "^0.33.4",
     "tailwindcss": "^4.3.3",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "^5.0.0"
   }
 }

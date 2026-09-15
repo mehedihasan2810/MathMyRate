@@ -144,6 +144,26 @@ transfer-success notice stays pale green, both independent of the brand
 accent. The OG cards and the full icon set are regenerated from the same
 palette values. Inter remains the only font.
 
+### Launch-blocker UX and SEO pass (2026-09-15)
+
+The first six launch blockers in [the improvement plan](improvement-plan.md)
+are implemented on branch `feat/launch-blockers-ux-seo`, based on `b06b53b`, not yet committed:
+
+- `apps/web/src/data/tools.ts` is the single calculator registry for the
+  header menu, footer, breadcrumbs, related calculators, home search, and
+  sitemap.
+- Every calculator H1 is its search phrase. Titles carry the preset's
+  published rate, and descriptions are 137 to 150 characters.
+- `PUBLIC_SITE_URL` turns on canonical links, JSON-LD, crawlable `robots.txt`,
+  and a sitemap with git-based `lastmod`. `REQUIRE_SITE_URL=true` or
+  `ALCHEMY_STAGE=production` fails a build without it. `trailingSlash` is
+  `always`.
+- An "All calculators" menu works at every width. Calculator pages have
+  breadcrumbs, five related calculators, and a sticky mobile result bar.
+- Inputs accept `$`, `%`, commas, spaces, and a dangling decimal point. An
+  unfinished entry dims the last result instead of erasing it, and errors
+  appear when the field is left or Update is pressed.
+
 ### Infrastructure and deployment
 
 Alchemy remains the infrastructure owner for the existing Cloudflare Workers,
@@ -362,6 +382,55 @@ driven through Argent):
 | `pnpm build:web` (`PUBLIC_SERVER_URL=…`)         | Passed; fourteen static pages                                                                                                                                                                                                                                                                                                                                                                         |
 | Browser end-to-end (Chromium CDP on dev `:4399`) | Home: body `rgb(244,245,247)`, text `rgb(19,31,51)`, wordmark dot `rgb(185,141,47)` gold, card buttons navy, header mark loaded, 6-card search grid intact. Hourly: navy panel `rgb(31,58,95)`, pale-navy eyebrow, red star `rgb(164,70,49)`, live recalc `60000 → $75.00` and restore to `$103.63`. Stripe: navy panel, pale-navy aside text, red star, `$250 → $7.55 / $242.45`, reset to `$96.80`. |
 
+Local checks on 2026-09-15 for the launch-blocker UX and SEO pass
+(branch `feat/launch-blockers-ux-seo`, based on `b06b53b`, not yet committed, no PR; browser work on the existing `astro preview`
+server at `:4321`, which serves the fresh production build, and on the `astro dev` server at `:4399` after a restart, using the in-app Chromium browser at 1024×768, 375×812, and 320×700):
+
+| Check                                                      | Observed result                                                                                                                                                                                                                      |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pnpm run lint`                                            | Passed with 0 findings                                                                                                                                                                                                               |
+| `pnpm run format:check`                                    | Passed                                                                                                                                                                                                                               |
+| `pnpm run check-types`                                     | Passed: `astro check` 0 errors, 0 warnings, 0 hints. The six earlier hints came from inline `onsubmit` and Print `onclick` attributes, which now live in bundled scripts.                                                            |
+| `pnpm run test`                                            | Passed: 35 calculator tests and 59 new web tests (parsing, registry, fee labels, structured data)                                                                                                                                    |
+| Preview build (`PUBLIC_SERVER_URL=…`)                      | Passed; 14 pages, all noindex, `Disallow: /`, no sitemap, no canonical, JSON-LD, or `og:url`                                                                                                                                         |
+| Guard build (`REQUIRE_SITE_URL=true`, no site)             | Failed as intended with the "has no site" error                                                                                                                                                                                      |
+| Site build (`PUBLIC_SITE_URL=https://calculators.example`) | Passed; one H1 and no skipped heading level per page, titles at most 60 characters, canonical on every indexable page, absolute JSON-LD URLs, 5 in-content tool links per calculator, 13 sitemap URLs all with `lastmod`, `Allow: /` |
+
+Browser evidence on the production preview:
+
+- Stripe, desktop: `$1,250.50` gives a $36.56 fee and $1,213.94 kept, then
+  tidies to `1,250.50`. Keeping $1,250.50 charges $1,288.16, or $1,339.65
+  with $50 tax; all three were checked by hand. Tax above the amount dims the
+  result while typing and shows the error after leaving the field. An invalid
+  amount followed by Update moves focus to the amount field, and Reset or the
+  mode radio still work straight after invalid typing.
+- Lemon Squeezy, desktop: $250 gives a $13.00 fee, and keeping $250 charges
+  $263.68 (hand-checked). Reset returns $94.50.
+- Hourly, 375 px: the sticky bar is hidden at the top, appears once the form
+  is scrolled into view, and "Details" scrolls to the panel. `$120,000` gives
+  $143.72 and tidies to `120,000.00`. A lone "." dims the result and disables
+  copy and transfer; leaving shows "Enter an amount.". Transfer fills the
+  project calculator with `103.63` and $2,801.84 and clears local storage.
+- Project, 375 px: 0.33 hours dims while typing and shows the whole-minute
+  error after leaving; 18.5 hours gives $3,090.94 for 22.5 hours.
+- Gumroad, 320 px: Discover $30.00; after the threshold $5.50 plus $3.20;
+  keeping $100 charges $109.44. No label and value collision or horizontal
+  overflow there, on PayPal ($3.98), home, or hourly. The menu panel fits
+  between 20 and 300 px.
+- `/?q=stripe` shows one card. An unknown URL returns HTTP 404 with noindex.
+- Regression found and fixed in the pass: the first version showed a deferred
+  error on mouse press, which moved the button and lost the click on desktop.
+- Not verified: menu activation by Enter or Space, and Enter submitting a form (the in-app browser's key presses and typed newlines do not activate even a native button; both rely on native browser behavior), a successful clipboard copy
+  (permission was denied and the fallback message appeared), print preview,
+  and iOS Safari's on-screen keyboard with the sticky bar.
+- Dev server `:4399`, restarted: no failed resources or console errors on
+  any page. Stripe desktop repeated $36.56, $1,288.16, and $1,339.65, the tax
+  and invalid-amount flows, reset, and the Print listener. Hourly at 375 px
+  repeated `$120,000` to $143.72, the lone-point dimming and error, and the
+  transfer to $2,801.84. PayPal $3.98, Gumroad $13.70, and Lemon Squeezy $5.50
+  computed on load. Every route returned 200 with a 137 to 150 character
+  description, the unknown URL returned 404, and no page has an inline handler.
+
 For every future status update, record:
 
 1. date, branch, commit, and PR;
@@ -375,8 +444,7 @@ For every future status update, record:
 1. Review the verified math package and keep provider metadata/fixtures aligned.
 2. Complete remaining release checks (staging validation, deployment, truthful
    source dates at launch). Methodology, worked examples, privacy, terms, and
-   the SEO plumbing are in place; sitemap and canonical URLs activate when a
-   production site is configured.
+   the SEO plumbing are in place; canonical URLs, JSON-LD, and the sitemap activate when `PUBLIC_SITE_URL` is set for the production build.
 3. Resolve Cloudflare account/access state, inventory resources read-only,
    validate a separately named staging stage, and review resource diffs before
    any production approval.

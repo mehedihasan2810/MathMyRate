@@ -1,0 +1,26 @@
+---
+import type { Crumb } from "../data/tools";
+
+interface Props {
+  items: readonly Crumb[];
+}
+
+const { items } = Astro.props;
+
+const lastIndex = items.length - 1;
+---
+
+<nav aria-label="Breadcrumb" class="text-xs font-medium text-ink/60">
+  <ol class="flex flex-wrap items-center gap-x-2 gap-y-1">
+    {items.map((item, index) => (
+      <li class="flex items-center gap-2">
+        {index > 0 ? <span aria-hidden="true" class="text-ink/35">/</span> : null}
+        {index === lastIndex ? (
+          <span aria-current="page" class="text-ink/80">{item.name}</span>
+        ) : (
+          <a href={item.href} class="underline-offset-4 transition-colors hover:text-navy hover:underline">{item.name}</a>
+        )}
+      </li>
+    ))}
+  </ol>
+</nav>

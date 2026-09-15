@@ -1,25 +1,20 @@
 import type { APIRoute } from "astro";
 
+import { hubs, infoLinks, tools } from "../data/tools";
+
+const lastModified = new Map(__SITEMAP_LASTMOD__);
+
 const publicRoutes = [
   "/",
-  "/freelance/",
-  "/freelance/hourly-rate-calculator/",
-  "/freelance/project-rate-calculator/",
-  "/fees/",
-  "/fees/stripe-fee-calculator/",
-  "/fees/paypal-fee-calculator/",
-  "/fees/gumroad-fee-calculator/",
-  "/fees/lemon-squeezy-fee-calculator/",
-  "/methodology/",
-  "/about/",
-  "/privacy/",
-  "/terms/",
+  ...hubs.map((hub) => hub.href),
+  ...tools.map((tool) => tool.href),
+  ...infoLinks.map((link) => link.href),
 ];
 
 /**
  * Sitemap of public routes. Preview and local builds have no configured site,
  * so no truthful absolute URLs exist; those builds return 404 instead of a
- * fabricated URL set.
+ * fabricated URL set. `lastmod` is the last commit date of the page source.
  */
 export const GET: APIRoute = ({ site }) => {
   if (!site) {
@@ -30,7 +25,12 @@ export const GET: APIRoute = ({ site }) => {
   }
 
   const urls = publicRoutes
-    .map((route) => `  <url><loc>${new URL(route, site).href}</loc></url>`)
+    .map((route) => {
+      const date = lastModified.get(route);
+      const lastmod = date ? `<lastmod>${date}</lastmod>` : "";
+
+      return `  <url><loc>${new URL(route, site).href}</loc>${lastmod}</url>`;
+    })
     .join("\n");
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;

@@ -1,0 +1,58 @@
+---
+interface Props {
+  id: string;
+  label: string;
+  value?: string;
+  help?: string;
+  required?: boolean;
+  /** Draws a "$" or "%" inside the field; "usd" also tidies the value to "1,250.00" after editing. */
+  unit?: "usd" | "percent";
+  inputMode?: "decimal" | "numeric";
+  placeholder?: string;
+  /** Lets a page script rewrite the label text without removing the required marker. */
+  labelTextId?: string;
+  /** Lets a page script rewrite the help text. */
+  class?: string;
+}
+
+const {
+  id,
+  label,
+  value = "",
+  help,
+  required = false,
+  unit,
+  inputMode = "decimal",
+  placeholder,
+  labelTextId,
+  class: className,
+} = Astro.props;
+
+const describedBy = help ? `${id}-help ${id}-error` : `${id}-error`;
+
+const padding = unit === "usd" ? "pl-7 pr-3" : unit === "percent" ? "pl-3 pr-9" : "px-3";
+---
+
+<div class:list={["text-sm", className]}>
+  <label for={id} class="font-semibold">
+    <span id={labelTextId}>{label}</span>{required ? <span class="text-[#a44631]" aria-hidden="true"> *</span> : null}
+  </label>
+  <div class="relative mt-2">
+    {unit === "usd" ? <span class="field-adornment left-3" aria-hidden="true">$</span> : null}
+    <input
+      id={id}
+      data-field={id}
+      data-format={unit === "usd" ? "usd" : undefined}
+      aria-required={required ? "true" : undefined}
+      aria-describedby={describedBy}
+      inputmode={inputMode}
+      autocomplete="off"
+      value={value}
+      placeholder={placeholder}
+      class:list={["w-full rounded-lg border border-line bg-paper py-3 text-base font-medium", padding]}
+    />
+    {unit === "percent" ? <span class="field-adornment right-3" aria-hidden="true">%</span> : null}
+  </div>
+  {help ? <p id={`${id}-help`} class="mt-1 text-xs text-ink/55">{help}</p> : null}
+  <span id={`${id}-error`} class="field-error" role="alert"></span>
+</div>

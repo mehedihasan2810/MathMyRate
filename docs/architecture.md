@@ -99,7 +99,25 @@ The checked-in web config selects `output: "static"`, so the public calculator
 pages are prerendered assets with small browser scripts. Astro's on-demand
 rendering documentation confirms that server output needs an adapter; that is
 not a reason to switch this app back to server output for a calculator
-keystroke. The production build currently emits seven static HTML pages.
+keystroke. The production build emits fourteen static HTML pages plus
+`robots.txt`, and `sitemap.xml` when a site is configured.
+
+Indexing is controlled by one environment variable. `PUBLIC_SITE_URL` (an
+origin such as `https://www.example.com`, declared optional in
+`apps/web/.env.schema`) becomes Astro's `site`. With it, pages get canonical
+links, absolute Open Graph URLs, JSON-LD structured data, a crawlable
+`robots.txt`, and a sitemap whose `lastmod` is the last git commit date of each
+page source. Without it, every page is `noindex`, `robots.txt` is
+`Disallow: /`, and no sitemap exists. A build with `REQUIRE_SITE_URL=true` or
+`ALCHEMY_STAGE=production` fails when no site is set, so production can never
+ship preview indexing rules. `trailingSlash` is `always`, so dev, links,
+canonical URLs, and the sitemap agree on one URL form.
+
+Deployment caveat for the release PR: Alchemy's `Cloudflare.Website.Astro`
+merges an `astro` override bag over this config and defaults `output` to
+`"server"` unless `astro: { output: "static" }` is passed. `packages/infra`
+does not pass it today. Alchemy's `astro.site` can also supply the production
+origin per stage. Neither was changed here.
 
 Alchemy's `Cloudflare.Website.Astro` resource remains the deployment path.
 Cloudflare Workers static-assets documentation is the reference for asset
@@ -132,12 +150,30 @@ preserves the static example on load, supports reset/copy/print and local
 hourly-rate transfer, and never ships mock financial results. Reconsider a
 framework island only if a later interaction has a demonstrated need.
 
-The current public information architecture makes the home page a searchable
-directory of every calculator: a client-side search input filters six tool
-cards (both freelance tools and the four fee calculators), each opening through
-its own button link. There is no account navigation.
-Calculator results stay in the browser; the transfer uses local storage rather
-than a query string, and the UI makes no calculator fetch, XHR, or beacon calls.
+`apps/web/src/data/tools.ts` is the single registry of hubs and calculators.
+The header menu, footer, breadcrumbs, related-calculator blocks, home search,
+hub links, and sitemap all read it, so a new calculator is linked everywhere by
+adding one entry. Each tool's `name` is the phrase people search for and is
+also its H1.
+
+The home page is a searchable directory of every calculator. It reads `?q=` on
+load so the `WebSite` search action in its structured data works. Calculator
+pages share `NumberField` (label, `$`/`%` adornment, help, error),
+`ResultRow`, `Breadcrumbs`, `RelatedTools`, and `StickyResult` (a compact copy
+of the primary result pinned to the top of screens narrower than 1024 px while
+the form is on screen and the full result is not). `Layout.astro` emits
+`WebApplication` and `BreadcrumbList` JSON-LD on calculator pages and
+`WebSite` plus `Organization` on the home page, only when a site is set. Pages use no inline event handlers: the calculator scripts prevent form submission, and `Layout.astro` wires every Print button, so the site stays compatible with a strict Content Security Policy.
+
+Input parsing in `apps/web/src/scripts/calculator-form.ts` accepts what people
+type or paste: `$`, `%`, digit-group commas, spaces, and a dangling decimal
+point. While someone is typing and no error is on screen, a failed parse dims
+the last good result and disables copy and transfer instead of wiping it; a
+finished edit (the change event) or an explicit update shows the error. Money
+fields are tidied to `1,250.00` when an edit finishes. There is no account
+navigation. Calculator results stay in the browser; the transfer uses local
+storage rather than a query string, and the UI makes no calculator fetch, XHR,
+or beacon calls.
 
 ## Source ownership
 
