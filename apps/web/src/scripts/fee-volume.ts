@@ -1,5 +1,6 @@
 import { effectiveFeeRateBps, repeatSale } from "@MathMyRate/calculators";
 
+import { salesVolumeLabels, type VolumeLabels } from "../data/fee-calculators";
 import {
   formatPercentBps,
   formatUsdGrouped,
@@ -17,7 +18,7 @@ interface EvaluatedSale {
   readonly sellerProceedsCents: bigint;
 }
 
-/** Reads the optional sales-per-month field. An empty field means a single sale. */
+/** Reads the optional volume field. An empty field means a single sale. */
 export function readSalesPerMonth(): number | null {
   const value = requireHtmlInput("salesPerMonth").value.trim();
 
@@ -29,28 +30,37 @@ function setText(id: string, text: string): void {
 }
 
 /**
- * Shows monthly and yearly totals for same-size sales, or hides the block when
- * there is no sale or no monthly count. Returns a sentence for the copied result.
+ * Shows totals for a number of same-size sales, or hides the block when there
+ * is no sale or no count. Returns a sentence for the copied result.
  */
-export function renderVolume(sale: EvaluatedSale | null, salesPerMonth: number | null): string {
+export function renderVolume(
+  sale: EvaluatedSale | null,
+  count: number | null,
+  labels: VolumeLabels = salesVolumeLabels,
+): string {
   const block = requireHtmlElement("volume-block");
 
-  if (sale === null || salesPerMonth === null) {
+  if (sale === null || count === null) {
     block.hidden = true;
 
     return "";
   }
 
-  const month = repeatSale(sale, salesPerMonth);
+  const total = repeatSale(sale, count);
   const rate = formatPercentBps(effectiveFeeRateBps(sale.feeCents, sale.grossCents));
-  const salesLabel = `${salesPerMonth.toLocaleString("en-US")} ${salesPerMonth === 1 ? "sale" : "sales"} a month`;
+  const countLabel = `${count.toLocaleString("en-US")} ${count === 1 ? labels.unitSingular : labels.unitPlural}`;
 
-  setText("volume-heading", `At ${salesLabel}`);
-  setText("volume-fees-month", formatUsdGrouped(month.feeCents));
-  setText("volume-keep-month", formatUsdGrouped(month.sellerProceedsCents));
-  setText("volume-fees-year", formatUsdGrouped(month.feeCents * 12n));
+  const heading =
+    labels.perPeriod === null ? `Across ${countLabel}` : `At ${countLabel} ${labels.perPeriod}`;
+
+  setText("volume-heading", heading);
+  setText("volume-fees-month", formatUsdGrouped(total.feeCents));
+  setText("volume-keep-month", formatUsdGrouped(total.sellerProceedsCents));
+  setText("volume-fees-year", labels.yearly ? formatUsdGrouped(total.feeCents * 12n) : "—");
   setText("volume-rate", rate);
   block.hidden = false;
 
-  return ` At ${salesLabel}: ${formatUsdGrouped(month.feeCents)} in fees and ${formatUsdGrouped(month.sellerProceedsCents)} kept each month (fees are ${rate} of sales).`;
+  const kept = labels.perPeriod === null ? "kept" : "kept each month";
+
+  return ` ${heading}: ${formatUsdGrouped(total.feeCents)} in fees and ${formatUsdGrouped(total.sellerProceedsCents)} ${kept} (fees are ${rate} of ${labels.shareNoun}).`;
 }

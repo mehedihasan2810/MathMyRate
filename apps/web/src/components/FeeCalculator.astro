@@ -1,6 +1,6 @@
 ---
 import { calculateFees, getFeePreset, type FeePreset } from "@MathMyRate/calculators";
-import { findFeeCalculator, type FeeCalculatorId } from "../data/fee-calculators";
+import { findFeeCalculator, salesVolumeLabels, type FeeCalculatorId } from "../data/fee-calculators";
 import { formatUsdGrouped } from "../scripts/calculator-form";
 import NumberField from "./NumberField.astro";
 import ResultRow from "./ResultRow.astro";
@@ -23,6 +23,8 @@ function requirePreset(id: string): FeePreset {
 const { calculatorId, stickyResult = true } = Astro.props;
 
 const config = findFeeCalculator(calculatorId);
+
+const volume = config.volume ?? salesVolumeLabels;
 
 const [defaultScenario] = config.scenarios;
 
@@ -71,7 +73,7 @@ const scenarioColumns = config.scenarios.length === 3 ? "sm:grid-cols-3" : "sm:g
       {acceptsTax ? (
         <NumberField id="taxIncluded" wrapperId="tax-field" hidden={!defaultTaxShown} label="Tax collected (optional)" unit="usd" placeholder="0.00" help={config.taxHelp} />
       ) : null}
-      <NumberField id="salesPerMonth" label="Sales per month (optional)" inputMode="numeric" placeholder="e.g. 250" help="Same-size sales. Adds monthly and yearly totals." />
+      <NumberField id="salesPerMonth" label={volume.fieldLabel} inputMode="numeric" placeholder="e.g. 250" help={volume.fieldHelp} />
     </div>
     <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="fee-update">Update fees</button><button id="fee-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
   </form>
@@ -92,11 +94,11 @@ const scenarioColumns = config.scenarios.length === 3 ? "sm:grid-cols-3" : "sm:g
       <ResultRow label="You keep after fees and tax" valueId="keep-result" value="—" rowId="keep-row" hidden />
     </div>
     <div id="volume-block" hidden class="mt-6 border-t border-paper/25 pt-5">
-      <p class="eyebrow !text-[#c3d2ea]" id="volume-heading">At 1 sale a month</p>
-      <ResultRow label="Fees per month" valueId="volume-fees-month" value="—" />
-      <ResultRow label="You keep per month" valueId="volume-keep-month" value="—" />
-      <ResultRow label="Fees per year" valueId="volume-fees-year" value="—" />
-      <ResultRow label="Fees as a share of sales" valueId="volume-rate" value="—" />
+      <p class="eyebrow !text-[#c3d2ea]" id="volume-heading">{volume.perPeriod === null ? `Across 1 ${volume.unitSingular}` : `At 1 ${volume.unitSingular} ${volume.perPeriod}`}</p>
+      <ResultRow label={volume.feesLabel} valueId="volume-fees-month" value="—" />
+      <ResultRow label={volume.keepLabel} valueId="volume-keep-month" value="—" />
+      <ResultRow label="Fees per year" valueId="volume-fees-year" value="—" rowId="volume-year-row" hidden={!volume.yearly} />
+      <ResultRow label={volume.shareLabel} valueId="volume-rate" value="—" />
     </div>
     <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-fee" type="button" class="rounded-full bg-paper px-4 py-2.5 text-sm font-bold text-ink">Copy result</button><button type="button" data-print class="rounded-full border border-paper/35 px-4 py-2.5 text-sm font-bold">Print</button></div>
     <ul class="mt-6 list-disc space-y-1 pl-5 text-sm text-[#ccd8ec]">{example.warnings.map((warning) => <li>{warning}</li>)}</ul>

@@ -6,6 +6,8 @@ export * from "./freelance.ts";
 
 export * from "./pricing.ts";
 
+export * from "./kdp.ts";
+
 export * from "./fee-presets.ts";
 
 export * from "./fee-schema.ts";

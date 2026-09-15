@@ -62,7 +62,7 @@ const scenarioRows = config.scenarios.flatMap((scenario) => {
   const preset = requireOfficialPreset(scenario.presetId);
   const range = preset.grossRangeCents;
 
-  if (range && (range.minCents > 10_000 || range.maxCents < 10_000)) return [];
+  if ((range?.minCents !== undefined && range.minCents > 10_000) || (range?.maxCents !== undefined && range.maxCents < 10_000)) return [];
 
   const result = calculateFees({ preset, grossCents: 10_000n });
 

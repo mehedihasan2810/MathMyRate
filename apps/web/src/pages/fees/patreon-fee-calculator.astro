@@ -1,0 +1,137 @@
+---
+import { calculateFees, effectiveFeeRateBps, repeatSale } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import { findFeeCalculator } from "../../data/fee-calculators";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatCombinedRate, formatFeeRate } from "../../lib/fee-labels";
+import { formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatPercentBps, formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("patreon-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const config = findFeeCalculator("patreon");
+
+const web = requireOfficialPreset("patreon-us-standard-web");
+
+const ios = requireOfficialPreset("patreon-us-standard-ios-first-year");
+
+const headlineRate = web.components.map(formatFeeRate).join(" + ");
+
+const ten = calculateFees({ preset: web, grossCents: 1_000n });
+
+const iosTen = calculateFees({ preset: ios, grossCents: 1_450n });
+
+const iosAbsorbed = calculateFees({ preset: ios, grossCents: 1_000n });
+
+const hundredMembers = repeatSale(ten, 100);
+
+const priceRows = [300n, 500n, 1_000n, 2_500n, 5_000n, 10_000n].map((grossCents) => {
+  const result = calculateFees({ preset: web, grossCents });
+
+  return [formatSaleLabel(grossCents), formatUsdGrouped(result.feeCents), formatUsdGrouped(result.sellerProceedsCents), formatPercentBps(effectiveFeeRateBps(result.feeCents, result.grossCents))];
+});
+
+const scenarioRows = config.scenarios.flatMap((scenario) => {
+  const preset = requireOfficialPreset(scenario.presetId);
+  const range = preset.grossRangeCents;
+
+  if ((range?.minCents !== undefined && range.minCents > 1_000) || (range?.maxCents !== undefined && range.maxCents < 1_000)) return [];
+
+  const result = calculateFees({ preset, grossCents: 1_000n });
+
+  return [[scenario.label, formatCombinedRate(preset.components), formatUsdGrouped(result.feeCents), formatUsdGrouped(result.sellerProceedsCents)]];
+});
+
+const updatedOn = "2026-09-16";
+
+const guideSources = [
+  { title: "Patreon Pricing Plans — Patreon", url: "https://www.patreon.com/pricing" },
+  { title: "Creator fees overview", url: "https://support.patreon.com/hc/en-us/articles/11111747095181-Creator-fees-overview" },
+  { title: "A standard platform fee for new creators — effective after August 4, 2025", url: "https://support.patreon.com/hc/en-us/articles/36426991446797-A-standard-platform-fee-for-new-creators-effective-after-August-4-2025" },
+  { title: "How iOS in-app payment works for one-time purchases", url: "https://support.patreon.com/hc/en-us/articles/20009513905933-How-iOS-in-app-payment-works-for-one-time-purchases" },
+  { title: "How iOS in-app purchases work on Patreon", url: "https://support.patreon.com/hc/en-us/articles/27991664769677-How-iOS-in-app-purchases-work-on-Patreon" },
+  { title: "Creator fees FAQ", url: "https://support.patreon.com/hc/en-us/articles/22581195376909-Creator-fees-FAQ" },
+  { title: "Patreon's refund policy", url: "https://support.patreon.com/hc/en-us/articles/205032045-Patreon-s-refund-policy" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Patreon take from creators?", answer: `Creators who publish a page today pay Patreon's standard 10% platform fee plus payment processing of 2.9% + $0.30 per payment. A $10 membership payment pays ${formatUsdGrouped(ten.feeCents)} and leaves ${formatUsdGrouped(ten.sellerProceedsCents)}, which matches Patreon's own example.` },
+  { question: "Does Patreon charge more on small payments?", answer: "Not on the standard plan: Patreon says it applies the same processing rates to all payments, regardless of amount. Legacy plans charge micropayment processing of 5% + $0.10 on tiers priced at $3 or less. The fixed $0.30 still takes a larger share of a small payment." },
+  { question: "What does Patreon charge on iOS app purchases?", answer: `Apple takes a 30% App Store fee on eligible purchases in Patreon's iOS app, dropping to 15% after a year of continuous membership billing. Patreon charges no processing fee on those, but the 10% platform fee still applies. At Patreon's default iOS price of $14.50 for a $10 tier, you keep ${formatUsdGrouped(iosTen.sellerProceedsCents)}; if you keep the price at $10, you keep ${formatUsdGrouped(iosAbsorbed.sellerProceedsCents)}. US fans can pay on the mobile web instead.` },
+  { question: "Is there a fee when members pay in another currency?", answer: "Yes. Patreon charges 2.5% on any payment made in a currency different from your payout currency. The fee is reversed if the member is refunded." },
+  { question: "What are Patreon's payout fees?", answer: "For US creators, a direct deposit processed by Stripe costs $0.25 per payout. PayPal payouts cost 1%, with a $0.25 minimum and a $20 cap, and need at least $10. Payout fees are charged per payout, so this calculator does not add them to each payment." },
+  { question: "Does Patreon collect sales tax?", answer: "Patreon adds sales tax, VAT, or GST to member payments where the law requires it, on top of your price, and sends it to the tax authorities. Its platform fee is calculated before sales tax. Patreon's pages disagree on whether the processing fee applies to the tax, so this calculator covers payments with no tax." },
+  { question: "What happens to fees when a member is refunded?", answer: "Patreon charges no fee to refund. You return only your share, and Patreon returns its fee, the processing fee, and any sales tax to the member." },
+  { question: "What about the older Pro and Founders plans?", answer: "Creators whose pages were published on or before August 4, 2025 and have stayed published keep their legacy plan: Pro at 8%, or Founders at 5% for creators who joined before May 7, 2019. This calculator includes Pro; Founders uses its own processing rates." },
+];
+---
+<Layout title={`${tool.name} (${headlineRate}) | MathMyRate`} description="Estimate Patreon's 10% platform fee, 2.9% + 30¢ processing, currency conversion, and iOS App Store fees on a membership, and what you keep each month." ogImage="/og/patreon.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Patreon, payment processing, and Apple take from a membership payment, and what you keep across your members each month.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={web.checkedOn} />
+    <FeeCalculator calculatorId="patreon" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The Patreon fee calculator shows what reaches you from a membership payment. On the standard plan, Patreon keeps a <strong>10%</strong> platform fee, and payment processing adds <strong>2.9% + $0.30</strong>. A $10 membership pays <strong>{formatUsdGrouped(ten.feeCents)}</strong> and leaves <strong>{formatUsdGrouped(ten.sellerProceedsCents)}</strong>. With 100 members at $10, that is {formatUsdGrouped(hundredMembers.sellerProceedsCents)} a month.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Choose how the member pays: on the web, from outside the US by PayPal or Venmo, in another currency, or in the iOS app.</li>
+        <li>Enter the tier price the member pays, before any sales tax Patreon adds.</li>
+        <li>Enter how many members pay that price to see monthly and yearly totals.</li>
+        <li>To price a tier, choose I want to keep a target and enter what each member should leave you.</li>
+      </ol>
+
+      <h2>How the fees are built</h2>
+      <p>Patreon's own example of a $10 payment on the web, reproduced with the same code as the calculator:</p>
+      <ol>
+        <li><strong>Platform fee.</strong> 10% of $10.00 is {formatUsdGrouped(ten.lineItems[0]?.feeCents ?? 0n)}, calculated before sales tax.</li>
+        <li><strong>Payment processing.</strong> 2.9% of $10.00 is $0.29, plus $0.30, for {formatUsdGrouped(ten.lineItems[1]?.feeCents ?? 0n)}.</li>
+        <li><strong>What you keep.</strong> {formatUsdGrouped(ten.sellerProceedsCents)}.</li>
+      </ol>
+
+      <h2>Patreon fees by tier price</h2>
+      <p>Web payments on the standard plan, with no sales tax.</p>
+      <DataTable caption={`Patreon fees (${headlineRate}) by membership price`} headers={["Price", "Patreon fees", "You keep", "Fee share"]} rows={priceRows} />
+
+      <h2>The same $10 payment in each scenario</h2>
+      <DataTable caption="Patreon fees on a $10 payment by scenario" headers={["Scenario", "Rate", "Fees", "You keep"]} rows={scenarioRows} />
+
+      <h2>iOS app purchases</h2>
+      <p>Apple's in-app purchase system takes a 30% App Store fee on eligible purchases in Patreon's iOS app, and 15% once a membership has been billed continuously for a year. Patreon charges no processing fee on those payments, but its platform fee still applies to the iOS price before tax. By default, Patreon raises iOS prices by roughly 43%, rounded to the nearest 50 cents, so a $10 tier sells for $14.50 in the app and leaves you {formatUsdGrouped(iosTen.sellerProceedsCents)}. If you keep the app price at $10, you keep {formatUsdGrouped(iosAbsorbed.sellerProceedsCents)}. US fans can use Patreon's mobile web checkout, which has no App Store fee.</p>
+
+      <h2>Other Patreon fees this calculator does not add</h2>
+      <ul>
+        <li><strong>Payouts:</strong> $0.25 per direct deposit through Stripe; PayPal payouts cost 1%, with a $0.25 minimum, a $20 cap, and a $10 minimum payout.</li>
+        <li><strong>Tax on fees:</strong> Patreon may add tax to its fees depending on your state.</li>
+        <li><strong>One-time purchases:</strong> Patreon's pages give their platform fee as 10%, as between 5% and 12% depending on plan, and as a flat 5%, so they are not estimated here.</li>
+        <li><strong>Merch:</strong> legacy Merch for Membership adds 3% of monthly earnings plus the cost of each item.</li>
+        <li><strong>Founders plan:</strong> 5%, with its own processing rates, for creators who joined before May 7, 2019.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="patreon" />
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId="patreon-fees" />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{guideSources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Patreon's pages were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Patreon. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

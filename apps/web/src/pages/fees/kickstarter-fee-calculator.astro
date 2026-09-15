@@ -1,0 +1,162 @@
+---
+import { calculateFees, effectiveFeeRateBps, grossUpFees, repeatSale, type FeePreset } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatFeeRate } from "../../lib/fee-labels";
+import { formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatPercentBps, formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("kickstarter-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const standard = requireOfficialPreset("kickstarter-us-pledge");
+
+const micro = requireOfficialPreset("kickstarter-us-micropledge");
+
+const headlineRate = standard.components.map(formatFeeRate).join(" + ");
+
+function presetFor(grossCents: bigint): FeePreset {
+  return grossCents < 1_000n ? micro : standard;
+}
+
+function pledgeFees(grossCents: bigint) {
+  return calculateFees({ preset: presetFor(grossCents), grossCents });
+}
+
+const fiftyPledge = pledgeFees(5_000n);
+
+const tenPledge = pledgeFees(1_000n);
+
+const onePledge = pledgeFees(100n);
+
+const target = grossUpFees({ preset: standard, targetProceedsCents: 5_000n });
+
+function share(result: { feeCents: bigint; grossCents: bigint }): string {
+  return formatPercentBps(effectiveFeeRateBps(result.feeCents, result.grossCents));
+}
+
+const pledgeRows = [100n, 500n, 999n, 1_000n, 2_500n, 5_000n, 10_000n, 25_000n, 50_000n].map((grossCents) => {
+  const result = pledgeFees(grossCents);
+
+  return [formatUsdGrouped(grossCents), formatUsdGrouped(result.feeCents), formatUsdGrouped(result.sellerProceedsCents), share(result)];
+});
+
+const campaigns = [
+  { pledges: 100, pledgeCents: 2_500n },
+  { pledges: 200, pledgeCents: 5_000n },
+  { pledges: 500, pledgeCents: 5_000n },
+  { pledges: 1_000, pledgeCents: 10_000n },
+  { pledges: 2_000, pledgeCents: 500n },
+];
+
+const campaignRows = campaigns.map(({ pledges, pledgeCents }) => {
+  const sale = pledgeFees(pledgeCents);
+  const total = repeatSale(sale, pledges);
+
+  return [`${pledges.toLocaleString("en-US")} × ${formatSaleLabel(pledgeCents)}`, formatSaleLabel(total.grossCents), formatUsdGrouped(total.feeCents), formatUsdGrouped(total.sellerProceedsCents), share(sale)];
+});
+
+const tenThousand = repeatSale(fiftyPledge, 200);
+
+const updatedOn = "2026-09-15";
+
+const guideSources = [
+  { title: "Fees: United States — Kickstarter", url: "https://www.kickstarter.com/help/fees" },
+  { title: "What are the fees? | Kickstarter Help Center", url: "https://help.kickstarter.com/en-us/articles/16236674-what-are-the-fees" },
+  { title: "Why is funding all-or-nothing? | Kickstarter Help Center", url: "https://help.kickstarter.com/en-us/articles/16236582-why-is-funding-all-or-nothing" },
+  { title: "What happens when there is a problem with one of my backer's pledges? | Kickstarter Help Center", url: "https://help.kickstarter.com/en-us/articles/16236454-what-happens-when-there-is-a-problem-with-one-of-my-backer-s-pledges" },
+  { title: "If my project is successfully funded, how do I receive my funds? | Kickstarter Help Center", url: "https://help.kickstarter.com/en-us/articles/16236545-if-my-project-is-successfully-funded-how-do-i-receive-my-funds" },
+  { title: "How do I add Late Pledges to my project? | Kickstarter Help Center", url: "https://help.kickstarter.com/en-us/articles/16236699-how-do-i-add-late-pledges-to-my-project" },
+  { title: "Pledge Over Time FAQ | Kickstarter Help Center", url: "https://help.kickstarter.com/en-us/articles/16236386-pledge-over-time-faq" },
+  { title: "What options do I have for charging shipping costs? | Kickstarter Help Center", url: "https://help.kickstarter.com/en-us/articles/16236769-what-options-do-i-have-for-charging-shipping-costs" },
+  { title: "How do I issue a refund to one of my backers? | Kickstarter Help Center", url: "https://help.kickstarter.com/en-us/articles/16236695-how-do-i-issue-a-refund-to-one-of-my-backers" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Kickstarter take from a pledge?", answer: `Kickstarter keeps 5% of each collected pledge, and payment processing adds 3% + $0.30 per pledge, or 5% + $0.08 for pledges under $10. A $50 pledge pays ${formatUsdGrouped(fiftyPledge.feeCents)} in total and leaves ${formatUsdGrouped(fiftyPledge.sellerProceedsCents)}.` },
+  { question: "Does Kickstarter charge fees if my project isn't funded?", answer: "No. Funding is all-or-nothing: if a project does not reach its goal, backers are not charged, the creator receives no funds, and Kickstarter collects no fees." },
+  { question: "Why do small pledges lose a bigger share?", answer: `The fixed part of the processing fee is charged on every pledge. A $10 pledge pays ${formatUsdGrouped(tenPledge.feeCents)}, or ${share(tenPledge)}, and a $1 pledge pays ${formatUsdGrouped(onePledge.feeCents)}, or ${share(onePledge)}. Kickstarter's summary of processing as 3% to 5% does not hold for small pledges.` },
+  { question: "Are fees charged on pledges that fail?", answer: "No. Kickstarter takes fees only from pledges it successfully collects. If a backer's payment still fails 7 days after the deadline, the pledge is dropped and no fees apply to it." },
+  { question: "Do Late Pledges and Pledge Over Time pay fees?", answer: "Late Pledges pay the same fees as campaign pledges. Pledge Over Time adds no extra fees, but the standard fees apply to each of its charges, so enter each charge as its own pledge." },
+  { question: "What does Kickstarter's Pledge Manager cost?", answer: "There is no up-front cost. Kickstarter takes its 5% from Pledge Manager payments except taxes, and the processing fee applies to the full payment including taxes. Kickstarter describes that processing fee only as roughly 3-5%, so this calculator does not estimate it." },
+  { question: "Are fees charged on shipping?", answer: "Shipping you charge with a pledge counts toward your funding amount, and Kickstarter collects its fees from the funding total, so this calculator includes shipping in the pledge. Shipping charged later through the Pledge Manager is a Pledge Manager payment." },
+  { question: "When do I receive the money?", answer: "Kickstarter starts the payout 14 calendar days after the deadline, with its fees and processing fees already deducted. It can take another 3 to 14 business days to reach your bank." },
+  { question: "What happens to fees when I refund a backer?", answer: "If you refund a campaign pledge before your project's payout, Kickstarter returns its 5% fee and the processing fees to the backer directly. After the payout, you cover the cost of the fees." },
+];
+---
+<Layout title={`${tool.name} (${headlineRate}) | MathMyRate`} description="Estimate Kickstarter's 5% fee and 3% + 30¢ payment processing on each pledge, the micropledge rate under $10, and your campaign's total fees." ogImage="/og/kickstarter.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Kickstarter and payment processing take from each pledge, and add up the fees across a whole campaign.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={standard.checkedOn} />
+    <FeeCalculator calculatorId="kickstarter" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The Kickstarter fee calculator shows what reaches you from a pledge on a successfully funded US project. Kickstarter keeps <strong>5%</strong>, and payment processing takes <strong>3% + $0.30</strong> per pledge, or 5% + $0.08 for pledges under $10. A $50 pledge pays <strong>{formatUsdGrouped(fiftyPledge.feeCents)}</strong> and leaves <strong>{formatUsdGrouped(fiftyPledge.sellerProceedsCents)}</strong>. Enter a number of pledges to see the campaign total.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Choose whether the pledge is $10 or more, or under $10.</li>
+        <li>Enter the pledge amount, including any shipping charged with it.</li>
+        <li>To total a campaign, enter how many pledges of that size were collected. For pledges of different sizes, run each size and add the results.</li>
+        <li>To price a reward, choose I want to keep a target and enter what each pledge should leave you.</li>
+      </ol>
+
+      <h2>How the fees are built</h2>
+      <ol>
+        <li><strong>Kickstarter's fee.</strong> 5% of a $50.00 pledge is {formatUsdGrouped(fiftyPledge.lineItems[0]?.feeCents ?? 0n)}.</li>
+        <li><strong>Payment processing.</strong> 3% of $50.00 is $1.50, plus $0.30, for {formatUsdGrouped(fiftyPledge.lineItems[1]?.feeCents ?? 0n)}.</li>
+        <li><strong>What you receive.</strong> $50.00 minus {formatUsdGrouped(fiftyPledge.feeCents)} is {formatUsdGrouped(fiftyPledge.sellerProceedsCents)}.</li>
+        <li><strong>A campaign.</strong> 200 pledges of $50 raise $10,000 and pay {formatUsdGrouped(tenThousand.feeCents)} in fees, leaving {formatUsdGrouped(tenThousand.sellerProceedsCents)}.</li>
+        <li><strong>Working backward.</strong> For each pledge to leave $50.00, a reward needs to cost {formatUsdGrouped(target.grossCents)}.</li>
+      </ol>
+
+      <h2>Fees by pledge size</h2>
+      <p>The processing fee changes at $10, and the fixed part weighs most on small pledges.</p>
+      <DataTable caption="Kickstarter and processing fees on one collected pledge" headers={["Pledge", "Total fees", "You receive", "Fee share"]} rows={pledgeRows} />
+
+      <h2>Fees across a campaign</h2>
+      <p>Each row assumes every pledge is the same size and was collected.</p>
+      <DataTable caption="Total fees on a successfully funded Kickstarter campaign" headers={["Pledges", "Raised", "Total fees", "You receive", "Fee share"]} rows={campaignRows} />
+
+      <h2>When fees apply</h2>
+      <ul>
+        <li><strong>All-or-nothing:</strong> no fees are charged if a project does not reach its goal.</li>
+        <li><strong>Dropped pledges:</strong> fees come only from pledges Kickstarter collects; a pledge dropped after failed payments pays nothing.</li>
+        <li><strong>Late Pledges:</strong> the same fees as campaign pledges.</li>
+        <li><strong>Pledge Over Time:</strong> no extra fees, but the fees apply to each charge.</li>
+        <li><strong>Pledge Manager:</strong> 5% on payments except taxes, plus processing on the full payment; Kickstarter does not publish that processing formula, so it is not estimated here.</li>
+      </ul>
+
+      <h2>Payouts and refunds</h2>
+      <ul>
+        <li><strong>Payout:</strong> starts 14 calendar days after the deadline, with fees deducted, and can take 3 to 14 more business days to arrive. Kickstarter's pages list no payout fee.</li>
+        <li><strong>Refunds before payout:</strong> Kickstarter returns its 5% fee and the processing fees to the backer directly.</li>
+        <li><strong>Refunds after payout:</strong> you cover the cost of the fees.</li>
+        <li><strong>Chargebacks:</strong> if a backer's dispute is found valid, you are responsible for the amount of the chargeback.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="kickstarter" blockedPresetIds={["kickstarter-us-pledge-manager"]} />
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId="kickstarter-fees" />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{guideSources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Kickstarter's pages were reviewed on the date shown at the top of this page. Fees can differ for projects outside the US. MathMyRate is not affiliated with Kickstarter. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

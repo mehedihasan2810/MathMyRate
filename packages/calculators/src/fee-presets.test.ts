@@ -99,11 +99,23 @@ const expectedFees = new Map([
   ["ebay-us-guitars-basses", 710n], // 6.7% = 670, + 40
   ["ebay-us-international-most-categories", 1565n], // 1360 + 1.65% = 165, + 40
   ["ebay-us-store-most-categories", 1310n], // 12.7% = 1270, + 40
+  ["kickstarter-us-pledge", 830n], // 5% = 500, + 3% = 300, + 30
+  ["patreon-us-standard-web", 1320n], // 10% = 1000, + 2.9% = 290, + 30
+  ["patreon-us-standard-non-us-paypal", 1420n], // 1000 + 3.9% = 390, + 30
+  ["patreon-us-standard-currency-conversion", 1570n], // 1000 + 290 + 30 + 2.5% = 250
+  ["patreon-us-standard-ios-first-year", 4000n], // Apple 30% = 3000, + 1000
+  ["patreon-us-standard-ios-after-year", 2500n], // Apple 15% = 1500, + 1000
+  ["patreon-us-pro-over-3", 1120n], // 8% = 800, + 290, + 30
+  ["kofi-us-stripe-5-percent", 820n], // 5% = 500, + 290, + 30
+  ["kofi-us-stripe-no-fee", 320n], // 290 + 30
+  ["kofi-us-paypal-5-percent", 500n], // 5%
 ]);
 
 // Presets whose range excludes $100 get a fixture at an amount inside their range.
 const expectedFeesAt = new Map([
   ["ebay-us-most-categories-small-order", { grossCents: 1_000n, feeCents: 166n }], // 13.6% of 1,000 = 136, + 30
+  ["kickstarter-us-micropledge", { grossCents: 500n, feeCents: 58n }], // 5% of 500 = 25, + 5% = 25, + 8
+  ["patreon-us-pro-3-or-less", { grossCents: 300n, feeCents: 49n }], // 8% of 300 = 24, + 5% = 15, + 10
 ]);
 
 for (const preset of feePresets) {
@@ -267,4 +279,58 @@ test("eBay scenarios refuse amounts outside the range their rates cover", () => 
     () => grossUpFees({ preset: large, targetProceedsCents: 700_000n }),
     GrossOutOfRangeError,
   );
+});
+
+test("Kickstarter's processing fee changes at $10 and each scenario refuses the other side", () => {
+  const standard = getFeePreset("kickstarter-us-pledge");
+  const micro = getFeePreset("kickstarter-us-micropledge");
+
+  assert.ok(standard && micro);
+
+  // $10.00: 5% = 50, 3% = 30, + 30 = 110. $9.99: 5% = 49.95 rounds to 50, 5% again 50, + 8 = 108.
+  assert.equal(calculateFees({ preset: standard, grossCents: 1_000n }).feeCents, 110n);
+  assert.equal(calculateFees({ preset: micro, grossCents: 999n }).feeCents, 108n);
+
+  // $1.00: 5 + 5 + 8 = 18, which is 18% of the pledge.
+  assert.equal(calculateFees({ preset: micro, grossCents: 100n }).feeCents, 18n);
+
+  assert.throws(() => calculateFees({ preset: standard, grossCents: 999n }), GrossOutOfRangeError);
+  assert.throws(() => calculateFees({ preset: micro, grossCents: 1_000n }), GrossOutOfRangeError);
+
+  try {
+    calculateFees({ preset: micro, grossCents: 5_000n });
+    assert.fail("A $50 pledge is outside the micropledge range");
+  } catch (error) {
+    assert.ok(error instanceof GrossOutOfRangeError);
+    assert.equal(error.minCents, null);
+    assert.equal(error.maxCents, 999n);
+  }
+});
+
+test("Patreon matches its own web and iOS worked examples", () => {
+  const web = getFeePreset("patreon-us-standard-web");
+  const ios = getFeePreset("patreon-us-standard-ios-first-year");
+
+  assert.ok(web && ios);
+
+  // $10 on the web: $1.00 platform fee and $0.59 processing, so the creator gets $8.41.
+  const webSale = calculateFees({ preset: web, grossCents: 1_000n });
+
+  assert.deepEqual(
+    webSale.lineItems.map((item) => item.feeCents),
+    [100n, 59n],
+  );
+  assert.equal(webSale.sellerProceedsCents, 841n);
+
+  // $14.50 in the iOS app: $4.35 to Apple and $1.45 platform fee, so the creator gets $8.70.
+  const iosSale = calculateFees({ preset: ios, grossCents: 1_450n });
+
+  assert.deepEqual(
+    iosSale.lineItems.map((item) => item.feeCents),
+    [435n, 145n],
+  );
+  assert.equal(iosSale.sellerProceedsCents, 870n);
+
+  // $10 in the iOS app with the creator absorbing Apple's fee: $3.00 and $1.00, so $6.00.
+  assert.equal(calculateFees({ preset: ios, grossCents: 1_000n }).sellerProceedsCents, 600n);
 });

@@ -1,0 +1,130 @@
+---
+import { calculateServiceFee, earningsForTarget } from "@MathMyRate/calculators";
+import { upworkFiverrRows } from "../data/service-fee-comparison";
+import { findServiceFeeCalculator } from "../data/service-fee-calculators";
+import { formatUsdGrouped } from "../scripts/calculator-form";
+import NumberField from "./NumberField.astro";
+
+const upwork = findServiceFeeCalculator("upwork");
+
+const exampleCents = 50_000n;
+
+const rows = upworkFiverrRows.map((row) => {
+  const feeBps = row.feeBps ?? upwork.exampleFeeBps;
+
+  return {
+    row,
+    rate: `${feeBps / 100}%`,
+    result: calculateServiceFee({ earningsCents: exampleCents, feeBps }),
+    charge: earningsForTarget({ targetCents: exampleCents, feeBps }).earningsCents,
+  };
+});
+---
+
+<div class="print-card mt-8 rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" data-service-fee-comparison>
+  <form id="service-comparison-form" data-calculator-form novalidate class="grid max-w-2xl gap-5 sm:grid-cols-2">
+    <div data-error-summary role="alert" hidden class="rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d] sm:col-span-2"></div>
+    <NumberField id="comparisonAmount" label="Job price" value="500.00" unit="usd" required help="What the client pays for the work, before any client fee." />
+    <NumberField id="comparisonUpworkFee" label="Your Upwork service fee" value={String(upwork.exampleFeeBps / 100)} unit="percent" required help="Shown on your Upwork proposal, offer, or contract: 0% to 15%." />
+  </form>
+  <div id="service-comparison-panel" data-result-panel aria-live="polite" class="guide-table mt-6">
+    <table>
+      <caption>Freelancer fees on the same job, in USD</caption>
+      <thead>
+        <tr><th scope="col">Platform and contract</th><th scope="col" class="numeric">Rate</th><th scope="col" class="numeric">Fee</th><th scope="col" class="numeric">You earn</th><th scope="col" class="numeric">To earn the full price, charge</th></tr>
+      </thead>
+      <tbody>
+        {rows.map(({ row, rate, result, charge }) => (
+          <tr>
+            <th scope="row"><a href={row.href} class="underline underline-offset-2 hover:text-navy">{row.label}</a></th>
+            <td class="numeric" id={`svc-${row.id}-rate`}>{rate}</td>
+            <td class="numeric" id={`svc-${row.id}-fee`}>{formatUsdGrouped(result.feeCents)}</td>
+            <td class="numeric" id={`svc-${row.id}-earn`}>{formatUsdGrouped(result.afterFeeCents)}</td>
+            <td class="numeric" id={`svc-${row.id}-charge`}>{formatUsdGrouped(charge)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p class="mt-4 text-xs text-ink/55">Estimates from each platform's published rates, before withdrawal fees. Upwork and Fiverr do not publish how they round, so a statement can differ by a cent.</p>
+</div>
+<noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">The table above prices a $500.00 job with a 10% Upwork fee. Enable JavaScript to compare your own job.</p></noscript>
+
+<script>
+  import { calculateServiceFee, earningsForTarget } from "@MathMyRate/calculators";
+  import { upworkFiverrRows } from "../data/service-fee-comparison";
+  import { findServiceFeeCalculator } from "../data/service-fee-calculators";
+  import {
+    type CalculationTrigger,
+    focusProblemField,
+    formatUsdGrouped,
+    InputProblem,
+    markResultsCurrent,
+    markResultsStale,
+    percentToBps,
+    requireHtmlElement,
+    requireHtmlForm,
+    requireHtmlInput,
+    setFieldState,
+    shouldDeferProblem,
+    usdToCents,
+    watchCalculatorFields,
+  } from "../scripts/calculator-form";
+
+  if (document.querySelector("[data-service-fee-comparison]")) {
+    const upwork = findServiceFeeCalculator("upwork");
+    const form = requireHtmlForm("service-comparison-form");
+    const panel = requireHtmlElement("service-comparison-panel");
+
+    const setText = (id: string, text: string): void => {
+      requireHtmlElement(id).textContent = text;
+    };
+
+    const calculate = (trigger: CalculationTrigger): void => {
+      try {
+        const amount = usdToCents(requireHtmlInput("comparisonAmount").value, "comparisonAmount");
+        const upworkFee = percentToBps(requireHtmlInput("comparisonUpworkFee").value, "comparisonUpworkFee", upwork.maxFeeBps);
+
+        for (const row of upworkFiverrRows) {
+          const feeBps = row.feeBps ?? upworkFee;
+          const result = calculateServiceFee({ earningsCents: amount, feeBps });
+
+          setText(`svc-${row.id}-rate`, `${feeBps / 100}%`);
+          setText(`svc-${row.id}-fee`, formatUsdGrouped(result.feeCents));
+          setText(`svc-${row.id}-earn`, formatUsdGrouped(result.afterFeeCents));
+          setText(`svc-${row.id}-charge`, formatUsdGrouped(earningsForTarget({ targetCents: amount, feeBps }).earningsCents));
+        }
+
+        markResultsCurrent(panel, []);
+        setFieldState(form);
+      } catch (error) {
+        const problem = error instanceof InputProblem ? error : new InputProblem("comparisonAmount", "Check your inputs.");
+
+        if (shouldDeferProblem(form, trigger)) {
+          markResultsStale(panel, []);
+
+          return;
+        }
+
+        for (const row of upworkFiverrRows) {
+          for (const column of ["fee", "earn", "charge"]) {
+            setText(`svc-${row.id}-${column}`, "—");
+          }
+        }
+
+        markResultsCurrent(panel, []);
+        setFieldState(form, problem);
+
+        if (trigger === "submit") focusProblemField(form, problem);
+      }
+    };
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      calculate("submit");
+    });
+
+    watchCalculatorFields(form, calculate);
+    calculate("commit");
+  }
+</script>

@@ -13,7 +13,8 @@ export type StandaloneEmbedId =
   | "markup-margin"
   | "salary-to-hourly"
   | "upwork-fees"
-  | "fiverr-fees";
+  | "fiverr-fees"
+  | "kdp-royalties";
 
 export type EmbeddableTool =
   | {
@@ -31,6 +32,9 @@ const feeHeights: Readonly<Record<FeeCalculatorId, number>> = {
   square: 2_300,
   etsy: 1_850,
   ebay: 2_250,
+  kickstarter: 1_650,
+  patreon: 2_150,
+  kofi: 1_800,
   gumroad: 1_750,
   "lemon-squeezy": 1_900,
 };
@@ -43,6 +47,7 @@ const standaloneEmbedIds: readonly StandaloneEmbedId[] = [
   "salary-to-hourly",
   "upwork-fees",
   "fiverr-fees",
+  "kdp-royalties",
 ];
 
 const standaloneHeights: Readonly<Record<StandaloneEmbedId, number>> = {
@@ -53,6 +58,7 @@ const standaloneHeights: Readonly<Record<StandaloneEmbedId, number>> = {
   "salary-to-hourly": 1_500,
   "upwork-fees": 1_950,
   "fiverr-fees": 1_400,
+  "kdp-royalties": 1_650,
 };
 
 export const embeddableTools: readonly EmbeddableTool[] = [

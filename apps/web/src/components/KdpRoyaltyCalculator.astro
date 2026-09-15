@@ -1,0 +1,308 @@
+---
+import { calculateEbookRoyalty } from "@MathMyRate/calculators";
+import { formatUsdGrouped } from "../scripts/calculator-form";
+import NumberField from "./NumberField.astro";
+import ResultRow from "./ResultRow.astro";
+import StickyResult from "./StickyResult.astro";
+
+interface Props {
+  /** Embedded copies leave out the pinned result bar. */
+  embedded?: boolean;
+}
+
+const { embedded = false } = Astro.props;
+
+const example = calculateEbookRoyalty({ listPriceCents: 499n, option: "70", fileSizeHundredthsMb: 250 });
+
+const radioCard = "flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium";
+
+const hint = "mt-1 block text-xs font-normal text-ink/55";
+---
+
+<div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]" data-kdp-calculator>
+  <form id="kdp-form" data-calculator-form class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate>
+    <div class="flex items-baseline justify-between gap-3"><h2 class="display text-2xl font-bold">Book details</h2><span class="shrink-0 text-xs text-ink/50">Amazon.com, USD</span></div>
+    <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
+    <fieldset class="mt-6">
+      <legend class="text-sm font-semibold">What format is it?</legend>
+      <div class="mt-3 grid gap-2 sm:grid-cols-3">
+        <label class={radioCard}><input type="radio" name="kdpFormat" value="ebook" class="mt-1" checked /><span>eBook<span class={hint}>Kindle, 70% or 35%.</span></span></label>
+        <label class={radioCard}><input type="radio" name="kdpFormat" value="paperback" class="mt-1" /><span>Paperback<span class={hint}>50% or 60%, minus printing.</span></span></label>
+        <label class={radioCard}><input type="radio" name="kdpFormat" value="hardcover" class="mt-1" /><span>Hardcover<span class={hint}>50% or 60%, minus printing.</span></span></label>
+      </div>
+    </fieldset>
+    <div id="kdp-ebook-fields">
+      <fieldset class="mt-6">
+        <legend class="text-sm font-semibold">Royalty option</legend>
+        <div class="mt-3 grid gap-2 sm:grid-cols-2">
+          <label class={radioCard}><input type="radio" name="kdpOption" value="70" class="mt-1" checked /><span>70%<span class={hint}>List price $2.99 to $12.99, minus delivery.</span></span></label>
+          <label class={radioCard}><input type="radio" name="kdpOption" value="35" class="mt-1" /><span>35%<span class={hint}>No delivery cost.</span></span></label>
+        </div>
+      </fieldset>
+    </div>
+    <div id="kdp-print-fields" hidden>
+      <div class="mt-6 grid gap-5 sm:grid-cols-2">
+        <div class="text-sm">
+          <label for="kdpInk" class="font-semibold">Ink and paper</label>
+          <select id="kdpInk" data-field="kdpInk" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium">
+            <option value="black">Black ink, white or cream paper</option>
+            <option value="groundwood">Black ink, groundwood paper</option>
+            <option value="standard-color">Standard color</option>
+            <option value="premium-color">Premium color</option>
+          </select>
+          <p id="kdpInk-help" class="mt-1 text-xs text-ink/55">Hardcovers offer black ink or premium color.</p>
+          <span id="kdpInk-error" class="field-error" role="alert"></span>
+        </div>
+        <NumberField id="kdpPages" label="Page count" value="300" inputMode="numeric" required />
+      </div>
+      <fieldset class="mt-6">
+        <legend class="text-sm font-semibold">Trim size</legend>
+        <div class="mt-3 grid gap-2 sm:grid-cols-2">
+          <label class={radioCard}><input type="radio" name="kdpTrim" value="regular" class="mt-1" checked /><span>Regular<span class={hint}>Up to 6.12 in wide and 9 in tall.</span></span></label>
+          <label class={radioCard}><input type="radio" name="kdpTrim" value="large" class="mt-1" /><span>Large<span class={hint}>Wider than 6.12 in or taller than 9 in.</span></span></label>
+        </div>
+      </fieldset>
+    </div>
+    <div class="mt-6 grid gap-5 sm:grid-cols-2">
+      <NumberField id="kdpPrice" label="List price" labelTextId="kdp-price-label" value="4.99" unit="usd" required help="Before tax." />
+      <NumberField id="kdpFileSize" wrapperId="kdp-file-field" label="File size (MB)" value="2.50" required help="As KDP shows it for your manuscript." />
+      <NumberField id="kdpCopies" label="Copies sold (optional)" inputMode="numeric" placeholder="e.g. 500" help="Adds the royalty on that many sales." />
+    </div>
+    <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="kdp-update">Update royalty</button><button id="kdp-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
+  </form>
+  <aside id="kdp-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-navy p-7 text-paper shadow-[0_16px_45px_rgba(19,31,51,.16)] md:p-9">
+    <p class="eyebrow !text-[#c3d2ea]" data-primary-label>Royalty per sale</p>
+    <p id="kdp-royalty" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.royaltyCents)}</p>
+    <p class="mt-1 text-paper/70">on Amazon.com, before income tax</p>
+    <div class="my-7 border-t border-paper/25"></div>
+    <div class="[&>:first-child]:mt-0">
+      <ResultRow label="Royalty rate" valueId="kdp-rate" value="70%" />
+      <ResultRow label="Delivery cost" labelId="kdp-cost-label" valueId="kdp-cost" value={formatUsdGrouped(example.deliveryCostCents)} />
+      <ResultRow label="List price range" labelId="kdp-range-label" valueId="kdp-range" value="$2.99 to $12.99" />
+      <ResultRow label="Royalty on these copies" valueId="kdp-total" value="—" rowId="kdp-total-row" hidden />
+    </div>
+    <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-kdp" type="button" class="rounded-full bg-paper px-4 py-2.5 text-sm font-bold text-ink">Copy result</button><button type="button" data-print class="rounded-full border border-paper/35 px-4 py-2.5 text-sm font-bold">Print</button></div>
+    <p id="kdp-message" class="mt-4 text-sm text-[#ccd8ec]" aria-live="polite"></p>
+  </aside>
+</div>
+{embedded ? null : <StickyResult />}
+<noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The example shows a $4.99 eBook of 2.5 MB at the 70% royalty option.</p></noscript>
+
+<script>
+  import {
+    calculateEbookRoyalty,
+    calculatePrintRoyalty,
+    PrintSpecificationError,
+    type EbookRoyaltyOption,
+    type PrintFormat,
+    type PrintInk,
+    type TrimSize,
+  } from "@MathMyRate/calculators";
+  import {
+    type CalculationTrigger,
+    decimalToHundredths,
+    focusProblemField,
+    formatUsdGrouped,
+    InputProblem,
+    markResultsCurrent,
+    markResultsStale,
+    requireHtmlButton,
+    requireHtmlElement,
+    requireHtmlForm,
+    requireHtmlInput,
+    requireHtmlSelect,
+    setFieldState,
+    shouldDeferProblem,
+    usdToCents,
+    watchCalculatorFields,
+    wholeNumber,
+  } from "../scripts/calculator-form";
+
+  type BookFormat = "ebook" | PrintFormat;
+
+  const examplePrices: Readonly<Record<BookFormat, string>> = { ebook: "4.99", paperback: "14.99", hardcover: "24.99" };
+
+  if (document.querySelector("[data-kdp-calculator]")) {
+    const form = requireHtmlForm("kdp-form");
+    const panel = requireHtmlElement("kdp-panel");
+    const copyButton = requireHtmlButton("copy-kdp");
+    const inkSelect = requireHtmlSelect("kdpInk");
+    let shownFormat: BookFormat = "ebook";
+    let latestCopy: string | null = null;
+
+    const setText = (id: string, text: string): void => {
+      requireHtmlElement(id).textContent = text;
+    };
+
+    const checked = (name: string): string | undefined =>
+      form.querySelector<HTMLInputElement>(`input[name="${name}"]:checked`)?.value;
+
+    const currentFormat = (): BookFormat => {
+      const value = checked("kdpFormat");
+
+      return value === "paperback" || value === "hardcover" ? value : "ebook";
+    };
+
+    const currentOption = (): EbookRoyaltyOption => (checked("kdpOption") === "35" ? "35" : "70");
+
+    const currentTrim = (): TrimSize => (checked("kdpTrim") === "large" ? "large" : "regular");
+
+    const currentInk = (): PrintInk => {
+      const value = inkSelect.value;
+
+      return value === "groundwood" || value === "standard-color" || value === "premium-color" ? value : "black";
+    };
+
+    const syncForm = (): void => {
+      const format = currentFormat();
+      const ebook = format === "ebook";
+      const priceInput = requireHtmlInput("kdpPrice");
+
+      requireHtmlElement("kdp-ebook-fields").hidden = !ebook;
+      requireHtmlElement("kdp-print-fields").hidden = ebook;
+      requireHtmlElement("kdp-file-field").hidden = !ebook;
+
+      for (const option of Array.from(inkSelect.options)) {
+        option.disabled = format === "hardcover" && (option.value === "groundwood" || option.value === "standard-color");
+      }
+
+      if (format === "hardcover" && (inkSelect.value === "groundwood" || inkSelect.value === "standard-color")) inkSelect.value = "black";
+
+      if (format !== shownFormat && priceInput.value === examplePrices[shownFormat]) priceInput.value = examplePrices[format];
+      shownFormat = format;
+    };
+
+    const clear = (): void => {
+      for (const id of ["kdp-royalty", "kdp-rate", "kdp-cost", "kdp-range", "kdp-total"]) {
+        setText(id, "—");
+      }
+
+      latestCopy = null;
+      markResultsCurrent(panel, []);
+      copyButton.disabled = true;
+    };
+
+    const readCopies = (): number | null => {
+      const value = requireHtmlInput("kdpCopies").value.trim();
+
+      return value.length === 0 ? null : wholeNumber(value, "kdpCopies", 1, 10_000_000);
+    };
+
+    const calculate = (trigger: CalculationTrigger): void => {
+      const format = currentFormat();
+
+      try {
+        const listPriceCents = usdToCents(requireHtmlInput("kdpPrice").value, "kdpPrice");
+        const copies = readCopies();
+        let royaltyCents: bigint;
+        let warning = "";
+
+        if (format === "ebook") {
+          const option = currentOption();
+          const fileSizeHundredthsMb = decimalToHundredths(requireHtmlInput("kdpFileSize").value, "kdpFileSize", "MB", 65_000);
+          const result = calculateEbookRoyalty({ listPriceCents, option, fileSizeHundredthsMb });
+          const range = `${formatUsdGrouped(result.minimumListPriceCents)} to ${formatUsdGrouped(result.maximumListPriceCents)}`;
+
+          royaltyCents = result.royaltyCents;
+          setText("kdp-rate", `${result.royaltyRateBps / 100}%`);
+          setText("kdp-cost-label", "Delivery cost");
+          setText("kdp-range-label", "List price range");
+          setText("kdp-cost", formatUsdGrouped(result.deliveryCostCents));
+          setText("kdp-range", range);
+
+          if (!result.priceInRange) warning = `KDP's ${option}% option needs a list price from ${range}${option === "35" ? " for this file size" : ""}.`;
+          latestCopy = `A ${formatUsdGrouped(listPriceCents)} Kindle eBook at the ${option}% option earns ${formatUsdGrouped(royaltyCents)} per Amazon.com sale.`;
+        } else {
+          const result = calculatePrintRoyalty({
+            format,
+            ink: currentInk(),
+            trim: currentTrim(),
+            pages: wholeNumber(requireHtmlInput("kdpPages").value, "kdpPages", 1, 5_000),
+            listPriceCents,
+          });
+
+          royaltyCents = result.royaltyCents;
+          setText("kdp-rate", `${result.royaltyRateBps / 100}%`);
+          setText("kdp-cost-label", "Printing cost");
+          setText("kdp-range-label", "Minimum list price");
+          setText("kdp-cost", formatUsdGrouped(result.printingCostCents));
+          setText("kdp-range", `${formatUsdGrouped(result.minimumAtFiftyCents)} at 50%, ${formatUsdGrouped(result.minimumAtSixtyCents)} at 60%`);
+
+          if (listPriceCents > result.maximumListPriceCents) {
+            warning = `KDP's maximum list price is ${formatUsdGrouped(result.maximumListPriceCents)}.`;
+          } else if (!result.priceInRange) {
+            warning = `KDP will not accept a list price below ${formatUsdGrouped(result.minimumListPriceCents)}, the printing cost divided by the ${result.royaltyRateBps / 100}% rate.`;
+          }
+
+          latestCopy = `A ${formatUsdGrouped(listPriceCents)} ${format} costs ${formatUsdGrouped(result.printingCostCents)} to print and earns ${formatUsdGrouped(royaltyCents)} per Amazon.com sale.`;
+        }
+
+        setText("kdp-royalty", formatUsdGrouped(royaltyCents));
+        requireHtmlElement("kdp-total-row").hidden = copies === null;
+
+        if (copies !== null) setText("kdp-total", formatUsdGrouped(royaltyCents * BigInt(copies)));
+        setText("kdp-message", warning);
+        markResultsCurrent(panel, [copyButton]);
+        setFieldState(form);
+      } catch (error) {
+        const problem =
+          error instanceof InputProblem
+            ? error
+            : error instanceof PrintSpecificationError
+              ? new InputProblem(error.problem === "ink" ? "kdpInk" : "kdpPages", error.message)
+              : new InputProblem("kdpPrice", "Check your inputs.");
+
+        if (shouldDeferProblem(form, trigger)) {
+          markResultsStale(panel, [copyButton]);
+
+          return;
+        }
+
+        clear();
+        setFieldState(form, problem);
+
+        if (trigger === "submit") focusProblemField(form, problem);
+        setText("kdp-message", "");
+      }
+    };
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      calculate("submit");
+    });
+
+    requireHtmlButton("kdp-update").addEventListener("click", () => calculate("submit"));
+
+    form.querySelectorAll('input[name="kdpFormat"], input[name="kdpOption"], input[name="kdpTrim"]').forEach((element) => {
+      element.addEventListener("change", () => {
+        syncForm();
+        calculate("commit");
+      });
+    });
+
+    inkSelect.addEventListener("change", () => calculate("commit"));
+
+    watchCalculatorFields(form, calculate);
+
+    requireHtmlButton("kdp-reset").addEventListener("click", () => {
+      form.reset();
+      shownFormat = "ebook";
+      syncForm();
+      calculate("commit");
+    });
+
+    copyButton.addEventListener("click", async () => {
+      if (latestCopy === null) return;
+
+      try {
+        await navigator.clipboard.writeText(`${latestCopy} Estimate from KDP's published rates.`);
+        setText("kdp-message", "Result copied.");
+      } catch {
+        setText("kdp-message", "Copy was unavailable. Select the result to copy it manually.");
+      }
+    });
+
+    syncForm();
+    calculate("commit");
+  }
+</script>

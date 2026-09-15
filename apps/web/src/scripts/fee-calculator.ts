@@ -67,6 +67,17 @@ function renderLineItems(items: ReadonlyArray<{ label: string; feeCents: bigint 
 }
 
 /** Wires the fee calculator rendered by FeeCalculator.astro, if the page has one. */
+/** Names the amounts a scenario covers, such as "$10.00 or more" or "$10.01 to $7,500.00". */
+function describeRange(minCents: bigint | null, maxCents: bigint | null): string {
+  if (minCents !== null && maxCents !== null) {
+    return `${formatUsdGrouped(minCents)} to ${formatUsdGrouped(maxCents)}`;
+  }
+
+  if (minCents !== null) return `${formatUsdGrouped(minCents)} or more`;
+
+  return `up to ${formatUsdGrouped(maxCents ?? 0n)}`;
+}
+
 export function mountFeeCalculator(): void {
   const root = document.querySelector<HTMLElement>("[data-fee-calculator]");
 
@@ -184,7 +195,7 @@ export function mountFeeCalculator(): void {
 
       if (mode === "net") setText("keep-result", formatUsdGrouped(result.sellerProceedsCents));
 
-      const volumeText = renderVolume(result, salesPerMonth);
+      const volumeText = renderVolume(result, salesPerMonth, config.volume);
       const reviewed = result.checkedOn ?? "date not recorded";
 
       const saleText =
@@ -199,9 +210,7 @@ export function mountFeeCalculator(): void {
     } catch (error) {
       const outOfRange = error instanceof GrossOutOfRangeError ? error : null;
 
-      const rangeText = outOfRange
-        ? `${formatUsdGrouped(outOfRange.minCents)} to ${formatUsdGrouped(outOfRange.maxCents)}`
-        : "";
+      const rangeText = outOfRange ? describeRange(outOfRange.minCents, outOfRange.maxCents) : "";
 
       const problem =
         error instanceof InputProblem
@@ -209,9 +218,9 @@ export function mountFeeCalculator(): void {
           : new InputProblem(
               "amount",
               outOfRange && mode === "received"
-                ? `This scenario covers sales from ${rangeText}. Choose another scenario for this amount.`
+                ? `This scenario covers amounts of ${rangeText}. Choose another scenario for this amount.`
                 : outOfRange
-                  ? `The charge for this amount falls outside ${rangeText}, the range this scenario covers.`
+                  ? `The charge for this amount falls outside the amounts this scenario covers: ${rangeText}.`
                   : mode === "received"
                     ? "Enter an amount above zero."
                     : "This target cannot be reached. Try a smaller amount.",
