@@ -5,7 +5,14 @@
 
 import type { ToolId } from "./tools";
 
-export type FeeCalculatorId = "stripe" | "paypal" | "square" | "etsy" | "gumroad" | "lemon-squeezy";
+export type FeeCalculatorId =
+  | "stripe"
+  | "paypal"
+  | "square"
+  | "etsy"
+  | "ebay"
+  | "gumroad"
+  | "lemon-squeezy";
 
 export interface FeeScenario {
   readonly id: string;
@@ -229,6 +236,74 @@ export const feeCalculators: readonly FeeCalculatorConfig[] = [
         description: "Transaction and processing fees, without the listing fee.",
         note: "Supported scenario: US shop with a US bank account, order paid in USD through Etsy Payments, transaction and processing fees only.",
         copyName: "Etsy order",
+      },
+    ],
+  },
+  {
+    id: "ebay",
+    toolId: "ebay-fees",
+    provider: "eBay",
+    formHeading: "Sale details",
+    scenarioLegend: "What did you sell?",
+    panelTone: "ink",
+    taxHelp:
+      "Sales tax on this order. eBay's final value fee is charged on the total amount of the sale, including sales tax; this calculator never computes tax.",
+    scenarios: [
+      {
+        id: "most",
+        presetId: "ebay-us-most-categories",
+        label: "Most categories",
+        description: "An order over $10, up to $7,500.",
+        note: "Supported scenario: US eBay account with no Store or a Starter Store, one item in an order over $10.00 and up to $7,500.00, in a category charged 13.6%.",
+        copyName: "eBay sale",
+      },
+      {
+        id: "small",
+        presetId: "ebay-us-most-categories-small-order",
+        label: "Most categories, $10 or less",
+        description: "A small order, with the 30¢ per-order fee.",
+        note: "Supported scenario: US eBay account with no Store or a Starter Store, one item in an order of $10.00 or less, in a category charged 13.6%.",
+        copyName: "eBay order of $10 or less",
+      },
+      {
+        id: "books",
+        presetId: "ebay-us-books-movies-music",
+        label: "Books, movies, and music",
+        description: "Books & Magazines, Movies & TV, and most Music.",
+        note: "Supported scenario: US eBay account with no Store or a Starter Store, one item in an order over $10.00 and up to $7,500.00, charged 15.3%.",
+        copyName: "eBay books, movies, or music sale",
+      },
+      {
+        id: "cards",
+        presetId: "ebay-us-cards-comics-coins",
+        label: "Trading cards, comics, and coins",
+        description: "Cards, comics, card games, and most coins.",
+        note: "Supported scenario: US eBay account with no Store or a Starter Store, one item in an order over $10.00 and up to $7,500.00, charged 13.25%.",
+        copyName: "eBay trading card, comic, or coin sale",
+      },
+      {
+        id: "guitars",
+        presetId: "ebay-us-guitars-basses",
+        label: "Guitars and basses",
+        description: "Musical Instruments & Gear > Guitars & Basses.",
+        note: "Supported scenario: US eBay account with no Store or a Starter Store, one guitar or bass in an order over $10.00 and up to $7,500.00, charged 6.7%.",
+        copyName: "eBay guitar or bass sale",
+      },
+      {
+        id: "international",
+        presetId: "ebay-us-international-most-categories",
+        label: "International buyer",
+        description: "Most categories, plus eBay's 1.65% international fee.",
+        note: "Supported scenario: US eBay account with no Store or a Starter Store, one item in a most-categories order over $10.00 and up to $7,500.00, to a buyer outside the US, not shipped with eBay International Shipping.",
+        copyName: "eBay international sale",
+      },
+      {
+        id: "store",
+        presetId: "ebay-us-store-most-categories",
+        label: "Basic Store or above",
+        description: "Most categories at 12.7%, orders over $10 up to $2,500.",
+        note: "Supported scenario: US eBay account with a Basic, Premium, Anchor, or Enterprise Store, one item in an order over $10.00 and up to $2,500.00, in a category charged 12.7%.",
+        copyName: "eBay Store sale",
       },
     ],
   },

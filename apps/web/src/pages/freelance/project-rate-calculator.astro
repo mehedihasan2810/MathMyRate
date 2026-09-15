@@ -1,13 +1,12 @@
 ---
 import { calculateProjectRate } from "@MathMyRate/calculators";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import ProjectRateCalculator from "../../components/ProjectRateCalculator.astro";
 import DataTable from "../../components/DataTable.astro";
 import FaqSection from "../../components/FaqSection.astro";
-import NumberField from "../../components/NumberField.astro";
 import PageByline from "../../components/PageByline.astro";
 import RelatedTools from "../../components/RelatedTools.astro";
-import ResultRow from "../../components/ResultRow.astro";
-import StickyResult from "../../components/StickyResult.astro";
 import { findTool, toolBreadcrumbs } from "../../data/tools";
 import Layout from "../../layouts/Layout.astro";
 import type { FaqEntry } from "../../lib/structured-data";
@@ -20,11 +19,6 @@ const breadcrumbs = toolBreadcrumbs(tool.id);
 const exampleInput = { hourlyRateCents: 11250n, estimatedMinutes: 1320, directExpensesCents: 18000n, contingencyBps: 1500 };
 
 const example = calculateProjectRate(exampleInput);
-
-const rowLabel = "text-[#f3f5fa]/80";
-
-const minutesHelp = "Whole minutes only: 1, 1.25, 1.5, and 1.75 are accepted.";
-
 
 const exampleLabor = formatUsdGrouped(example.laborCents);
 
@@ -63,34 +57,7 @@ const faq: readonly FaqEntry[] = [
     <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
     <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Give the scope a number. Turn delivery hours, meetings, contingency, and expenses into a clear fixed-price quote.</p>
     <PageByline updatedOn={updatedOn} />
-    <div id="transfer-notice" class="mt-6 hidden rounded-xl border border-[#aac7a9] bg-[#e2efe1] px-5 py-4 text-sm text-ink"><strong>Hourly rate brought across.</strong> This is stored only in this browser. Your annual tax reserve is already reflected in this rate and is not added again.</div>
-    <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
-      <form id="project-form" data-calculator-form class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate>
-        <div class="flex items-baseline justify-between gap-3"><h2 class="display text-2xl font-bold">Project ingredients</h2><span class="shrink-0 text-xs text-ink/50">USD</span></div>
-        <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
-        <div class="mt-7 grid gap-5 sm:grid-cols-2">
-          <NumberField id="projectHourly" label="Hourly rate" value="112.50" unit="usd" required />
-          <NumberField id="deliveryHours" label="Delivery hours" value="18" help={minutesHelp} required />
-          <NumberField id="adminHours" label="Meetings & admin hours" value="4" help={minutesHelp} required />
-          <NumberField id="contingency" label="Contingency" value="15.00" unit="percent" required />
-          <NumberField id="directExpenses" label="Direct project expenses" value="180.00" unit="usd" required />
-        </div>
-        <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="project-update">Update quote</button><button id="project-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
-      </form>
-      <aside id="project-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
-        <p class="eyebrow !text-[#f2e3bd]" data-primary-label>Target project receipts</p><p id="quote-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.targetReceiptsCents)}</p><p class="mt-1 text-[#f3f5fa]/80">before any project-specific payment processing fees</p>
-        <div class="my-7 border-t border-[#f3f5fa]/30"></div>
-        <div class="[&>:first-child]:mt-0">
-          <ResultRow label="Labor" valueId="labor-result" value={formatUsdGrouped(example.laborCents)} labelClass={rowLabel} />
-          <ResultRow label="Contingency allowance" valueId="contingency-result" value={formatUsdGrouped(example.contingencyCents)} labelClass={rowLabel} />
-          <ResultRow label="Expense reimbursement" valueId="expense-result" value={formatUsdGrouped(example.expensesCents)} labelClass={rowLabel} />
-          <ResultRow label="Planned time" valueId="time-result" value="22 hours" labelClass={rowLabel} />
-        </div>
-        <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-project" type="button" class="rounded-full bg-[#f3f5fa] px-4 py-2.5 text-sm font-bold text-ink">Copy quote</button><button type="button" data-print class="rounded-full border border-[#f3f5fa]/45 px-4 py-2.5 text-sm font-bold">Print</button></div><p id="project-message" class="mt-4 text-sm text-[#f2e3bd]"></p>
-      </aside>
-    </div>
-    <StickyResult />
-    <noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The example scope is visible; enable JavaScript to calculate a quote locally.</p></noscript>
+    <ProjectRateCalculator />
     <article class="guide mt-14 border-t border-line pt-4">
       <h2>What this calculator tells you</h2>
       <p>The freelance project rate calculator turns an hourly rate and a scope into a fixed-price quote. It prices delivery and admin time, adds a contingency allowance to that labor, and passes direct expenses through at cost. With the example inputs, the quote to aim for is <strong>{exampleTotal}</strong>.</p>
@@ -134,155 +101,10 @@ const faq: readonly FaqEntry[] = [
 
       <FaqSection entries={faq} />
 
+      <EmbedSnippet toolId={tool.id} />
+
       <p class="text-sm text-ink/60">Planning estimate only; not tax, accounting, or legal advice. See <a href="/methodology/">how the numbers are made</a>.</p>
     </article>
     <RelatedTools current={tool.id} />
   </main>
-  <script>
-    import { calculateProjectRate } from "@MathMyRate/calculators";
-    import {
-      type CalculationTrigger,
-      formatUsdGrouped,
-      focusProblemField,
-      formatUsdInput,
-      hoursToMinutes,
-      InputProblem,
-      markResultsCurrent,
-      markResultsStale,
-      percentToBps,
-      requireHtmlButton,
-      requireHtmlElement,
-      requireHtmlForm,
-      requireHtmlInput,
-      setFieldState,
-      shouldDeferProblem,
-      usdToCents,
-      watchCalculatorFields,
-    } from "../../scripts/calculator-form";
-
-    const form = requireHtmlForm("project-form");
-
-    const panel = requireHtmlElement("project-panel");
-
-    const copyButton = requireHtmlButton("copy-project");
-
-    let latest: bigint | null = null;
-
-    let transferMessage = "";
-
-    function setResult(id: string, text: string): void {
-      requireHtmlElement(id).textContent = text;
-    }
-
-    function clear(): void {
-      for (const id of [
-        "quote-result",
-        "labor-result",
-        "contingency-result",
-        "expense-result",
-        "time-result",
-      ]) {
-        setResult(id, "—");
-      }
-
-      latest = null;
-      markResultsCurrent(panel, []);
-      copyButton.disabled = true;
-    }
-
-    function calc(trigger: CalculationTrigger): void {
-      try {
-        const delivery = hoursToMinutes(requireHtmlInput("deliveryHours").value, "deliveryHours");
-        const admin = hoursToMinutes(requireHtmlInput("adminHours").value, "adminHours");
-
-        if (delivery + admin < 1) {
-          throw new InputProblem("deliveryHours", "Plan at least one minute of work.");
-        }
-
-        const result = calculateProjectRate({
-          hourlyRateCents: usdToCents(requireHtmlInput("projectHourly").value, "projectHourly"),
-          estimatedMinutes: delivery + admin,
-          directExpensesCents: usdToCents(requireHtmlInput("directExpenses").value, "directExpenses"),
-          contingencyBps: percentToBps(requireHtmlInput("contingency").value, "contingency", 10000),
-        });
-
-        setResult("quote-result", formatUsdGrouped(result.targetReceiptsCents));
-        setResult("labor-result", formatUsdGrouped(result.laborCents));
-        setResult("contingency-result", formatUsdGrouped(result.contingencyCents));
-        setResult("expense-result", formatUsdGrouped(result.expensesCents));
-        setResult("time-result", `${(delivery + admin) / 60} hours`);
-        latest = result.targetReceiptsCents;
-        markResultsCurrent(panel, [copyButton]);
-        requireHtmlElement("project-message").textContent = transferMessage;
-        setFieldState(form);
-      } catch (error) {
-        const problem =
-          error instanceof InputProblem ? error : new InputProblem("projectHourly", "Check your inputs.");
-
-        if (shouldDeferProblem(form, trigger)) {
-          markResultsStale(panel, [copyButton]);
-
-          return;
-        }
-
-        clear();
-        setFieldState(form, problem);
-
-        if (trigger === "submit") focusProblemField(form, problem);
-        requireHtmlElement("project-message").textContent = "";
-      }
-    }
-
-    try {
-      const transferred = localStorage.getItem("mathmyrate:hourly-cents");
-
-      localStorage.removeItem("mathmyrate:hourly-cents");
-
-      if (transferred && /^\d+$/u.test(transferred) && BigInt(transferred) <= 100000000000000n) {
-        requireHtmlInput("projectHourly").value = formatUsdInput(BigInt(transferred));
-        requireHtmlElement("transfer-notice").classList.remove("hidden");
-      } else if (transferred) {
-        transferMessage = "The saved hourly rate was invalid and was not used.";
-      }
-    } catch {
-      transferMessage = "Saved-rate transfer was unavailable; enter an hourly rate manually.";
-    }
-
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      calc("submit");
-    });
-
-    requireHtmlButton("project-update").addEventListener("click", () => calc("submit"));
-
-    watchCalculatorFields(form, calc);
-
-    requireHtmlButton("project-reset").addEventListener("click", () => {
-      form.reset();
-      transferMessage = "";
-
-      try {
-        localStorage.removeItem("mathmyrate:hourly-cents");
-      } catch {
-        /* localStorage may be unavailable */
-      }
-
-      requireHtmlElement("transfer-notice").classList.add("hidden");
-      calc("commit");
-    });
-
-    copyButton.addEventListener("click", async () => {
-      if (latest === null) return;
-
-      try {
-        await navigator.clipboard.writeText(`Target project receipts: ${formatUsdGrouped(latest)}`);
-        requireHtmlElement("project-message").textContent = "Quote copied.";
-      } catch {
-        requireHtmlElement("project-message").textContent =
-          "Copy was unavailable. Select the result to copy it manually.";
-      }
-    });
-
-    calc("commit");
-  </script>
 </Layout>

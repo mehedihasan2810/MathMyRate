@@ -1,11 +1,13 @@
 /** Side-by-side fee comparisons. Every option points at one official preset. */
 
-export type FeeComparisonId = "stripe-vs-paypal" | "gumroad-vs-lemon-squeezy";
+export type FeeComparisonId = "stripe-vs-paypal" | "gumroad-vs-lemon-squeezy" | "digital-products";
 
 export interface ComparisonOption {
   readonly id: string;
   readonly presetId: string;
   readonly label: string;
+  /** A compact name for table headings; defaults to the label. */
+  readonly shortLabel?: string;
   readonly href: string;
 }
 
@@ -85,6 +87,54 @@ export const feeComparisons: readonly FeeComparisonConfig[] = [
         presetId: "lemon-squeezy-us-international-card",
         label: "Lemon Squeezy, international card order",
         href: "/fees/lemon-squeezy-fee-calculator/",
+      },
+    ],
+  },
+  {
+    id: "digital-products",
+    caption: "Fees on the same digital product sale, USD, no tax",
+    options: [
+      {
+        id: "lemon",
+        presetId: "lemon-squeezy-us-domestic-card",
+        label: "Lemon Squeezy, US card order",
+        shortLabel: "Lemon Squeezy",
+        href: "/fees/lemon-squeezy-fee-calculator/",
+      },
+      {
+        id: "gumroad-direct",
+        presetId: "gumroad-us-direct-card",
+        label: "Gumroad, direct sale",
+        shortLabel: "Gumroad direct",
+        href: "/fees/gumroad-fee-calculator/",
+      },
+      {
+        id: "gumroad-discover",
+        presetId: "gumroad-us-discover",
+        label: "Gumroad, Discover sale",
+        shortLabel: "Gumroad Discover",
+        href: "/fees/gumroad-fee-calculator/",
+      },
+      {
+        id: "etsy",
+        presetId: "etsy-us-order-with-listing-fee",
+        label: "Etsy, order with listing fee",
+        shortLabel: "Etsy",
+        href: "/fees/etsy-fee-calculator/",
+      },
+      {
+        id: "stripe",
+        presetId: "stripe-us-online-domestic-card",
+        label: "Stripe card payment (payment only)",
+        shortLabel: "Stripe",
+        href: "/fees/stripe-fee-calculator/",
+      },
+      {
+        id: "paypal",
+        presetId: "paypal-us-checkout-paypal-payment",
+        label: "PayPal Checkout (payment only)",
+        shortLabel: "PayPal Checkout",
+        href: "/fees/paypal-fee-calculator/",
       },
     ],
   },

@@ -1,27 +1,38 @@
 ---
 import FeeCalculator from "../../components/FeeCalculator.astro";
-import { feeCalculators, type FeeCalculatorId } from "../../data/fee-calculators";
-import { findTool, type ToolId } from "../../data/tools";
+import HourlyRateCalculator from "../../components/HourlyRateCalculator.astro";
+import MarkupMarginCalculator from "../../components/MarkupMarginCalculator.astro";
+import ProjectRateCalculator from "../../components/ProjectRateCalculator.astro";
+import RetainerCalculator from "../../components/RetainerCalculator.astro";
+import SalaryToHourlyCalculator from "../../components/SalaryToHourlyCalculator.astro";
+import ServiceFeeCalculator from "../../components/ServiceFeeCalculator.astro";
+import { embeddableTools, type EmbeddableTool } from "../../data/embeds";
+import { findTool } from "../../data/tools";
 import EmbedLayout from "../../layouts/EmbedLayout.astro";
 import { embedPath } from "../../lib/embed";
 
 export function getStaticPaths() {
-  return feeCalculators.map((config) => {
-    const slug = embedPath(findTool(config.toolId)).split("/").filter(Boolean).at(-1) ?? config.id;
-
-    return { params: { calculator: slug }, props: { calculatorId: config.id, toolId: config.toolId } };
-  });
+  return embeddableTools.map((embed) => ({
+    params: { calculator: embedPath(findTool(embed.toolId)).split("/").filter(Boolean).at(-1) ?? embed.toolId },
+    props: { embed },
+  }));
 }
 
 interface Props {
-  calculatorId: FeeCalculatorId;
-  toolId: ToolId;
+  embed: EmbeddableTool;
 }
 
-const { calculatorId, toolId } = Astro.props;
+const { embed } = Astro.props;
 
-const tool = findTool(toolId);
+const tool = findTool(embed.toolId);
 ---
 <EmbedLayout title={`${tool.name} | MathMyRate`} toolHref={tool.href} toolName={tool.name}>
-  <FeeCalculator calculatorId={calculatorId} stickyResult={false} />
+  {embed.kind === "fee" ? <FeeCalculator calculatorId={embed.calculatorId} stickyResult={false} /> : null}
+  {embed.toolId === "hourly-rate" ? <HourlyRateCalculator embedded /> : null}
+  {embed.toolId === "project-rate" ? <ProjectRateCalculator embedded /> : null}
+  {embed.toolId === "retainer" ? <RetainerCalculator embedded /> : null}
+  {embed.toolId === "markup-margin" ? <MarkupMarginCalculator embedded /> : null}
+  {embed.toolId === "salary-to-hourly" ? <SalaryToHourlyCalculator embedded /> : null}
+  {embed.toolId === "upwork-fees" ? <ServiceFeeCalculator calculatorId="upwork" embedded /> : null}
+  {embed.toolId === "fiverr-fees" ? <ServiceFeeCalculator calculatorId="fiverr" embedded /> : null}
 </EmbedLayout>

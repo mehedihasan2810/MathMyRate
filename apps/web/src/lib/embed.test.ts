@@ -11,9 +11,10 @@ describe("embed snippet", () => {
   });
 
   it("frames the embed page and credits the full calculator with absolute links", () => {
-    const snippet = embedSnippet(new URL("https://calculators.example/"), tool);
+    const snippet = embedSnippet(new URL("https://calculators.example/"), tool, 1250);
 
     expect(snippet).toContain('src="https://calculators.example/embed/stripe-fee-calculator/"');
+    expect(snippet).toContain('height="1250"');
     expect(snippet).toContain(
       '<a href="https://calculators.example/fees/stripe-fee-calculator/">Stripe Fee Calculator</a>',
     );

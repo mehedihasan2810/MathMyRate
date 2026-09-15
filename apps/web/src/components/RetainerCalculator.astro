@@ -1,0 +1,177 @@
+---
+import { calculateRetainer } from "@MathMyRate/calculators";
+import { formatUsdGrouped } from "../scripts/calculator-form";
+import NumberField from "./NumberField.astro";
+import ResultRow from "./ResultRow.astro";
+import StickyResult from "./StickyResult.astro";
+
+interface Props {
+  /** Embedded copies leave out the pinned result bar and any hand-off to another page. */
+  embedded?: boolean;
+}
+
+const { embedded = false } = Astro.props;
+
+const rowLabel = "text-[#f3f5fa]/80";
+
+const hoursHelp = "Quarter hours such as 7.25 and 7.5 are accepted.";
+
+const example = calculateRetainer({ hourlyRateCents: 10_000n, includedMinutes: 1_200, discountBps: 1_000, usedMinutes: 900, months: 3 });
+---
+
+<div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
+  <form id="retainer-form" data-calculator-form class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate>
+    <div class="flex items-baseline justify-between gap-3"><h2 class="display text-2xl font-bold">Retainer terms</h2><span class="shrink-0 text-xs text-ink/50">USD / per month</span></div>
+    <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
+    <div class="mt-7 grid gap-5 sm:grid-cols-2">
+      <NumberField id="retainerRate" label="Hourly rate" value="100.00" unit="usd" required />
+      <NumberField id="includedHours" label="Hours included each month" value="20" required help={hoursHelp} />
+      <NumberField id="retainerDiscount" label="Retainer discount" value="10" unit="percent" required help="Enter 0 for no discount." />
+      <NumberField id="contractMonths" label="Contract length in months" value="3" inputMode="numeric" required />
+      <NumberField id="usedHours" label="Hours used in a month (optional)" value="15" help="Shows what each hour you work earns." />
+    </div>
+    <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="retainer-update">Update retainer</button><button id="retainer-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
+  </form>
+  <aside id="retainer-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
+    <p class="eyebrow !text-[#f2e3bd]" data-primary-label>Monthly retainer fee</p><p id="retainer-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.monthlyFeeCents)}</p><p class="mt-1 text-[#f3f5fa]/80">before any payment processing fees</p>
+    <div class="my-7 border-t border-[#f3f5fa]/30"></div>
+    <div class="[&>:first-child]:mt-0">
+      <ResultRow label="Full value at your hourly rate" valueId="full-value-result" value={formatUsdGrouped(example.fullValueCents)} labelClass={rowLabel} />
+      <ResultRow label="Client saves each month" valueId="savings-result" value={formatUsdGrouped(example.clientSavingsCents)} labelClass={rowLabel} />
+      <ResultRow label="Rate per included hour" valueId="included-rate-result" value={formatUsdGrouped(example.ratePerIncludedHourCents)} labelClass={rowLabel} />
+      <ResultRow label="Rate per hour used" valueId="used-rate-result" value={formatUsdGrouped(example.ratePerUsedHourCents ?? 0n)} labelClass={rowLabel} />
+      <ResultRow label="Contract total" valueId="contract-result" value={formatUsdGrouped(example.contractTotalCents)} labelClass={rowLabel} />
+    </div>
+    <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-retainer" type="button" class="rounded-full bg-[#f3f5fa] px-4 py-2.5 text-sm font-bold text-ink">Copy retainer</button><button type="button" data-print class="rounded-full border border-[#f3f5fa]/45 px-4 py-2.5 text-sm font-bold">Print</button></div><p id="retainer-message" class="mt-4 text-sm text-[#f2e3bd]"></p>
+  </aside>
+</div>
+{embedded ? null : <StickyResult />}
+<noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The example shows 20 hours a month at $100 an hour with a 10% discount; enable JavaScript to calculate your own retainer locally.</p></noscript>
+
+<script>
+  import { calculateRetainer, type RetainerResult } from "@MathMyRate/calculators";
+  import {
+    type CalculationTrigger,
+    focusProblemField,
+    formatUsdGrouped,
+    hoursToMinutes,
+    InputProblem,
+    markResultsCurrent,
+    markResultsStale,
+    percentToBps,
+    requireHtmlButton,
+    requireHtmlElement,
+    requireHtmlForm,
+    requireHtmlInput,
+    setFieldState,
+    shouldDeferProblem,
+    usdToCents,
+    watchCalculatorFields,
+    wholeNumber,
+  } from "../scripts/calculator-form";
+
+  // The most minutes any month can hold: 31 days of 24 hours.
+  const MONTH_MINUTES = 44_640;
+
+  const form = requireHtmlForm("retainer-form");
+
+  const panel = requireHtmlElement("retainer-panel");
+
+  const copyButton = requireHtmlButton("copy-retainer");
+
+  let latest: { readonly includedMinutes: number; readonly months: number; readonly result: RetainerResult } | null = null;
+
+  function setText(id: string, text: string): void {
+    requireHtmlElement(id).textContent = text;
+  }
+
+  function monthMinutes(field: string, minimum: number): number {
+    const minutes = hoursToMinutes(requireHtmlInput(field).value, field);
+
+    if (minutes < minimum) throw new InputProblem(field, "Include at least one minute.");
+
+    if (minutes > MONTH_MINUTES) throw new InputProblem(field, "A month has at most 744 hours.");
+
+    return minutes;
+  }
+
+  function clear(): void {
+    for (const id of ["retainer-result", "full-value-result", "savings-result", "included-rate-result", "used-rate-result", "contract-result"]) {
+      setText(id, "—");
+    }
+
+    latest = null;
+    markResultsCurrent(panel, []);
+    copyButton.disabled = true;
+  }
+
+  function calculate(trigger: CalculationTrigger): void {
+    try {
+      const hourlyRateCents = usdToCents(requireHtmlInput("retainerRate").value, "retainerRate");
+      const includedMinutes = monthMinutes("includedHours", 1);
+      const discountBps = percentToBps(requireHtmlInput("retainerDiscount").value, "retainerDiscount", 9_999);
+      const months = wholeNumber(requireHtmlInput("contractMonths").value, "contractMonths", 1, 120);
+      const usedMinutes = requireHtmlInput("usedHours").value.trim().length === 0 ? 0 : monthMinutes("usedHours", 0);
+      const result = calculateRetainer({ hourlyRateCents, includedMinutes, discountBps, usedMinutes, months });
+
+      setText("retainer-result", formatUsdGrouped(result.monthlyFeeCents));
+      setText("full-value-result", formatUsdGrouped(result.fullValueCents));
+      setText("savings-result", formatUsdGrouped(result.clientSavingsCents));
+      setText("included-rate-result", formatUsdGrouped(result.ratePerIncludedHourCents));
+      setText("used-rate-result", result.ratePerUsedHourCents === null ? "—" : formatUsdGrouped(result.ratePerUsedHourCents));
+      setText("contract-result", formatUsdGrouped(result.contractTotalCents));
+      latest = { includedMinutes, months, result };
+      markResultsCurrent(panel, [copyButton]);
+      setText(
+        "retainer-message",
+        usedMinutes > includedMinutes ? "The client used more hours than the retainer includes. Bill the extra hours separately, or each hour earns less." : "",
+      );
+      setFieldState(form);
+    } catch (error) {
+      const problem = error instanceof InputProblem ? error : new InputProblem("retainerRate", "Check your inputs.");
+
+      if (shouldDeferProblem(form, trigger)) {
+        markResultsStale(panel, [copyButton]);
+
+        return;
+      }
+
+      clear();
+      setFieldState(form, problem);
+
+      if (trigger === "submit") focusProblemField(form, problem);
+      setText("retainer-message", "");
+    }
+  }
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    calculate("submit");
+  });
+
+  requireHtmlButton("retainer-update").addEventListener("click", () => calculate("submit"));
+
+  watchCalculatorFields(form, calculate);
+
+  requireHtmlButton("retainer-reset").addEventListener("click", () => {
+    form.reset();
+    calculate("commit");
+  });
+
+  copyButton.addEventListener("click", async () => {
+    if (latest === null) return;
+
+    const { includedMinutes, months, result } = latest;
+    const hours = (includedMinutes / 60).toLocaleString("en-US", { maximumFractionDigits: 2 });
+    const text = `Monthly retainer: ${formatUsdGrouped(result.monthlyFeeCents)} for ${hours} hours (${formatUsdGrouped(result.ratePerIncludedHourCents)} per included hour). ${months}-month total: ${formatUsdGrouped(result.contractTotalCents)}.`;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setText("retainer-message", "Retainer copied.");
+    } catch {
+      setText("retainer-message", "Copy was unavailable. Select the result to copy it manually.");
+    }
+  });
+
+  calculate("commit");
+</script>

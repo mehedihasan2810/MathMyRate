@@ -55,17 +55,21 @@ outside launch scope.
 | `/fees/paypal-fee-calculator/`            | Product-specific PayPal calculation                        |
 | `/fees/square-fee-calculator/`            | Square fees by plan and payment channel                    |
 | `/fees/etsy-fee-calculator/`              | Etsy transaction, processing, and listing fees             |
+| `/fees/ebay-fee-calculator/`              | eBay final value and per-order fees by category            |
+| `/fees/upwork-fee-calculator/`            | Upwork service fee on a contract and withdrawal fees       |
+| `/fees/fiverr-fee-calculator/`            | Fiverr's seller commission and withdrawal fees             |
 | `/fees/gumroad-fee-calculator/`           | Gumroad direct/Discover take-home                          |
 | `/fees/lemon-squeezy-fee-calculator/`     | Order fees and separate payout estimate                    |
 | `/fees/stripe-vs-paypal-fees/`            | Stripe and PayPal fees on the same sale                    |
 | `/fees/gumroad-vs-lemon-squeezy-fees/`    | Gumroad and Lemon Squeezy fees on the same sale            |
+| `/fees/digital-product-platform-fees/`    | Digital product platform fees compared on one sale         |
 | `/methodology/`                           | Calculations, sourcing, rounding, review, and corrections  |
 | `/about/`                                 | Truthful product/operator information                      |
 | `/privacy/`                               | Actual data collection and storage disclosures             |
 | `/terms/`                                 | Estimates, exclusions, permitted use, and limitations      |
 | `/changelog/`                             | Dated record of fee rule changes and their sources         |
 | `/guides/`                                | Worked guides that hand off to calculators                 |
-| `/embed/<fee calculator>/`                | Noindex iframe copies of the fee calculators               |
+| `/embed/<calculator>/`                    | Noindex iframe copies of every calculator                  |
 | `/404`                                    | Useful navigation for unavailable URLs                     |
 
 Every route in the table exists as of 2026-09-15. There are no account pages.

@@ -1,0 +1,77 @@
+---
+import { calculateFees } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import GuideTools from "../../components/GuideTools.astro";
+import PageByline from "../../components/PageByline.astro";
+import { findGuide, guideBreadcrumbs } from "../../data/guides";
+import Layout from "../../layouts/Layout.astro";
+import { commonSaleAmounts, formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const guide = findGuide("gumroad-threshold");
+
+const breadcrumbs = guideBreadcrumbs(guide.id);
+
+const before = requireOfficialPreset("gumroad-us-direct-card");
+
+const after = requireOfficialPreset("gumroad-us-direct-card-high-volume");
+
+const lemon = requireOfficialPreset("lemon-squeezy-us-domestic-card");
+
+function feeCents(preset: typeof before, grossCents: bigint): bigint {
+  return calculateFees({ preset, grossCents }).feeCents;
+}
+
+const savingRows = commonSaleAmounts.map((grossCents) => {
+  const beforeFee = feeCents(before, grossCents);
+  const afterFee = feeCents(after, grossCents);
+
+  return [formatSaleLabel(grossCents), formatUsdGrouped(beforeFee), formatUsdGrouped(afterFee), formatUsdGrouped(beforeFee - afterFee)];
+});
+
+const perSaleSaving = feeCents(before, 5_000n) - feeCents(after, 5_000n);
+
+const lemonAlwaysLower = commonSaleAmounts.every((grossCents) => feeCents(lemon, grossCents) < feeCents(after, grossCents));
+
+const sources = [
+  { title: "Gumroad's fees - Gumroad Help Center", url: "https://gumroad.com/help/article/66-gumroads-fees.html" },
+  { title: "Gumroad pricing", url: "https://gumroad.com/pricing" },
+];
+---
+<Layout title="Gumroad's $20,000 Threshold Explained | MathMyRate" description={guide.description} ogImage="/og/gumroad-threshold.png" breadcrumbs={breadcrumbs} article={{ headline: guide.title, publishedOn: guide.publishedOn, updatedOn: guide.updatedOn }}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 max-w-3xl text-3xl font-bold md:text-4xl">{guide.title}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Gumroad halves its own fee on direct sales once a month gets busy. Here is when that happens and what it is worth.</p>
+    <PageByline updatedOn={guide.updatedOn} reviewedOn={before.checkedOn} />
+    <article class="guide mt-8">
+      <h2>The rule</h2>
+      <p>Gumroad's fee on a direct sale, made through your profile or a direct link, is 10% + $0.50. Once your paid sales in a calendar month reach $20,000, new direct sales for the rest of that month cost 5% + $0.50 instead. The lower rate applies automatically and resets on the 1st of the next month. A refund can take your month back under the threshold.</p>
+
+      <h2>Card processing does not change</h2>
+      <p>Gumroad's fee list says its fee does not include credit card processing of 2.9% + $0.30, so both are added before and after the threshold. Gumroad's refund help describes processing as part of its fee, which conflicts with that list; MathMyRate follows the fee list.</p>
+
+      <h2>What the threshold saves on each sale</h2>
+      <p>Direct card sales with no sales tax, including card processing.</p>
+      <DataTable caption="Gumroad direct-sale fee before and after the $20,000 monthly threshold" headers={["Sale", "Before", "After", "Saved"]} rows={savingRows} />
+      <p>At $50 a sale, every sale after the threshold saves <strong>{formatUsdGrouped(perSaleSaving)}</strong>, so 100 more sales that month save {formatUsdGrouped(perSaleSaving * 100n)}.</p>
+
+      <h2>What the threshold does not change</h2>
+      <ul>
+        <li><strong>Discover sales</strong> stay at a flat 30%, which already includes processing.</li>
+        <li><strong>Sales earlier in the month</strong> keep the fee they paid; the lower rate applies to new direct sales after the threshold.</li>
+        <li><strong>The sale that crosses $20,000</strong> is not split by any rule Gumroad publishes, so MathMyRate does not estimate it.</li>
+      </ul>
+
+      <h2>Is Lemon Squeezy still cheaper?</h2>
+      <p>{lemonAlwaysLower ? "Yes, at every common sale amount." : "Not at every sale amount."} Lemon Squeezy's US card fee is 5% + 50¢ including processing, while a Gumroad direct sale after the threshold still pays 5% + $0.50 plus 2.9% + $0.30. On a $50 sale, that is {formatUsdGrouped(feeCents(lemon, 5_000n))} against {formatUsdGrouped(feeCents(after, 5_000n))}. <a href="/fees/gumroad-vs-lemon-squeezy-fees/">Gumroad vs Lemon Squeezy fees</a> compares them at any price, and the <a href="/fees/digital-product-platform-fees/">digital product comparison</a> adds Etsy, Stripe, and PayPal.</p>
+      <p>The <a href="/fees/gumroad-fee-calculator/">Gumroad fee calculator</a> has a scenario for sales after the threshold.</p>
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Gumroad's pages were reviewed on the date shown above. MathMyRate is not affiliated with Gumroad.</p>
+    </article>
+    <GuideTools guide={guide.id} />
+  </main>
+</Layout>

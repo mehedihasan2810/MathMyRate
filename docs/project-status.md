@@ -214,6 +214,29 @@ On branch `feat/growth-calculators-guides`, based on `9143e2d`:
   hub. The menu panel scrolls on short screens. Percentage fields accept
   digit grouping and values above 100% where a calculator allows them.
 
+### Marketplace fees, embeds, and more guides (2026-09-15)
+
+On branch `feat/marketplace-fees-embeds`, based on `df44ae1`:
+
+- eBay has seven scenarios: most categories above and at or below $10, Books,
+  Movies & TV, and Music, trading cards, comics, and coins, Guitars & Basses,
+  international buyers, and Basic Store or above. A preset can now carry
+  `grossRangeCents`; `calculateFees` and `grossUpFees` throw
+  `GrossOutOfRangeError` outside it, and the page names the covered range.
+  Sales above a category's rate threshold are a blocked preset.
+- Upwork and Fiverr use `ServiceFeeCalculator.astro`, configured in
+  `apps/web/src/data/service-fee-calculators.ts`, with the engine's new
+  `calculateServiceFee` and `earningsForTarget`. Upwork's fee is entered from
+  the contract (0% to 15%), with Direct Contract (5%, or 0% with Freelancer
+  Plus) and Enterprise (typically 10%) options. Fiverr's is a fixed 20%. Each
+  lists only withdrawal fees its pages state consistently.
+- `/fees/digital-product-platform-fees/` compares Lemon Squeezy, Gumroad,
+  Etsy, Stripe, and PayPal on one sale. Two guides were added: Stripe fees
+  explained and Gumroad's $20,000 threshold.
+- The five freelance calculators moved into components, and every calculator
+  has a noindex embed page. Shopify Payments is still not built, because its
+  official pages publish no card rate.
+
 ### Infrastructure and deployment
 
 Alchemy remains the infrastructure owner for the existing Cloudflare Workers,
@@ -592,6 +615,55 @@ Browser evidence (each value hand-checked):
 - Not verified: Enter and Space activation (a limitation of the in-app
   browser), a successful clipboard copy, print preview, iOS Safari's on-screen
   keyboard, and the embed snippet inside an iframe on another site.
+
+Local checks on 2026-09-15 for marketplace fees, embeds, and guides (branch
+`feat/marketplace-fees-embeds`, based on `df44ae1`; browser work on the dev
+server at `:4399` and the preview build at `:4321`):
+
+| Check                                                      | Observed result                                                                                                                                                                                                                                                                                      |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run lint`                                            | Passed with 0 findings                                                                                                                                                                                                                                                                               |
+| `pnpm run format:check`                                    | Passed                                                                                                                                                                                                                                                                                               |
+| `pnpm run check-types`                                     | Passed: 7 of 7 tasks; `astro check` 0 errors, 0 warnings, 0 hints                                                                                                                                                                                                                                    |
+| Vitest                                                     | Passed: 83 calculator tests (eBay fixtures and its two published worked examples, range refusals, service fees and their inverse) and 104 web tests                                                                                                                                                  |
+| Guard build (`REQUIRE_SITE_URL=true`, no site)             | Failed as intended                                                                                                                                                                                                                                                                                   |
+| Site build (`PUBLIC_SITE_URL=https://calculators.example`) | Passed; 46 pages. Audit: one H1 and no skipped heading level per page, no inline handlers, canonical links and existing OG images on every indexable page, `WebApplication` on the 17 calculator and comparison pages, `Article` on the five guides, 31 sitemap URLs with none of the 14 embed pages |
+| Preview build                                              | Passed; every page noindex, `Disallow: /`, no sitemap, no canonical links, no JSON-LD, and no embed snippet                                                                                                                                                                                          |
+
+Page text: eBay 3,584 words, Upwork 1,439, Fiverr 1,373, the digital product
+comparison 1,052, `/fees/` 977, `/freelance/` 822, and the new guides 484 and 590.
+
+Browser evidence (each value hand-checked):
+
+- eBay: $100 in most categories pays $14.00 ($13.60 and $0.40). eBay's own
+  example, $424.00 with $24.00 tax, pays $58.06 and keeps $341.94. An $8.00
+  order in the small-order scenario pays $1.39; in the larger-order scenario it
+  shows "This scenario covers sales from $10.01 to $7,500.00." International
+  $100 pays $15.65, and a Basic Store $100 sale $13.10. Keeping $1 charges
+  $10.01; keeping $7,000 names the range instead of a price.
+- Upwork: $1,000 at 10% leaves $900.00; a Direct Contract leaves $950.00 and
+  hides the rate field; Freelancer Plus leaves $1,000.00. At 15% with Instant
+  Pay, $848.00 reaches the account. 16% shows "Enter a value no higher than
+  15%." $5,000 with Instant Pay warns about the $2,999 transfer limit.
+  Receiving $1,000 by wire bills $1,166.67, and $1,166.66 would leave a cent
+  short.
+- Fiverr: a $100 order earns $80.00, or $77.00 after a Payoneer withdrawal.
+  $5 warns about Payoneer's $10 minimum, $1 says the withdrawal fee is larger
+  than the earnings, and $7,000 warns about the $5,000 limit. Earning $100
+  prices the order at $125.00.
+- The digital product comparison marks Lemon Squeezy lowest among platforms
+  at $10, $25, $50, and $100, and Stripe lowest overall; at $3 Stripe is
+  lowest.
+- Regressions after the component move: the hourly calculator still shows
+  $103.63 and the independent $79.87, $638.96, and 1,152-hour fixture; the
+  project calculator $3,026.25 and $3,090.94 for 18.5 delivery hours; a $75.00
+  rate transfers into a $2,077.50 quote and is removed from storage. Embedded
+  copies hide the pinned bar and the project hand-off.
+- Every embed page at 360 and 760 px has no horizontal overflow; suggested
+  heights come from the 360 px measurements.
+- Not verified: Enter and Space activation (a limitation of the in-app
+  browser), a successful clipboard copy, print preview, iOS Safari's on-screen
+  keyboard, and an embed on another site.
 
 For every future status update, record:
 

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "vitest";
 import { feePresets, getFeePreset } from "./fee-presets.ts";
 import { validateFeePresets } from "./fee-schema.ts";
-import { calculateFees, grossUpFees } from "./fees.ts";
+import { calculateFees, GrossOutOfRangeError, grossUpFees } from "./fees.ts";
 import { calculateProjectRate } from "./freelance.ts";
 
 test("every published rule passes the runtime schema", () => {
@@ -93,6 +93,17 @@ const expectedFees = new Map([
   ["square-us-afterpay", 630n], // 6% = 600, + 30
   ["etsy-us-order-with-listing-fee", 995n], // 6.5% = 650, + 3% = 300, + 25, + 20
   ["etsy-us-order-fees-only", 975n], // 650 + 300 + 25
+  ["ebay-us-most-categories", 1400n], // 13.6% = 1360, + 40
+  ["ebay-us-books-movies-music", 1570n], // 15.3% = 1530, + 40
+  ["ebay-us-cards-comics-coins", 1365n], // 13.25% = 1325, + 40
+  ["ebay-us-guitars-basses", 710n], // 6.7% = 670, + 40
+  ["ebay-us-international-most-categories", 1565n], // 1360 + 1.65% = 165, + 40
+  ["ebay-us-store-most-categories", 1310n], // 12.7% = 1270, + 40
+]);
+
+// Presets whose range excludes $100 get a fixture at an amount inside their range.
+const expectedFeesAt = new Map([
+  ["ebay-us-most-categories-small-order", { grossCents: 1_000n, feeCents: 166n }], // 13.6% of 1,000 = 136, + 30
 ]);
 
 for (const preset of feePresets) {
@@ -108,12 +119,22 @@ for (const preset of feePresets) {
       return;
     }
 
-    const expected = expectedFees.get(preset.id);
+    const fixture =
+      expectedFeesAt.get(preset.id) ??
+      (expectedFees.has(preset.id)
+        ? { grossCents: 10000n, feeCents: expectedFees.get(preset.id) }
+        : undefined);
 
-    assert.ok(expected !== undefined, "Each supported rule needs an independent fixture");
-    assert.equal(calculateFees({ preset, grossCents: 10000n }).feeCents, expected);
-    const result = grossUpFees({ preset, targetProceedsCents: 10000n });
-    assert.ok(result.sellerProceedsCents >= 10000n);
+    assert.ok(fixture?.feeCents !== undefined, "Each supported rule needs an independent fixture");
+    assert.equal(
+      calculateFees({ preset, grossCents: fixture.grossCents }).feeCents,
+      fixture.feeCents,
+    );
+
+    const target = fixture.grossCents / 2n;
+    const result = grossUpFees({ preset, targetProceedsCents: target });
+
+    assert.ok(result.sellerProceedsCents >= target);
 
     // Independent exhaustive small-domain oracle avoids assuming monotonic net.
     for (let gross = 1; gross < Number(result.grossCents); gross++) {
@@ -122,7 +143,12 @@ for (const preset of feePresets) {
         0,
       );
 
-      assert.ok(gross - fee < 10000, "A smaller charge must not reach the target");
+      const floor = preset.grossRangeCents?.minCents ?? 1;
+
+      assert.ok(
+        gross < floor || gross - fee < Number(target),
+        "A smaller charge must not reach the target",
+      );
     }
 
     if (preset.taxMode === "zero-only") {
@@ -207,4 +233,38 @@ test("Etsy's transaction fee leaves out sales tax while its processing fee inclu
   );
   assert.equal(order.feeCents, 532n);
   assert.equal(order.sellerProceedsCents, 4_468n);
+});
+
+test("eBay matches the worked examples on its selling fees page", () => {
+  const preset = getFeePreset("ebay-us-most-categories");
+
+  assert.ok(preset);
+
+  // $424.00 including 6% sales tax ($24.00): 13.6% of 42,400 is 5,766.4, rounded to 5,766, + 40 = 5,806.
+  const taxed = calculateFees({ preset, grossCents: 42_400n, taxCents: 2_400n });
+
+  assert.equal(taxed.feeCents, 5_806n);
+
+  // $68.90: 13.6% is 937.04, rounded to 937, + 40 = 977.
+  assert.equal(calculateFees({ preset, grossCents: 6_890n }).feeCents, 977n);
+});
+
+test("eBay scenarios refuse amounts outside the range their rates cover", () => {
+  const large = getFeePreset("ebay-us-most-categories");
+  const small = getFeePreset("ebay-us-most-categories-small-order");
+
+  assert.ok(large && small);
+  assert.throws(() => calculateFees({ preset: large, grossCents: 1_000n }), GrossOutOfRangeError);
+  assert.throws(() => calculateFees({ preset: large, grossCents: 750_001n }), GrossOutOfRangeError);
+  assert.throws(() => calculateFees({ preset: small, grossCents: 1_001n }), GrossOutOfRangeError);
+  assert.equal(calculateFees({ preset: large, grossCents: 750_000n }).feeCents, 102_040n);
+
+  // Keeping $1.00 on the large-order scenario still needs a charge of at least $10.01.
+  assert.equal(grossUpFees({ preset: large, targetProceedsCents: 100n }).grossCents, 1_001n);
+
+  // Keeping $7,000.00 would need more than $7,500.00, beyond the scenario's range.
+  assert.throws(
+    () => grossUpFees({ preset: large, targetProceedsCents: 700_000n }),
+    GrossOutOfRangeError,
+  );
 });

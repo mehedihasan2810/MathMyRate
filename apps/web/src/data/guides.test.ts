@@ -30,7 +30,8 @@ describe("guides", () => {
 
   it("lists a guide under each calculator it names", () => {
     expect(guidesForTool("markup-margin").map((guide) => guide.id)).toContain("markup-vs-margin");
-    expect(guidesForTool("gumroad-fees")).toEqual([]);
+    expect(guidesForTool("gumroad-fees").map((guide) => guide.id)).toEqual(["gumroad-threshold"]);
+    expect(guidesForTool("lemon-squeezy-fees")).toEqual([]);
   });
 
   it("builds breadcrumbs through the guides index", () => {

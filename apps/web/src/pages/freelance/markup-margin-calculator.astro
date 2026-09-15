@@ -1,13 +1,12 @@
 ---
 import { analyzePrice, priceFromMargin, priceFromMarkup } from "@MathMyRate/calculators";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import MarkupMarginCalculator from "../../components/MarkupMarginCalculator.astro";
 import DataTable from "../../components/DataTable.astro";
 import FaqSection from "../../components/FaqSection.astro";
-import NumberField from "../../components/NumberField.astro";
 import PageByline from "../../components/PageByline.astro";
 import RelatedTools from "../../components/RelatedTools.astro";
-import ResultRow from "../../components/ResultRow.astro";
-import StickyResult from "../../components/StickyResult.astro";
 import { findTool, toolBreadcrumbs } from "../../data/tools";
 import Layout from "../../layouts/Layout.astro";
 import type { FaqEntry } from "../../lib/structured-data";
@@ -24,8 +23,6 @@ const marginExample = priceFromMargin({ costCents: 4_000n, marginBps: 5_000 });
 const mistake = analyzePrice({ costCents: 10_000n, priceCents: 13_000n });
 
 const thirtyMargin = priceFromMargin({ costCents: 10_000n, marginBps: 3_000 });
-
-const rowLabel = "text-[#f3f5fa]/80";
 
 function percent(bps: bigint | null): string {
   return bps === null ? "Not defined" : formatPercentBps(bps);
@@ -66,41 +63,7 @@ const faq: readonly FaqEntry[] = [
     <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
     <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Price from a markup or a margin, or check the numbers on a price you already charge. See the profit, the markup, and the margin side by side.</p>
     <PageByline updatedOn={updatedOn} />
-    <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
-      <form id="markup-form" data-calculator-form class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate>
-        <div class="flex items-baseline justify-between gap-3"><h2 class="display text-2xl font-bold">Cost and price</h2><span class="shrink-0 text-xs text-ink/50">USD</span></div>
-        <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
-        <fieldset class="mt-6">
-          <legend class="text-sm font-semibold">What do you want to work out?</legend>
-          <div class="mt-3 grid gap-2 sm:grid-cols-3">
-            <label class="flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium"><input type="radio" name="pricingMode" value="markup" class="mt-1" checked /><span>Price from a markup<span class="mt-1 block text-xs font-normal text-ink/55">Profit as a share of cost.</span></span></label>
-            <label class="flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium"><input type="radio" name="pricingMode" value="margin" class="mt-1" /><span>Price from a margin<span class="mt-1 block text-xs font-normal text-ink/55">Profit as a share of price.</span></span></label>
-            <label class="flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium"><input type="radio" name="pricingMode" value="check" class="mt-1" /><span>Check a price<span class="mt-1 block text-xs font-normal text-ink/55">Markup and margin of a price.</span></span></label>
-          </div>
-        </fieldset>
-        <div class="mt-6 grid gap-5 sm:grid-cols-2">
-          <NumberField id="cost" label="Cost" value="40.00" unit="usd" required help="What the item or the work costs you." />
-          <NumberField id="markup" wrapperId="markup-field" label="Markup" value="50" unit="percent" required help="Can be more than 100%." />
-          <NumberField id="margin" wrapperId="margin-field" hidden label="Margin" value="50" unit="percent" required help="Must be below 100%." />
-          <NumberField id="price" wrapperId="price-field" hidden label="Selling price" value="60.00" unit="usd" required />
-        </div>
-        <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="markup-update">Update price</button><button id="markup-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
-      </form>
-      <aside id="markup-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
-        <p class="eyebrow !text-[#f2e3bd]" id="primary-label" data-primary-label>Price to charge</p><p id="primary-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.priceCents)}</p><p id="primary-note" class="mt-1 text-[#f3f5fa]/80">rounded up to the cent</p>
-        <div class="my-7 border-t border-[#f3f5fa]/30"></div>
-        <div class="[&>:first-child]:mt-0">
-          <ResultRow label="Selling price" valueId="price-result" value={formatUsdGrouped(example.priceCents)} labelClass={rowLabel} />
-          <ResultRow label="Cost" valueId="cost-result" value={formatUsdGrouped(example.costCents)} labelClass={rowLabel} />
-          <ResultRow label="Profit" valueId="profit-result" value={formatUsdGrouped(example.profitCents)} labelClass={rowLabel} />
-          <ResultRow label="Markup (profit ÷ cost)" valueId="markup-result" value={percent(example.markupBps)} labelClass={rowLabel} />
-          <ResultRow label="Margin (profit ÷ price)" valueId="margin-result" value={percent(example.marginBps)} labelClass={rowLabel} />
-        </div>
-        <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-markup" type="button" class="rounded-full bg-[#f3f5fa] px-4 py-2.5 text-sm font-bold text-ink">Copy result</button><button type="button" data-print class="rounded-full border border-[#f3f5fa]/45 px-4 py-2.5 text-sm font-bold">Print</button></div><p id="markup-message" class="mt-4 text-sm text-[#f2e3bd]"></p>
-      </aside>
-    </div>
-    <StickyResult />
-    <noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The example shows a $40.00 cost at a 50% markup; enable JavaScript to calculate your own prices locally.</p></noscript>
+    <MarkupMarginCalculator />
     <article class="guide mt-14 border-t border-line pt-4">
       <h2>What this calculator tells you</h2>
       <p>The markup and margin calculator turns a cost into a selling price, or shows what a price earns. Markup is profit as a share of the <em>cost</em>; margin is profit as a share of the <em>price</em>. A $40.00 cost with a 50% markup sells for <strong>{formatUsdGrouped(example.priceCents)}</strong>, which is a margin of only <strong>{percent(example.marginBps)}</strong>. For a 50% margin, you would charge <strong>{formatUsdGrouped(marginExample.priceCents)}</strong>.</p>
@@ -138,169 +101,10 @@ const faq: readonly FaqEntry[] = [
 
       <FaqSection entries={faq} />
 
+      <EmbedSnippet toolId={tool.id} />
+
       <p class="text-sm text-ink/60">Planning estimate only; not tax, accounting, or legal advice. See <a href="/methodology/">how the numbers are made</a>.</p>
     </article>
     <RelatedTools current={tool.id} />
   </main>
-  <script>
-    import { analyzePrice, priceFromMargin, priceFromMarkup, type PriceBreakdown } from "@MathMyRate/calculators";
-    import {
-      type CalculationTrigger,
-      focusProblemField,
-      formatPercentBps,
-      formatUsdGrouped,
-      InputProblem,
-      markResultsCurrent,
-      markResultsStale,
-      percentToBps,
-      requireHtmlButton,
-      requireHtmlElement,
-      requireHtmlForm,
-      requireHtmlInput,
-      setFieldState,
-      shouldDeferProblem,
-      usdToCents,
-      watchCalculatorFields,
-    } from "../../scripts/calculator-form";
-
-    type PricingMode = "markup" | "margin" | "check";
-
-    const form = requireHtmlForm("markup-form");
-
-    const panel = requireHtmlElement("markup-panel");
-
-    const copyButton = requireHtmlButton("copy-markup");
-
-    let latest: { readonly mode: PricingMode; readonly result: PriceBreakdown } | null = null;
-
-    function setText(id: string, text: string): void {
-      requireHtmlElement(id).textContent = text;
-    }
-
-    function percentText(bps: bigint | null): string {
-      return bps === null ? "Not defined" : formatPercentBps(bps);
-    }
-
-    function currentMode(): PricingMode {
-      const value = form.querySelector<HTMLInputElement>('input[name="pricingMode"]:checked')?.value;
-
-      if (value === "margin" || value === "check") return value;
-
-      return "markup";
-    }
-
-    function showMode(mode: PricingMode): void {
-      requireHtmlElement("markup-field").hidden = mode !== "markup";
-      requireHtmlElement("margin-field").hidden = mode !== "margin";
-      requireHtmlElement("price-field").hidden = mode !== "check";
-      setText("primary-label", mode === "check" ? "Profit on this price" : "Price to charge");
-      setText("primary-note", mode === "check" ? "selling price minus cost" : "rounded up to the cent");
-    }
-
-    function clear(): void {
-      for (const id of ["primary-result", "price-result", "cost-result", "profit-result", "markup-result", "margin-result"]) {
-        setText(id, "—");
-      }
-
-      latest = null;
-      markResultsCurrent(panel, []);
-      copyButton.disabled = true;
-    }
-
-    function priceFor(mode: PricingMode, costCents: bigint): PriceBreakdown {
-      if (mode === "markup") {
-        return priceFromMarkup({ costCents, markupBps: percentToBps(requireHtmlInput("markup").value, "markup", 1_000_000) });
-      }
-
-      if (mode === "margin") {
-        return priceFromMargin({ costCents, marginBps: percentToBps(requireHtmlInput("margin").value, "margin", 9_999) });
-      }
-
-      return analyzePrice({ costCents, priceCents: usdToCents(requireHtmlInput("price").value, "price") });
-    }
-
-    function calculate(trigger: CalculationTrigger): void {
-      const mode = currentMode();
-
-      try {
-        const result = priceFor(mode, usdToCents(requireHtmlInput("cost").value, "cost"));
-
-        setText("primary-result", formatUsdGrouped(mode === "check" ? result.profitCents : result.priceCents));
-        setText("price-result", formatUsdGrouped(result.priceCents));
-        setText("cost-result", formatUsdGrouped(result.costCents));
-        setText("profit-result", formatUsdGrouped(result.profitCents));
-        setText("markup-result", percentText(result.markupBps));
-        setText("margin-result", percentText(result.marginBps));
-        latest = { mode, result };
-        markResultsCurrent(panel, [copyButton]);
-        setText("markup-message", result.profitCents < 0n ? "This price is below cost, so each sale loses money." : "");
-        setFieldState(form);
-      } catch (error) {
-        const problem = error instanceof InputProblem ? error : new InputProblem("cost", "Check your inputs.");
-
-        if (shouldDeferProblem(form, trigger)) {
-          markResultsStale(panel, [copyButton]);
-
-          return;
-        }
-
-        clear();
-        setFieldState(form, problem);
-
-        if (trigger === "submit") focusProblemField(form, problem);
-        setText("markup-message", "");
-      }
-    }
-
-    function copyText(mode: PricingMode, result: PriceBreakdown): string {
-      const cost = formatUsdGrouped(result.costCents);
-      const price = formatUsdGrouped(result.priceCents);
-      const profit = formatUsdGrouped(result.profitCents);
-      const markup = percentText(result.markupBps);
-      const margin = percentText(result.marginBps);
-
-      if (mode === "markup") return `Cost ${cost} at a ${markup} markup: charge ${price}. Profit ${profit}, margin ${margin}.`;
-
-      if (mode === "margin") return `Cost ${cost} at a ${margin} margin: charge ${price}. Profit ${profit}, markup ${markup}.`;
-
-      return `Cost ${cost}, price ${price}: profit ${profit}, markup ${markup}, margin ${margin}.`;
-    }
-
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      calculate("submit");
-    });
-
-    requireHtmlButton("markup-update").addEventListener("click", () => calculate("submit"));
-
-    form.querySelectorAll('input[name="pricingMode"]').forEach((element) => {
-      element.addEventListener("change", () => {
-        showMode(currentMode());
-        calculate("commit");
-      });
-    });
-
-    watchCalculatorFields(form, calculate);
-
-    requireHtmlButton("markup-reset").addEventListener("click", () => {
-      form.reset();
-      showMode(currentMode());
-      calculate("commit");
-    });
-
-    copyButton.addEventListener("click", async () => {
-      if (latest === null) return;
-
-      try {
-        await navigator.clipboard.writeText(copyText(latest.mode, latest.result));
-        setText("markup-message", "Result copied.");
-      } catch {
-        setText("markup-message", "Copy was unavailable. Select the result to copy it manually.");
-      }
-    });
-
-    showMode(currentMode());
-
-    calculate("commit");
-  </script>
 </Layout>

@@ -39,6 +39,12 @@ export interface FeePreset {
   readonly customPricingPolicy: "excluded" | "user-supplied";
   readonly revision: number;
   readonly components: readonly FeeComponent[];
+  /**
+   * The charges this scenario covers, when a provider's rate changes at a
+   * documented amount, such as a per-order fee that differs above $10. The
+   * engine refuses a charge outside the range instead of mixing two rates.
+   */
+  readonly grossRangeCents?: { readonly minCents: number; readonly maxCents: number };
   readonly sources: readonly {
     readonly url: string;
     readonly title: string;
@@ -101,6 +107,16 @@ const etsyFeesPolicy = {
 const etsyPaymentsPolicy = {
   url: "https://www.etsy.com/legal/etsy-payments/",
   title: "Etsy Payments Policy - Our House Rules | Etsy",
+};
+
+const ebaySellingFees = {
+  url: "https://www.ebay.com/help/selling/fees-credits-invoices/selling-fees?id=4822",
+  title: "Selling fees | eBay",
+};
+
+const ebayStoreFees = {
+  url: "https://www.ebay.com/help/selling/fees-credits-invoices/store-selling-fees-managed-payments-sellers?id=4809",
+  title: "Store selling fees | eBay",
 };
 
 const lemonGettingPaid = {
@@ -180,6 +196,8 @@ function freezeFeePreset(preset: FeePreset): FeePreset {
   Object.freeze(preset.sources);
   Object.freeze(preset.assumptions);
   Object.freeze(preset.exclusions);
+
+  if (preset.grossRangeCents) Object.freeze(preset.grossRangeCents);
 
   return Object.freeze(preset);
 }
@@ -963,6 +981,314 @@ const officialPresetRecords: FeePreset[] = [
     status: "blocked",
     blockedReason:
       "Etsy's Offsite Ads fee is 15% or 12% depending on the shop's sales history and is capped at $100 per order. The fee engine does not model caps, so it does not estimate Offsite Ads.",
+  }),
+  official({
+    id: "ebay-us-most-categories",
+    label: "eBay sale in most categories, order over $10",
+    provider: "ebay",
+    taxMode: "caller-supplied",
+    paymentProduct: "eBay selling fees",
+    channel: "ebay.com marketplace",
+    tierPolicy: "pre-threshold",
+    components: [
+      {
+        id: "ebay-final-value",
+        label: "eBay final value fee",
+        rateBps: 1360,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "ebay-per-order",
+        label: "eBay per-order fee",
+        rateBps: 0,
+        fixedCents: 40,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 1001, maxCents: 750000 },
+    sources: [ebaySellingFees],
+    assumptions: [
+      "US eBay account selling on ebay.com with no Store or a Starter Store, which pays the same rates, in a category charged 13.6%, such as most categories on eBay's fee table.",
+      "The amount is the total amount of the sale, which eBay's selling fees page defines as the item price, handling charges, shipping charged to the buyer, sales tax, and other applicable fees. eBay's older seller fees FAQ says sales tax is excluded; its current help pages and worked examples include it, and this estimate follows the help pages.",
+      "One item in the order. eBay calculates the percentage per item and charges the per-order fee once for each order.",
+      "The order is over $10.00, so the per-order fee is $0.40. eBay does not say whether its $10.00 test uses the item price or the whole order, so this scenario assumes both are over $10.00.",
+      "The total amount of the sale is at most $7,500.00; above that, eBay charges a lower rate on the portion over $7,500.00, which this scenario does not model, so larger amounts are refused.",
+      "The estimator rounds each component to cents; eBay's pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Insertion fees and listing upgrades, Promoted Listings ad fees, Below Standard and item-not-as-described surcharges, the $20 dispute fee, Store subscription prices, express payouts, and currency conversion.",
+      "eBay's shipping exceptions (such as charging on the cheapest domestic shipping option), orders with more than one item, refunds, and cancellations.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "ebay-us-most-categories-small-order",
+    label: "eBay sale in most categories, order of $10 or less",
+    provider: "ebay",
+    taxMode: "caller-supplied",
+    paymentProduct: "eBay selling fees",
+    channel: "ebay.com marketplace",
+    tierPolicy: "pre-threshold",
+    components: [
+      {
+        id: "ebay-final-value",
+        label: "eBay final value fee",
+        rateBps: 1360,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "ebay-per-order",
+        label: "eBay per-order fee",
+        rateBps: 0,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 1, maxCents: 1000 },
+    sources: [ebaySellingFees],
+    assumptions: [
+      "US eBay account selling on ebay.com with no Store or a Starter Store, which pays the same rates, in a category charged 13.6%, such as most categories on eBay's fee table.",
+      "The amount is the total amount of the sale, which eBay's selling fees page defines as the item price, handling charges, shipping charged to the buyer, sales tax, and other applicable fees. eBay's older seller fees FAQ says sales tax is excluded; its current help pages and worked examples include it, and this estimate follows the help pages.",
+      "One item in the order. eBay calculates the percentage per item and charges the per-order fee once for each order.",
+      "The order is $10.00 or less, so the per-order fee is $0.30. The item price is then also $10.00 or less.",
+      "The total amount of the sale is at most $10.00; above that, eBay charges a lower rate on the portion over $10.00, which this scenario does not model, so larger amounts are refused.",
+      "The estimator rounds each component to cents; eBay's pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Insertion fees and listing upgrades, Promoted Listings ad fees, Below Standard and item-not-as-described surcharges, the $20 dispute fee, Store subscription prices, express payouts, and currency conversion.",
+      "eBay's shipping exceptions (such as charging on the cheapest domestic shipping option), orders with more than one item, refunds, and cancellations.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "ebay-us-books-movies-music",
+    label: "eBay sale in Books, Movies & TV, or Music, order over $10",
+    provider: "ebay",
+    taxMode: "caller-supplied",
+    paymentProduct: "eBay selling fees",
+    channel: "ebay.com marketplace",
+    tierPolicy: "pre-threshold",
+    components: [
+      {
+        id: "ebay-final-value",
+        label: "eBay final value fee",
+        rateBps: 1530,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "ebay-per-order",
+        label: "eBay per-order fee",
+        rateBps: 0,
+        fixedCents: 40,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 1001, maxCents: 750000 },
+    sources: [ebaySellingFees],
+    assumptions: [
+      "US eBay account selling on ebay.com with no Store or a Starter Store, which pays the same rates, in Books & Magazines, Movies & TV (except Movie NFTs), or Music (except Vinyl Records and Music NFTs), charged 15.3%.",
+      "The amount is the total amount of the sale, which eBay's selling fees page defines as the item price, handling charges, shipping charged to the buyer, sales tax, and other applicable fees. eBay's older seller fees FAQ says sales tax is excluded; its current help pages and worked examples include it, and this estimate follows the help pages.",
+      "One item in the order. eBay calculates the percentage per item and charges the per-order fee once for each order.",
+      "The order is over $10.00, so the per-order fee is $0.40. eBay does not say whether its $10.00 test uses the item price or the whole order, so this scenario assumes both are over $10.00.",
+      "The total amount of the sale is at most $7,500.00; above that, eBay charges a lower rate on the portion over $7,500.00, which this scenario does not model, so larger amounts are refused.",
+      "The estimator rounds each component to cents; eBay's pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Insertion fees and listing upgrades, Promoted Listings ad fees, Below Standard and item-not-as-described surcharges, the $20 dispute fee, Store subscription prices, express payouts, and currency conversion.",
+      "eBay's shipping exceptions (such as charging on the cheapest domestic shipping option), orders with more than one item, refunds, and cancellations.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "ebay-us-cards-comics-coins",
+    label: "eBay sale in trading cards, comics, or coins, order over $10",
+    provider: "ebay",
+    taxMode: "caller-supplied",
+    paymentProduct: "eBay selling fees",
+    channel: "ebay.com marketplace",
+    tierPolicy: "pre-threshold",
+    components: [
+      {
+        id: "ebay-final-value",
+        label: "eBay final value fee",
+        rateBps: 1325,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "ebay-per-order",
+        label: "eBay per-order fee",
+        rateBps: 0,
+        fixedCents: 40,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 1001, maxCents: 750000 },
+    sources: [ebaySellingFees],
+    assumptions: [
+      "US eBay account selling on ebay.com with no Store or a Starter Store, which pays the same rates, in Comic Books & Memorabilia, Non-Sport Trading Cards, Sports Trading Cards, Collectible Card Games, or Coins & Paper Money (except Bullion), charged 13.25%.",
+      "The amount is the total amount of the sale, which eBay's selling fees page defines as the item price, handling charges, shipping charged to the buyer, sales tax, and other applicable fees. eBay's older seller fees FAQ says sales tax is excluded; its current help pages and worked examples include it, and this estimate follows the help pages.",
+      "One item in the order. eBay calculates the percentage per item and charges the per-order fee once for each order.",
+      "The order is over $10.00, so the per-order fee is $0.40. eBay does not say whether its $10.00 test uses the item price or the whole order, so this scenario assumes both are over $10.00.",
+      "The total amount of the sale is at most $7,500.00; above that, eBay charges a lower rate on the portion over $7,500.00, which this scenario does not model, so larger amounts are refused.",
+      "The estimator rounds each component to cents; eBay's pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Insertion fees and listing upgrades, Promoted Listings ad fees, Below Standard and item-not-as-described surcharges, the $20 dispute fee, Store subscription prices, express payouts, and currency conversion.",
+      "eBay's shipping exceptions (such as charging on the cheapest domestic shipping option), orders with more than one item, refunds, and cancellations.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "ebay-us-guitars-basses",
+    label: "eBay sale in Guitars & Basses, order over $10",
+    provider: "ebay",
+    taxMode: "caller-supplied",
+    paymentProduct: "eBay selling fees",
+    channel: "ebay.com marketplace",
+    tierPolicy: "pre-threshold",
+    components: [
+      {
+        id: "ebay-final-value",
+        label: "eBay final value fee",
+        rateBps: 670,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "ebay-per-order",
+        label: "eBay per-order fee",
+        rateBps: 0,
+        fixedCents: 40,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 1001, maxCents: 750000 },
+    sources: [ebaySellingFees],
+    assumptions: [
+      "US eBay account selling on ebay.com with no Store or a Starter Store, which pays the same rates, in Musical Instruments & Gear > Guitars & Basses, charged 6.7%.",
+      "The amount is the total amount of the sale, which eBay's selling fees page defines as the item price, handling charges, shipping charged to the buyer, sales tax, and other applicable fees. eBay's older seller fees FAQ says sales tax is excluded; its current help pages and worked examples include it, and this estimate follows the help pages.",
+      "One item in the order. eBay calculates the percentage per item and charges the per-order fee once for each order.",
+      "The order is over $10.00, so the per-order fee is $0.40. eBay does not say whether its $10.00 test uses the item price or the whole order, so this scenario assumes both are over $10.00.",
+      "The total amount of the sale is at most $7,500.00; above that, eBay charges a lower rate on the portion over $7,500.00, which this scenario does not model, so larger amounts are refused.",
+      "The estimator rounds each component to cents; eBay's pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Insertion fees and listing upgrades, Promoted Listings ad fees, Below Standard and item-not-as-described surcharges, the $20 dispute fee, Store subscription prices, express payouts, and currency conversion.",
+      "eBay's shipping exceptions (such as charging on the cheapest domestic shipping option), orders with more than one item, refunds, and cancellations.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "ebay-us-international-most-categories",
+    label: "eBay international sale in most categories, order over $10",
+    provider: "ebay",
+    taxMode: "caller-supplied",
+    paymentProduct: "eBay selling fees",
+    channel: "ebay.com marketplace",
+    tierPolicy: "pre-threshold",
+    components: [
+      {
+        id: "ebay-final-value",
+        label: "eBay final value fee",
+        rateBps: 1360,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "ebay-international",
+        label: "eBay international fee",
+        rateBps: 165,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "ebay-per-order",
+        label: "eBay per-order fee",
+        rateBps: 0,
+        fixedCents: 40,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 1001, maxCents: 750000 },
+    sources: [ebaySellingFees],
+    assumptions: [
+      "US eBay account selling on ebay.com with no Store or a Starter Store, which pays the same rates, in a category charged 13.6%.",
+      "The amount is the total amount of the sale, which eBay's selling fees page defines as the item price, handling charges, shipping charged to the buyer, sales tax, and other applicable fees. eBay's older seller fees FAQ says sales tax is excluded; its current help pages and worked examples include it, and this estimate follows the help pages.",
+      "One item in the order. eBay calculates the percentage per item and charges the per-order fee once for each order.",
+      "The order is over $10.00, so the per-order fee is $0.40. eBay does not say whether its $10.00 test uses the item price or the whole order, so this scenario assumes both are over $10.00.",
+      "The total amount of the sale is at most $7,500.00; above that, eBay charges a lower rate on the portion over $7,500.00, which this scenario does not model, so larger amounts are refused.",
+      "The buyer's delivery address or registered address is outside the US, and the item is not shipped with eBay International Shipping, so eBay's 1.65% international fee applies to the total amount of the sale.",
+      "The estimator rounds each component to cents; eBay's pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Sales shipped with eBay International Shipping, which eBay says have no international fee.",
+      "Insertion fees and listing upgrades, Promoted Listings ad fees, Below Standard and item-not-as-described surcharges, the $20 dispute fee, Store subscription prices, express payouts, and currency conversion.",
+      "eBay's shipping exceptions (such as charging on the cheapest domestic shipping option), orders with more than one item, refunds, and cancellations.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "ebay-us-store-most-categories",
+    label: "eBay Basic Store or above, most categories, order over $10",
+    provider: "ebay",
+    taxMode: "caller-supplied",
+    paymentProduct: "eBay Store selling fees",
+    channel: "ebay.com marketplace",
+    tierPolicy: "pre-threshold",
+    components: [
+      {
+        id: "ebay-final-value",
+        label: "eBay final value fee",
+        rateBps: 1270,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "ebay-per-order",
+        label: "eBay per-order fee",
+        rateBps: 0,
+        fixedCents: 40,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 1001, maxCents: 250000 },
+    sources: [ebayStoreFees],
+    assumptions: [
+      "US eBay account with a Basic, Premium, Anchor, or Enterprise Store, in a category charged 12.7%, such as Antiques, Baby, Crafts, Health & Beauty, Home & Garden, Sporting Goods, most Collectibles, most Clothing, Shoes & Accessories, and all other categories on eBay's Store fee table.",
+      "The amount is the total amount of the sale, which eBay's selling fees page defines as the item price, handling charges, shipping charged to the buyer, sales tax, and other applicable fees. eBay's older seller fees FAQ says sales tax is excluded; its current help pages and worked examples include it, and this estimate follows the help pages.",
+      "One item in the order. eBay calculates the percentage per item and charges the per-order fee once for each order.",
+      "The order is over $10.00, so the per-order fee is $0.40. eBay does not say whether its $10.00 test uses the item price or the whole order, so this scenario assumes both are over $10.00.",
+      "The total amount of the sale is at most $2,500.00; above that, eBay charges a lower rate on the portion over $2,500.00, which this scenario does not model, so larger amounts are refused.",
+      "The estimator rounds each component to cents; eBay's pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Insertion fees and listing upgrades, Promoted Listings ad fees, Below Standard and item-not-as-described surcharges, the $20 dispute fee, Store subscription prices, express payouts, and currency conversion.",
+      "eBay's shipping exceptions (such as charging on the cheapest domestic shipping option), orders with more than one item, refunds, and cancellations.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "ebay-us-above-threshold",
+    label: "eBay sale above its category's rate threshold",
+    provider: "ebay",
+    taxMode: "zero-only",
+    paymentProduct: "eBay selling fees",
+    channel: "ebay.com marketplace",
+    tierPolicy: "explicitly-excluded",
+    components: [],
+    sources: [ebaySellingFees, ebayStoreFees],
+    assumptions: [
+      "eBay charges most categories 13.6% on the total amount of the sale up to $7,500 and 2.35% on the portion over $7,500, and Basic Store subscribers 12.7% up to $2,500 and 2.35% on the portion over $2,500.",
+      "Some categories switch the rate for the whole sale at a threshold instead, such as Women's Bags & Handbags at $2,000 and Jewelry & Watches at $5,000.",
+    ],
+    exclusions: ["No estimate is given for a sale above its category's threshold."],
+    status: "blocked",
+    blockedReason:
+      "Above a category's threshold, eBay charges a second rate on part or all of the sale. The fee engine applies one rate to the whole charge, so it does not estimate these sales.",
   }),
   official({
     id: "lemon-squeezy-us-domestic-card",

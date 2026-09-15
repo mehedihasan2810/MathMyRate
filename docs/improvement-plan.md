@@ -244,6 +244,8 @@ assumptions, exclusions, and inverse tests:
 
 **Status: partly done 2026-09-15** (branch `feat/growth-calculators-guides`). Added the Freelance Retainer, Markup and Margin, and Salary to Hourly calculators, and the Square and Etsy fee calculators, each with the full content template. Square and Etsy rates were read from their official pricing, help, and policy pages on 2026-09-15. Shopify Payments was not built: its official pricing pages show no card rate, so no sourced rate exists to model. The engine now supports a fee charged on the amount before tax (Etsy's transaction fee). Fees with a minimum or a cap (Square ACH invoices, Etsy Offsite Ads) are recorded as blocked presets. Demand was not checked in Search Console or Keyword Planner, because the site has no domain or Search Console property yet.
 
+**Update 2026-09-15** (branch `feat/marketplace-fees-embeds`). Added the eBay, Upwork, and Fiverr fee calculators and a "cheapest way to sell digital products" comparison. eBay's rates change at documented amounts, so each eBay scenario carries a `grossRangeCents` range and the engine refuses charges outside it; sales above a category's threshold are blocked. Upwork sets its fee per contract (0% to 15%), so the freelancer enters the rate shown on their contract. Fiverr's 20% commission is fixed, but its buyer small-order fee and one Payoneer withdrawal fee conflict across its own pages, so those are left out. Every provider fact was checked on the provider's own pages on 2026-09-15.
+
 Add tools inside the niche so topical authority compounds. Verify demand in
 Search Console and Keyword Planner before building; do not publish a tool
 without the eight content sections. Candidates, grouped by hub:
@@ -278,6 +280,8 @@ Comparisons and hubs
 
 **Status: done 2026-09-15** (branch `feat/growth-calculators-guides`). `/fees/` (about 830 words) has a registry-driven table of every fee calculator's default rate, scenario count, and review date, plus a fee comparison at $10, $100, and $1,000. `/freelance/` (about 570 words) shows how the five calculators connect, with engine-computed examples. The freelance hub is below the 800-word target.
 
+**Update 2026-09-15** (branch `feat/marketplace-fees-embeds`). `/freelance/` now has about 820 words, meeting the target, and `/fees/` about 980 words, with eBay, Upwork, and Fiverr in its summary table.
+
 - `/freelance/` and `/fees/` gain 800 to 1,200 words: who the tools are for,
   how they connect, and a summary table of every tool with its rate and
   review date. Hubs link to every child and every child links back in the
@@ -286,6 +290,8 @@ Comparisons and hubs
 ### P2.3 Guides that feed the calculators (M each)
 
 **Status: first three done 2026-09-15** (branch `feat/growth-calculators-guides`). `/guides/` lists "Markup vs Margin", "How to Compare a Salary With a Freelance Rate", and "How to Charge Enough to Cover Payment Processing Fees". Each guide computes its numbers with the engine, emits `Article` JSON-LD with the dates printed on the page, and links to two or more calculators. Calculator pages list the guides that name them, from `apps/web/src/data/guides.ts`.
+
+**Update 2026-09-15** (branch `feat/marketplace-fees-embeds`). Added "Stripe Fees Explained" and "How Gumroad's $20,000 Monthly Threshold Works", for five guides in total.
 
 - Short, sourced guides that answer a question and hand off to a tool: "How
   to set a freelance hourly rate", "Stripe fees explained", "How Gumroad's
@@ -296,6 +302,8 @@ Comparisons and hubs
 
 **Status: embed snippet done 2026-09-15** (branch `feat/growth-calculators-guides`). Each fee calculator has a noindex `/embed/<calculator>/` page with no header, footer, or pinned result bar, and a credit link. The copyable snippet appears on fee pages only when `PUBLIC_SITE_URL` is set, because it needs absolute URLs. Freelance calculators do not have embeds yet.
 
+**Update 2026-09-15** (branch `feat/marketplace-fees-embeds`). The five freelance calculators now live in components, and every calculator, including Upwork and Fiverr, has a noindex embed page. Suggested iframe heights are each embed page's measured height at 360 px wide.
+
 - An "Embed this calculator" snippet (iframe with a credit link) on each
   tool. Free tools with embeds earn links from blogs and course sites.
 - List the exact-math and sourced-rules approach on the methodology page as a
@@ -304,6 +312,8 @@ Comparisons and hubs
 ### P2.5 Ads rollout (M)
 
 **Status: not started.** It depends on a deployed site with a domain, which is deferred. The site now has 13 calculator and comparison pages with full content, short of the 20-page gate below.
+
+**Update 2026-09-15.** The site has 17 calculator and comparison pages with full content, still short of the 20-page gate, and ads still wait for a deployed domain.
 
 - Only after P0.7 and P2.1 have at least 20 tool pages with full content.
 - Reserve fixed-height slots (one below the result panel, one after the

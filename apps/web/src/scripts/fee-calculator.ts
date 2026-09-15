@@ -1,4 +1,10 @@
-import { calculateFees, getFeePreset, grossUpFees, type FeePreset } from "@MathMyRate/calculators";
+import {
+  calculateFees,
+  type FeePreset,
+  getFeePreset,
+  GrossOutOfRangeError,
+  grossUpFees,
+} from "@MathMyRate/calculators";
 
 import {
   findFeeCalculator,
@@ -191,14 +197,24 @@ export function mountFeeCalculator(): void {
       setText("fee-message", "");
       setFieldState(form);
     } catch (error) {
+      const outOfRange = error instanceof GrossOutOfRangeError ? error : null;
+
+      const rangeText = outOfRange
+        ? `${formatUsdGrouped(outOfRange.minCents)} to ${formatUsdGrouped(outOfRange.maxCents)}`
+        : "";
+
       const problem =
         error instanceof InputProblem
           ? error
           : new InputProblem(
               "amount",
-              mode === "received"
-                ? "Enter an amount above zero."
-                : "This target cannot be reached. Try a smaller amount.",
+              outOfRange && mode === "received"
+                ? `This scenario covers sales from ${rangeText}. Choose another scenario for this amount.`
+                : outOfRange
+                  ? `The charge for this amount falls outside ${rangeText}, the range this scenario covers.`
+                  : mode === "received"
+                    ? "Enter an amount above zero."
+                    : "This target cannot be reached. Try a smaller amount.",
             );
 
       if (shouldDeferProblem(form, trigger)) {

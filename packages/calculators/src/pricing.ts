@@ -203,3 +203,64 @@ export function calculateRetainer(input: RetainerInput): RetainerResult {
     contractTotalCents: monthlyFeeCents * BigInt(values.months),
   };
 }
+
+/* ------------------------------- Service fees ------------------------------- */
+
+const ServiceFeeInput = Schema.Struct({
+  earningsCents: Cents,
+  feeBps: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 9_999 })),
+});
+
+const ServiceFeeTargetInput = Schema.Struct({
+  targetCents: Cents,
+  feeBps: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 9_999 })),
+});
+
+/** Earnings, a platform's percentage service fee on them, and what remains. */
+export interface ServiceFeeResult {
+  readonly earningsCents: bigint;
+  readonly feeCents: bigint;
+  readonly afterFeeCents: bigint;
+}
+
+function serviceFeeOn(earningsCents: bigint, feeBps: bigint): ServiceFeeResult {
+  const feeCents = (earningsCents * feeBps + 5_000n) / BASIS_POINTS;
+
+  return { earningsCents, feeCents, afterFeeCents: earningsCents - feeCents };
+}
+
+/** A service fee taken as a percentage of earnings, rounded half up to the cent. */
+export function calculateServiceFee(input: {
+  earningsCents: bigint;
+  feeBps: number;
+}): ServiceFeeResult {
+  const { earningsCents, feeBps } = Schema.decodeSync(ServiceFeeInput)(input);
+
+  return serviceFeeOn(earningsCents, BigInt(feeBps));
+}
+
+/**
+ * The least earnings that leave at least the target after a percentage service
+ * fee. The fee rounds to the cent, so the exact inverse is only within a cent of
+ * the answer; the search checks that narrow interval in order. What remains
+ * never decreases as earnings rise, so the first match is the least.
+ */
+export function earningsForTarget(input: {
+  targetCents: bigint;
+  feeBps: number;
+}): ServiceFeeResult {
+  const { targetCents, feeBps } = Schema.decodeSync(ServiceFeeTargetInput)(input);
+  const rate = BigInt(feeBps);
+  const remaining = BASIS_POINTS - rate;
+  const lowerNumerator = targetCents * BASIS_POINTS - 5_000n;
+  const lower = lowerNumerator > 0n ? ceilDivide(lowerNumerator, remaining) : 0n;
+  const upper = ceilDivide(targetCents * BASIS_POINTS + 5_000n, remaining);
+
+  for (let earningsCents = lower; earningsCents <= upper; earningsCents++) {
+    const result = serviceFeeOn(earningsCents, rate);
+
+    if (result.afterFeeCents >= targetCents) return result;
+  }
+
+  throw new RangeError("No earnings reach the target");
+}
