@@ -1,7 +1,18 @@
 ---
 import { calculateFees, getFeePreset } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import NumberField from "../../components/NumberField.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import ResultRow from "../../components/ResultRow.astro";
+import StickyResult from "../../components/StickyResult.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
 import Layout from "../../layouts/Layout.astro";
+import { formatFeeRate } from "../../lib/fee-labels";
 import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("paypal-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
 
 const preset = getFeePreset("paypal-us-checkout-paypal-payment");
 
@@ -17,19 +28,26 @@ if (!component) {
 
 const exampleSale = calculateFees({ preset, grossCents: 10000n });
 
+const rate = formatFeeRate(component);
+
 const ratePercent = component.rateBps / 100;
 
 const fixedFee = formatUsdGrouped(BigInt(component.fixedCents));
 
 const reviewedOn = preset.checkedOn ?? "date not recorded";
+
+const title = `${tool.name} (${rate}) | MathMyRate`;
+
+const description = `Estimate PayPal Checkout's ${rate} fee, what you keep from a sale, and what to charge to net a target, using PayPal's published fees.`;
 ---
-<Layout title="PayPal Fee Calculator | MathMyRate" description="Estimate PayPal Checkout's PayPal payment fee, what you keep from a sale, and what to charge to net a target amount." ogImage="/og/paypal.png">
+<Layout title={title} description={description} ogImage="/og/paypal.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
-    <p class="eyebrow">Platform fees / 02</p>
-    <h1 class="display mt-2 text-2xl font-bold md:text-3xl">PayPal's fee, out in the open.</h1>
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">PayPal's fee, out in the open. PayPal Checkout payments at {rate}, worked out in cents.</p>
     <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
-      <form id="paypal-fee-form" class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate onsubmit="return false">
-        <div class="flex items-baseline justify-between"><h2 class="display text-2xl font-bold">Payment details</h2><span class="text-xs text-ink/50">USD / per transaction</span></div>
+      <form id="paypal-fee-form" data-calculator-form class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate>
+        <div class="flex items-baseline justify-between gap-3"><h2 class="display text-2xl font-bold">Payment details</h2><span class="shrink-0 text-xs text-ink/50">USD / per transaction</span></div>
         <p class="mt-2 text-sm text-ink/60">Supported scenario: US PayPal Business account, USD, PayPal Checkout paid with the buyer's PayPal payment method.</p>
         <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
         <fieldset class="mt-6">
@@ -40,25 +58,28 @@ const reviewedOn = preset.checkedOn ?? "date not recorded";
           </div>
         </fieldset>
         <div class="mt-6 grid gap-5 sm:grid-cols-2">
-          <label class="text-sm font-semibold"><span id="amount-label">Amount the customer paid</span> <span class="text-[#a44631]" aria-hidden="true">*</span> <input id="amount" data-field="amount" aria-required="true" aria-describedby="amount-help amount-error" inputmode="decimal" value="100.00" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" /><span id="amount-help" class="mt-1 block text-xs font-normal text-ink/55">The full amount processed, including any sales tax you collected.</span><span id="amount-error" class="field-error" role="alert"></span></label>
-          <label class="text-sm font-semibold">Sales tax collected (optional) <input id="taxIncluded" data-field="taxIncluded" aria-describedby="taxIncluded-help taxIncluded-error" inputmode="decimal" value="" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" placeholder="0.00" /><span id="taxIncluded-help" class="mt-1 block text-xs font-normal text-ink/55">A pass-through you enter; this calculator never computes tax. The fee applies to the amount that includes it.</span><span id="taxIncluded-error" class="field-error" role="alert"></span></label>
+          <NumberField id="amount" label="Amount the customer paid" labelTextId="amount-label" value="100.00" unit="usd" required help="The full amount processed, including any sales tax you collected." />
+          <NumberField id="taxIncluded" label="Sales tax collected (optional)" unit="usd" placeholder="0.00" help="A pass-through you enter; this calculator never computes tax. The fee applies to the amount that includes it." />
         </div>
         <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="paypal-fee-update">Update fees</button><button id="paypal-fee-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
       </form>
-      <aside aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-ink p-7 text-paper shadow-[0_16px_45px_rgba(19,31,51,.16)] md:p-9">
-        <p class="eyebrow !text-[#c3d2ea]" id="primary-label">You keep from this sale</p>
-        <p id="fee-result" class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(exampleSale.sellerProceedsCents)}</p>
+      <aside id="fee-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-ink p-7 text-paper shadow-[0_16px_45px_rgba(19,31,51,.16)] md:p-9">
+        <p class="eyebrow !text-[#c3d2ea]" id="primary-label" data-primary-label>You keep from this sale</p>
+        <p id="fee-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(exampleSale.sellerProceedsCents)}</p>
         <p class="mt-1 text-paper/70">before expenses and income tax</p>
         <div class="my-7 border-t border-paper/25"></div>
-        <div class="flex justify-between"><span class="text-paper/70">PayPal fee</span><strong id="fee-total-result">{formatUsdGrouped(exampleSale.feeCents)}</strong></div>
-        <div class="mt-4 flex justify-between"><span class="text-paper/70">Net after fees</span><strong id="net-result">{formatUsdGrouped(exampleSale.netAfterFeesCents)}</strong></div>
-        <div class="mt-4 flex justify-between" id="tax-row" hidden><span class="text-paper/70">Sales tax collected</span><strong id="tax-result">—</strong></div>
-        <div class="mt-4 flex justify-between" id="keep-row" hidden><span class="text-paper/70">You keep after fees and tax</span><strong id="keep-result">—</strong></div>
-        <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-fee" type="button" class="rounded-full bg-paper px-4 py-2.5 text-sm font-bold text-ink">Copy result</button><button type="button" onclick="window.print()" class="rounded-full border border-paper/35 px-4 py-2.5 text-sm font-bold">Print</button></div>
+        <div class="[&>:first-child]:mt-0">
+          <ResultRow label="PayPal fee" valueId="fee-total-result" value={formatUsdGrouped(exampleSale.feeCents)} />
+          <ResultRow label="Net after fees" valueId="net-result" value={formatUsdGrouped(exampleSale.netAfterFeesCents)} />
+          <ResultRow label="Sales tax collected" valueId="tax-result" value="—" rowId="tax-row" hidden />
+          <ResultRow label="You keep after fees and tax" valueId="keep-result" value="—" rowId="keep-row" hidden />
+        </div>
+        <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-fee" type="button" class="rounded-full bg-paper px-4 py-2.5 text-sm font-bold text-ink">Copy result</button><button type="button" data-print class="rounded-full border border-paper/35 px-4 py-2.5 text-sm font-bold">Print</button></div>
         <ul class="mt-6 list-disc space-y-1 pl-5 text-sm text-[#ccd8ec]">{exampleSale.warnings.map((warning) => <li>{warning}</li>)}</ul>
         <p id="fee-message" class="mt-4 text-sm text-[#ccd8ec]" aria-live="polite"></p>
       </aside>
     </div>
+    <StickyResult />
     <noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The worked example above uses a $100.00 PayPal payment; enable JavaScript to calculate your own amounts locally.</p></noscript>
     <section class="mt-14 max-w-3xl border-t border-line pt-10">
       <h2 class="display text-3xl font-bold">Where this rate comes from</h2>
@@ -70,6 +91,7 @@ const reviewedOn = preset.checkedOn ?? "date not recorded";
       <ul class="mt-3 list-disc space-y-1 pl-5 text-sm leading-relaxed text-ink/70">{preset.exclusions.map((exclusion) => <li>{exclusion}</li>)}</ul>
       <p class="mt-8 text-sm text-ink/60">Official sources: {preset.sources.map((source, index) => <span>{index > 0 && " "}<a class="underline" href={source.url} rel="noopener">{source.title}</a></span>)}. Reviewed {reviewedOn}. Rates can change; unsupported cases are refused rather than estimated.</p>
     </section>
+    <RelatedTools current={tool.id} />
   </main>
   <script>
     import {
@@ -79,15 +101,20 @@ const reviewedOn = preset.checkedOn ?? "date not recorded";
       type FeePreset,
     } from "@MathMyRate/calculators";
     import {
+      type CalculationTrigger,
       formatUsdGrouped,
       focusProblemField,
       InputProblem,
+      markResultsCurrent,
+      markResultsStale,
       requireHtmlButton,
       requireHtmlElement,
       requireHtmlForm,
       requireHtmlInput,
       setFieldState,
+      shouldDeferProblem,
       usdToCents,
+      watchCalculatorFields,
     } from "../../scripts/calculator-form";
 
     const preset = getFeePreset("paypal-us-checkout-paypal-payment");
@@ -97,6 +124,10 @@ const reviewedOn = preset.checkedOn ?? "date not recorded";
     }
 
     const form = requireHtmlForm("paypal-fee-form");
+
+    const panel = requireHtmlElement("fee-panel");
+
+    const copyButton = requireHtmlButton("copy-fee");
 
     const MODE_TEXT = {
       received: {
@@ -140,7 +171,8 @@ const reviewedOn = preset.checkedOn ?? "date not recorded";
       }
 
       requireHtmlElement("tax-row").hidden = true;
-      requireHtmlButton("copy-fee").disabled = true;
+      markResultsCurrent(panel, []);
+      copyButton.disabled = true;
       latestCopy = null;
     }
 
@@ -150,7 +182,7 @@ const reviewedOn = preset.checkedOn ?? "date not recorded";
       return value.length === 0 ? 0n : usdToCents(value, "taxIncluded");
     }
 
-    function calc(activePreset: FeePreset, focusProblem = false): void {
+    function calc(activePreset: FeePreset, trigger: CalculationTrigger): void {
       const mode = currentMode();
 
       try {
@@ -193,12 +225,10 @@ const reviewedOn = preset.checkedOn ?? "date not recorded";
             ? `PayPal Checkout (PayPal payment) on ${formatUsdGrouped(result.grossCents)}: ${formatUsdGrouped(result.feeCents)} fee, you keep ${formatUsdGrouped(result.sellerProceedsCents)} (estimate; source reviewed ${reviewed}).`
             : `To keep ${formatUsdGrouped(amount)} from a PayPal Checkout PayPal payment, charge ${formatUsdGrouped(result.grossCents)} (estimate; source reviewed ${reviewed}).`;
 
-        requireHtmlButton("copy-fee").disabled = false;
+        markResultsCurrent(panel, [copyButton]);
         requireHtmlElement("fee-message").textContent = "";
         setFieldState(form);
       } catch (error) {
-        clear();
-
         const problem =
           error instanceof InputProblem
             ? error
@@ -209,37 +239,42 @@ const reviewedOn = preset.checkedOn ?? "date not recorded";
                   : "This target cannot be reached. Try a smaller amount.",
               );
 
+        if (shouldDeferProblem(form, trigger)) {
+          markResultsStale(panel, [copyButton]);
+
+          return;
+        }
+
+        clear();
         setFieldState(form, problem);
 
-        if (focusProblem) focusProblemField(form, problem);
+        if (trigger === "submit") focusProblemField(form, problem);
       }
     }
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      calc(preset, true);
+      calc(preset, "submit");
     });
 
-    requireHtmlButton("paypal-fee-update").addEventListener("click", () => calc(preset, true));
+    requireHtmlButton("paypal-fee-update").addEventListener("click", () => calc(preset, "submit"));
 
     form.querySelectorAll('input[name="feeMode"]').forEach((element) => {
       element.addEventListener("change", () => {
         applyModeText(currentMode());
-        calc(preset);
+        calc(preset, "commit");
       });
     });
 
-    for (const id of ["amount", "taxIncluded"]) {
-      requireHtmlInput(id).addEventListener("input", () => calc(preset));
-    }
+    watchCalculatorFields(form, (trigger) => calc(preset, trigger));
 
     requireHtmlButton("paypal-fee-reset").addEventListener("click", () => {
       form.reset();
       applyModeText(currentMode());
-      calc(preset);
+      calc(preset, "commit");
     });
 
-    requireHtmlButton("copy-fee").addEventListener("click", async () => {
+    copyButton.addEventListener("click", async () => {
       if (latestCopy === null) return;
 
       try {
@@ -253,6 +288,6 @@ const reviewedOn = preset.checkedOn ?? "date not recorded";
 
     applyModeText(currentMode());
 
-    calc(preset);
+    calc(preset, "commit");
   </script>
 </Layout>

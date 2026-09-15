@@ -1,6 +1,17 @@
 export type FieldName = string;
 
+/** What started a recalculation: a keystroke, a finished edit, or an explicit update. */
+export type CalculationTrigger = "typing" | "commit" | "submit";
+
 const MAX_CENTS = 100_000_000_000_000n;
+
+const MONEY_NOISE = /[\s$,]/gu;
+
+const PERCENT_NOISE = /[\s%]/gu;
+
+const COUNT_NOISE = /[\s,]/gu;
+
+const HOURS_NOISE = /\s/gu;
 
 export class InputProblem extends Error {
   constructor(
@@ -51,12 +62,24 @@ export function requireHtmlButton(id: string): HTMLButtonElement {
   return element;
 }
 
+/**
+ * Removes characters people type or paste around a number ("$1,250", " 27 % ")
+ * so validation judges the number itself. A dangling decimal point ("18.",
+ * ".5") is completed instead of rejected, because it is usually mid-typing.
+ */
+function tidyNumber(value: string, noise: RegExp): string {
+  const stripped = value.replace(noise, "");
+  const withoutTrailingPoint = stripped.endsWith(".") ? stripped.slice(0, -1) : stripped;
+
+  return withoutTrailingPoint.startsWith(".") ? `0${withoutTrailingPoint}` : withoutTrailingPoint;
+}
+
 export function usdToCents(value: string, field: FieldName): bigint {
-  const clean = value.trim();
+  const clean = tidyNumber(value, MONEY_NOISE);
 
   if (clean.length === 0) throw new InputProblem(field, "Enter an amount.");
 
-  if (!/^(0|[1-9]\d*)(\.\d{1,2})?$/.test(clean)) {
+  if (!/^\d+(\.\d{1,2})?$/u.test(clean)) {
     throw new InputProblem(field, "Use a nonnegative amount with up to 2 decimal places.");
   }
 
@@ -69,11 +92,11 @@ export function usdToCents(value: string, field: FieldName): bigint {
 }
 
 export function percentToBps(value: string, field: FieldName, maximumBps: number): number {
-  const clean = value.trim();
+  const clean = tidyNumber(value, PERCENT_NOISE);
 
   if (clean.length === 0) throw new InputProblem(field, "Enter a percentage.");
 
-  if (!/^(0|[1-9]\d?|100)(\.\d{1,2})?$/.test(clean)) {
+  if (!/^(0|[1-9]\d?|100)(\.\d{1,2})?$/u.test(clean)) {
     throw new InputProblem(field, "Use a percentage with up to 2 decimal places.");
   }
 
@@ -93,9 +116,11 @@ export function wholeNumber(
   minimum: number,
   maximum: number,
 ): number {
-  if (!/^\d+$/.test(value.trim())) throw new InputProblem(field, "Enter a whole number.");
+  const clean = tidyNumber(value, COUNT_NOISE);
 
-  const parsed = Number(value);
+  if (!/^\d+$/u.test(clean)) throw new InputProblem(field, "Enter a whole number.");
+
+  const parsed = Number(clean);
 
   if (!Number.isSafeInteger(parsed) || parsed < minimum || parsed > maximum) {
     throw new InputProblem(field, `Enter a whole number from ${minimum} to ${maximum}.`);
@@ -105,9 +130,11 @@ export function wholeNumber(
 }
 
 export function hoursToMinutes(value: string, field: FieldName): number {
-  const clean = value.trim();
+  const clean = tidyNumber(value, HOURS_NOISE);
 
-  if (!/^(0|[1-9]\d*)(\.\d{1,2})?$/.test(clean)) {
+  if (clean.length === 0) throw new InputProblem(field, "Enter a number of hours.");
+
+  if (!/^\d+(\.\d{1,2})?$/u.test(clean)) {
     throw new InputProblem(field, "Use hours with up to 2 decimal places.");
   }
 
@@ -133,10 +160,12 @@ export function formatUsdGrouped(cents: bigint): string {
   return `${sign}$${(absolute / 100n).toLocaleString("en-US")}.${String(absolute % 100n).padStart(2, "0")}`;
 }
 
+/** Formats cents for an input field: digit groups and two decimals, without a currency sign. */
 export function formatUsdInput(cents: bigint): string {
+  const sign = cents < 0n ? "-" : "";
   const absolute = cents < 0n ? -cents : cents;
 
-  return `${cents < 0n ? "-" : ""}${absolute / 100n}.${String(absolute % 100n).padStart(2, "0")}`;
+  return `${sign}${(absolute / 100n).toLocaleString("en-US")}.${String(absolute % 100n).padStart(2, "0")}`;
 }
 
 export function setFieldState(form: HTMLFormElement, problem?: InputProblem): void {
@@ -170,4 +199,103 @@ export function focusProblemField(form: HTMLFormElement, problem: InputProblem):
     field.scrollIntoView({ block: "center" });
     field.focus({ preventScroll: true });
   }
+}
+
+/**
+ * While someone is still typing and no error is on screen yet, an unfinished
+ * entry should not flash an error or wipe the result. A finished edit or an
+ * explicit update always shows the problem.
+ */
+export function shouldDeferProblem(form: HTMLFormElement, trigger: CalculationTrigger): boolean {
+  return trigger === "typing" && form.querySelector('[data-field][aria-invalid="true"]') === null;
+}
+
+/**
+ * Keeps the last good result visible but dimmed, and disables the actions that
+ * would copy or transfer it, so an unfinished entry never reads as a live answer.
+ */
+export function markResultsStale(panel: HTMLElement, actions: readonly HTMLButtonElement[]): void {
+  panel.setAttribute("data-stale", "");
+
+  for (const action of actions) {
+    action.disabled = true;
+  }
+}
+
+export function markResultsCurrent(
+  panel: HTMLElement,
+  actions: readonly HTMLButtonElement[],
+): void {
+  panel.removeAttribute("data-stale");
+
+  for (const action of actions) {
+    action.disabled = false;
+  }
+}
+
+function tidyMoneyField(input: HTMLInputElement): void {
+  if (input.value.trim().length === 0) return;
+
+  try {
+    input.value = formatUsdInput(usdToCents(input.value, input.id));
+  } catch {
+    // Leave unreadable text in place so the error message can describe it.
+  }
+}
+
+/**
+ * Recalculates on every keystroke. When an edit is finished (the change event
+ * fires as the field loses focus), money fields are tidied to "1,250.00" and
+ * the inputs are validated in full.
+ *
+ * A mouse press on a button blurs the field before the button's click fires.
+ * Showing a new error at that moment would push the button down, the release
+ * would land elsewhere, and the click would be lost. So a finished edit that
+ * happens while a pointer is held waits until the press ends and its click has
+ * run.
+ */
+export function watchCalculatorFields(
+  form: HTMLFormElement,
+  calculate: (trigger: CalculationTrigger) => void,
+): void {
+  let pointerHeld = false;
+  let commitWaiting = false;
+
+  const releasePointer = () => {
+    pointerHeld = false;
+
+    if (!commitWaiting) return;
+
+    commitWaiting = false;
+    window.setTimeout(() => calculate("commit"), 0);
+  };
+
+  document.addEventListener(
+    "pointerdown",
+    () => {
+      pointerHeld = true;
+    },
+    { capture: true },
+  );
+
+  document.addEventListener("pointerup", releasePointer, { capture: true });
+  document.addEventListener("pointercancel", releasePointer, { capture: true });
+
+  form.querySelectorAll("input[data-field]").forEach((node) => {
+    if (!(node instanceof HTMLInputElement)) return;
+
+    node.addEventListener("input", () => calculate("typing"));
+
+    node.addEventListener("change", () => {
+      if (node.dataset.format === "usd") tidyMoneyField(node);
+
+      if (pointerHeld) {
+        commitWaiting = true;
+
+        return;
+      }
+
+      calculate("commit");
+    });
+  });
 }

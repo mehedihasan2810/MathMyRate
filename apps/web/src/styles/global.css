@@ -90,10 +90,68 @@ input[type="number"]::-webkit-inner-spin-button {
 .result-value {
   overflow-wrap: anywhere;
 }
+.site-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.field-adornment {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgb(19 31 51 / 0.5);
+  font-weight: 500;
+  pointer-events: none;
+}
+/* An unfinished entry dims the last good result instead of replacing it. */
+[data-result-panel] .result-value,
+[data-result-panel] strong {
+  transition: opacity 0.15s ease;
+}
+[data-result-panel][data-stale] .result-value,
+[data-result-panel][data-stale] strong {
+  opacity: 0.45;
+}
+.sticky-result {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: 55;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 0;
+  background: var(--color-navy);
+  padding: 0.6rem 1.25rem;
+  color: var(--color-paper);
+  box-shadow: 0 10px 30px rgb(19 31 51 / 0.2);
+  transform: translateY(-110%);
+  transition: transform 0.2s ease;
+}
+.sticky-result[data-visible] {
+  transform: translateY(0);
+}
+.sticky-result:focus {
+  outline-offset: -4px;
+}
+.sticky-result[data-stale] [data-sticky-value] {
+  opacity: 0.45;
+}
+@media (max-width: 1023.98px) {
+  html:has(.sticky-result[data-visible]) {
+    scroll-padding-top: 5rem;
+  }
+}
+@media (min-width: 1024px) {
+  .sticky-result {
+    display: none;
+  }
+}
 @media print {
   header,
   .no-print,
   .calculator-actions,
+  .sticky-result,
   .site-footer {
     display: none !important;
   }

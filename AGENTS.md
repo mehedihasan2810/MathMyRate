@@ -39,8 +39,7 @@ record what has actually happened since the plan was written.
   `/privacy/`, `/terms/`; and a 404 page for unknown routes. Tools are free;
   there are no login, signup, or dashboard pages. The pages use labeled native
   controls and browser scripts, not a Preact island, and consume real engine
-  results. Without a configured production site, pages are noindexed and the
-  sitemap is not emitted; both activate with `site` in `astro.config.mjs`.
+  results. Without `PUBLIC_SITE_URL`, pages are noindexed, `robots.txt` disallows crawling, and no sitemap is emitted. Setting it for the production build turns all three on, and `REQUIRE_SITE_URL=true` or `ALCHEMY_STAGE=production` makes a missing value fail the build. SEO and UX work follows [the SEO playbook](docs/seo-playbook.md).
 - There is no hosted CI/CD. Run lint, types, Vitest unit tests, and the web
   build locally. Test UI changes end to end like a real user, including
   edge cases, until they are production-ready. Prefer the in-app browser;

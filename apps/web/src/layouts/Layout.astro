@@ -1,6 +1,15 @@
 ---
 import "../styles/global.css";
 import Header from "../components/Header.astro";
+import { hubs, infoLinks, toolsInHub, type Crumb } from "../data/tools";
+import {
+  breadcrumbListNode,
+  organizationNode,
+  serializeStructuredData,
+  webApplicationNode,
+  webSiteNode,
+  type StructuredDataNode,
+} from "../lib/structured-data";
 
 interface Props {
   title?: string;
@@ -8,6 +17,12 @@ interface Props {
   noindex?: boolean;
   /** Site-root-relative path to the social card image, e.g. "/og/home.png". */
   ogImage?: string;
+  /** Visible breadcrumb trail; also emitted as BreadcrumbList structured data. */
+  breadcrumbs?: readonly Crumb[];
+  /** Calculator pages pass their tool name to be described as a free WebApplication. */
+  applicationName?: string;
+  /** The home page also describes the site and its calculator search. */
+  isHome?: boolean;
 }
 
 const {
@@ -15,6 +30,9 @@ const {
   description = "Practical pricing calculators for independent work.",
   noindex = false,
   ogImage = "/og/default.png",
+  breadcrumbs,
+  applicationName,
+  isHome = false,
 } = Astro.props;
 
 const canonicalUrl = Astro.site && !noindex ? new URL(Astro.url.pathname, Astro.site).href : null;
@@ -23,12 +41,18 @@ const canonicalUrl = Astro.site && !noindex ? new URL(Astro.url.pathname, Astro.
 // only emitted once a production site is configured.
 const ogImageUrl = Astro.site ? new URL(ogImage, Astro.site).href : null;
 
-const footerLinks = [
-  { to: "/methodology/", label: "Methodology" },
-  { to: "/about/", label: "About" },
-  { to: "/privacy/", label: "Privacy" },
-  { to: "/terms/", label: "Terms" },
-];
+// Structured data needs absolute URLs, so it follows the canonical-link gate.
+const structuredData: StructuredDataNode[] = [];
+
+if (Astro.site && canonicalUrl) {
+  if (isHome) structuredData.push(webSiteNode(Astro.site), organizationNode(Astro.site));
+
+  if (applicationName) {
+    structuredData.push(webApplicationNode(Astro.site, applicationName, description, Astro.url.pathname));
+  }
+
+  if (breadcrumbs && breadcrumbs.length > 1) structuredData.push(breadcrumbListNode(Astro.site, breadcrumbs));
+}
 ---
 
 <!doctype html>
@@ -62,23 +86,44 @@ const footerLinks = [
         <meta name="twitter:image" content={ogImageUrl} />
       </>
     ) : null}
+    {structuredData.map((node) => <script is:inline type="application/ld+json" set:html={serializeStructuredData(node)} />)}
   </head>
   <body class="grain min-h-[100dvh]">
     <a href="#main-content" class="sr-only z-[60] rounded bg-ink px-4 py-3 text-paper focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to main content</a>
     <Header />
     <slot />
-    <footer class="site-footer border-t border-line px-5 py-10 text-sm text-ink/60 md:px-8">
-      <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-6">
+    <footer class="site-footer border-t border-line px-5 py-12 text-sm text-ink/65 md:px-8">
+      <div class="mx-auto grid max-w-6xl gap-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_0.8fr]">
         <div>
           <p class="display text-base font-bold text-ink">MathMyRate<span class="text-gold">.</span></p>
-          <p class="mt-1">Planning tools, not financial advice.</p>
+          <p class="mt-2 max-w-xs leading-relaxed">Free pricing and payment-fee calculators. Planning tools, not financial advice.</p>
         </div>
-        <nav aria-label="Site information" class="flex flex-wrap gap-5">
-          {footerLinks.map((link) => (
-            <a href={link.to} class="transition-colors hover:text-navy">{link.label}</a>
-          ))}
+        {hubs.map((hub) => (
+          <nav aria-label={`${hub.name} calculators`}>
+            <a href={hub.href} class="font-semibold text-ink transition-colors hover:text-navy">{hub.name}</a>
+            <ul class="mt-3 space-y-2">
+              {toolsInHub(hub.id).map((tool) => (
+                <li><a href={tool.href} class="transition-colors hover:text-navy">{tool.name}</a></li>
+              ))}
+            </ul>
+          </nav>
+        ))}
+        <nav aria-label="Site information">
+          <p class="font-semibold text-ink">Site</p>
+          <ul class="mt-3 space-y-2">
+            {infoLinks.map((link) => (
+              <li><a href={link.href} class="transition-colors hover:text-navy">{link.name}</a></li>
+            ))}
+          </ul>
         </nav>
       </div>
     </footer>
+    <script>
+      // Print buttons use a bundled listener instead of inline onclick handlers,
+      // so pages stay compatible with a strict Content Security Policy.
+      document.querySelectorAll<HTMLButtonElement>("button[data-print]").forEach((button) => {
+        button.addEventListener("click", () => window.print());
+      });
+    </script>
   </body>
 </html>

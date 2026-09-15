@@ -1,56 +1,87 @@
 ---
 import { calculateProjectRate } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import NumberField from "../../components/NumberField.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import ResultRow from "../../components/ResultRow.astro";
+import StickyResult from "../../components/StickyResult.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
 import Layout from "../../layouts/Layout.astro";
 import { formatUsdGrouped } from "../../scripts/calculator-form";
 
+const tool = findTool("project-rate");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
 const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes: 1320, directExpensesCents: 18000n, contingencyBps: 1500 });
+
+const rowLabel = "text-[#f3f5fa]/80";
+
+const minutesHelp = "Whole minutes only: 1, 1.25, 1.5, and 1.75 are accepted.";
 ---
-<Layout title="Freelance Project Rate Calculator | MathMyRate" description="Turn scope, contingency, and expenses into a clear project quote." ogImage="/og/project-rate.png">
+<Layout title="Freelance Project Rate Calculator for Quotes | MathMyRate" description="Price a fixed-fee project from delivery hours, meetings, contingency, and expenses. See labor, buffer, and the quote total at once. Free, no sign-up." ogImage="/og/project-rate.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
-    <p class="eyebrow">Freelance pricing / 02</p>
-    <h1 class="display mt-2 text-2xl font-bold md:text-3xl">Give the scope a number.</h1>
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Give the scope a number. Turn delivery hours, meetings, contingency, and expenses into a clear fixed-price quote.</p>
     <div id="transfer-notice" class="mt-6 hidden rounded-xl border border-[#aac7a9] bg-[#e2efe1] px-5 py-4 text-sm text-ink"><strong>Hourly rate brought across.</strong> This is stored only in this browser. Your annual tax reserve is already reflected in this rate and is not added again.</div>
     <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
-      <form id="project-form" class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate onsubmit="return false">
-        <div class="flex items-baseline justify-between"><h2 class="display text-2xl font-bold">Project ingredients</h2><span class="text-xs text-ink/50">USD</span></div>
+      <form id="project-form" data-calculator-form class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate>
+        <div class="flex items-baseline justify-between gap-3"><h2 class="display text-2xl font-bold">Project ingredients</h2><span class="shrink-0 text-xs text-ink/50">USD</span></div>
         <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
         <div class="mt-7 grid gap-5 sm:grid-cols-2">
-          <label class="text-sm font-semibold">Hourly rate <span class="text-[#a44631]" aria-hidden="true">*</span><input id="projectHourly" data-field="projectHourly" aria-required="true" aria-describedby="projectHourly-error" inputmode="decimal" value="112.50" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" /><span id="projectHourly-error" class="field-error" role="alert"></span></label>
-          <label class="text-sm font-semibold">Delivery hours <span class="text-[#a44631]" aria-hidden="true">*</span><input id="deliveryHours" data-field="deliveryHours" aria-required="true" aria-describedby="deliveryHours-help deliveryHours-error" inputmode="decimal" value="18" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" /><span id="deliveryHours-help" class="mt-1 block text-xs font-normal text-ink/55">Whole minutes only: 1, 1.25, 1.5, and 1.75 are accepted.</span><span id="deliveryHours-error" class="field-error" role="alert"></span></label>
-          <label class="text-sm font-semibold">Meetings &amp; admin hours <span class="text-[#a44631]" aria-hidden="true">*</span><input id="adminHours" data-field="adminHours" aria-required="true" aria-describedby="adminHours-help adminHours-error" inputmode="decimal" value="4" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" /><span id="adminHours-help" class="mt-1 block text-xs font-normal text-ink/55">Whole minutes only: 1, 1.25, 1.5, and 1.75 are accepted.</span><span id="adminHours-error" class="field-error" role="alert"></span></label>
-          <label class="text-sm font-semibold">Contingency <span class="text-[#a44631]" aria-hidden="true">*</span><div class="relative mt-2"><input id="contingency" data-field="contingency" aria-required="true" aria-describedby="contingency-error" inputmode="decimal" value="15.00" class="w-full rounded-lg border border-line bg-paper px-3 py-3 pr-9 text-base font-medium" /><span class="absolute right-3 top-3.5 text-ink/50">%</span></div><span id="contingency-error" class="field-error" role="alert"></span></label>
-          <label class="text-sm font-semibold">Direct project expenses <span class="text-[#a44631]" aria-hidden="true">*</span><input id="directExpenses" data-field="directExpenses" aria-required="true" aria-describedby="directExpenses-error" inputmode="decimal" value="180.00" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" /><span id="directExpenses-error" class="field-error" role="alert"></span></label>
+          <NumberField id="projectHourly" label="Hourly rate" value="112.50" unit="usd" required />
+          <NumberField id="deliveryHours" label="Delivery hours" value="18" help={minutesHelp} required />
+          <NumberField id="adminHours" label="Meetings & admin hours" value="4" help={minutesHelp} required />
+          <NumberField id="contingency" label="Contingency" value="15.00" unit="percent" required />
+          <NumberField id="directExpenses" label="Direct project expenses" value="180.00" unit="usd" required />
         </div>
         <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="project-update">Update quote</button><button id="project-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
       </form>
-      <aside aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
-        <p class="eyebrow !text-[#f2e3bd]">Target project receipts</p><p id="quote-result" class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.targetReceiptsCents)}</p><p class="mt-1 text-[#f3f5fa]/80">before any project-specific payment processing fees</p>
+      <aside id="project-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
+        <p class="eyebrow !text-[#f2e3bd]" data-primary-label>Target project receipts</p><p id="quote-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.targetReceiptsCents)}</p><p class="mt-1 text-[#f3f5fa]/80">before any project-specific payment processing fees</p>
         <div class="my-7 border-t border-[#f3f5fa]/30"></div>
-        <div class="flex justify-between"><span class="text-[#f3f5fa]/80">Labor</span><strong id="labor-result">{formatUsdGrouped(example.laborCents)}</strong></div><div class="mt-4 flex justify-between"><span class="text-[#f3f5fa]/80">Contingency allowance</span><strong id="contingency-result">{formatUsdGrouped(example.contingencyCents)}</strong></div><div class="mt-4 flex justify-between"><span class="text-[#f3f5fa]/80">Expense reimbursement</span><strong id="expense-result">{formatUsdGrouped(example.expensesCents)}</strong></div><div class="mt-4 flex justify-between"><span class="text-[#f3f5fa]/80">Planned time</span><strong id="time-result">22 hours</strong></div>
-        <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-project" type="button" class="rounded-full bg-[#f3f5fa] px-4 py-2.5 text-sm font-bold text-ink">Copy quote</button><button type="button" onclick="window.print()" class="rounded-full border border-[#f3f5fa]/45 px-4 py-2.5 text-sm font-bold">Print</button></div><p id="project-message" class="mt-4 text-sm text-[#f2e3bd]"></p>
+        <div class="[&>:first-child]:mt-0">
+          <ResultRow label="Labor" valueId="labor-result" value={formatUsdGrouped(example.laborCents)} labelClass={rowLabel} />
+          <ResultRow label="Contingency allowance" valueId="contingency-result" value={formatUsdGrouped(example.contingencyCents)} labelClass={rowLabel} />
+          <ResultRow label="Expense reimbursement" valueId="expense-result" value={formatUsdGrouped(example.expensesCents)} labelClass={rowLabel} />
+          <ResultRow label="Planned time" valueId="time-result" value="22 hours" labelClass={rowLabel} />
+        </div>
+        <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-project" type="button" class="rounded-full bg-[#f3f5fa] px-4 py-2.5 text-sm font-bold text-ink">Copy quote</button><button type="button" data-print class="rounded-full border border-[#f3f5fa]/45 px-4 py-2.5 text-sm font-bold">Print</button></div><p id="project-message" class="mt-4 text-sm text-[#f2e3bd]"></p>
       </aside>
     </div>
+    <StickyResult />
     <noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The example scope is visible; enable JavaScript to calculate a quote locally.</p></noscript>
-    <section class="mt-14 max-w-3xl border-t border-line pt-10"><h2 class="display text-3xl font-bold">A quote, not a tax calculation</h2><p class="mt-4 leading-relaxed text-ink/70">Contingency is applied to labor only. Direct expenses are added separately without markup. The target assumes the hourly rate already includes the annual tax reserve chosen in the hourly calculator, so it never adds that reserve a second time.</p><p class="mt-4 text-sm leading-relaxed text-ink/60">Payment processing fees are intentionally not included here. <a class="underline" href="/fees/stripe-fee-calculator/">Add a supported fee calculation</a> when that quote needs a gross-up.</p></section>
+    <section class="mt-14 max-w-3xl border-t border-line pt-10"><h2 class="display text-3xl font-bold">A quote, not a tax calculation</h2><p class="mt-4 leading-relaxed text-ink/70">Contingency is applied to labor only. Direct expenses are added separately without markup. The target assumes the hourly rate already includes the annual tax reserve chosen in the <a class="underline" href="/freelance/hourly-rate-calculator/">freelance hourly rate calculator</a>, so it never adds that reserve a second time.</p><p class="mt-4 text-sm leading-relaxed text-ink/60">Payment processing fees are intentionally not included here. Use the <a class="underline" href="/fees/stripe-fee-calculator/">Stripe fee calculator</a> or the <a class="underline" href="/fees/paypal-fee-calculator/">PayPal fee calculator</a> when a quote needs a gross-up for the fee.</p></section>
+    <RelatedTools current={tool.id} />
   </main>
   <script>
     import { calculateProjectRate } from "@MathMyRate/calculators";
     import {
+      type CalculationTrigger,
       formatUsdGrouped,
       focusProblemField,
       formatUsdInput,
       hoursToMinutes,
       InputProblem,
+      markResultsCurrent,
+      markResultsStale,
       percentToBps,
       requireHtmlButton,
       requireHtmlElement,
       requireHtmlForm,
       requireHtmlInput,
       setFieldState,
+      shouldDeferProblem,
       usdToCents,
+      watchCalculatorFields,
     } from "../../scripts/calculator-form";
 
     const form = requireHtmlForm("project-form");
+
+    const panel = requireHtmlElement("project-panel");
+
+    const copyButton = requireHtmlButton("copy-project");
 
     let latest: bigint | null = null;
 
@@ -72,10 +103,11 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
       }
 
       latest = null;
-      requireHtmlButton("copy-project").disabled = true;
+      markResultsCurrent(panel, []);
+      copyButton.disabled = true;
     }
 
-    function calc(focusProblem = false): bigint | null {
+    function calc(trigger: CalculationTrigger): void {
       try {
         const delivery = hoursToMinutes(requireHtmlInput("deliveryHours").value, "deliveryHours");
         const admin = hoursToMinutes(requireHtmlInput("adminHours").value, "adminHours");
@@ -97,23 +129,24 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
         setResult("expense-result", formatUsdGrouped(result.expensesCents));
         setResult("time-result", `${(delivery + admin) / 60} hours`);
         latest = result.targetReceiptsCents;
-        requireHtmlButton("copy-project").disabled = false;
+        markResultsCurrent(panel, [copyButton]);
         requireHtmlElement("project-message").textContent = transferMessage;
         setFieldState(form);
-
-        return result.targetReceiptsCents;
       } catch (error) {
-        clear();
-
         const problem =
           error instanceof InputProblem ? error : new InputProblem("projectHourly", "Check your inputs.");
 
+        if (shouldDeferProblem(form, trigger)) {
+          markResultsStale(panel, [copyButton]);
+
+          return;
+        }
+
+        clear();
         setFieldState(form, problem);
 
-        if (focusProblem) focusProblemField(form, problem);
+        if (trigger === "submit") focusProblemField(form, problem);
         requireHtmlElement("project-message").textContent = "";
-
-        return null;
       }
     }
 
@@ -122,7 +155,7 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
 
       localStorage.removeItem("mathmyrate:hourly-cents");
 
-      if (transferred && /^\d+$/.test(transferred) && BigInt(transferred) <= 100000000000000n) {
+      if (transferred && /^\d+$/u.test(transferred) && BigInt(transferred) <= 100000000000000n) {
         requireHtmlInput("projectHourly").value = formatUsdInput(BigInt(transferred));
         requireHtmlElement("transfer-notice").classList.remove("hidden");
       } else if (transferred) {
@@ -134,14 +167,12 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      calc(true);
+      calc("submit");
     });
 
-    requireHtmlButton("project-update").addEventListener("click", () => calc(true));
+    requireHtmlButton("project-update").addEventListener("click", () => calc("submit"));
 
-    for (const id of ["projectHourly", "deliveryHours", "adminHours", "contingency", "directExpenses"]) {
-      requireHtmlInput(id).addEventListener("input", () => calc());
-    }
+    watchCalculatorFields(form, calc);
 
     requireHtmlButton("project-reset").addEventListener("click", () => {
       form.reset();
@@ -154,10 +185,10 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
       }
 
       requireHtmlElement("transfer-notice").classList.add("hidden");
-      calc();
+      calc("commit");
     });
 
-    requireHtmlButton("copy-project").addEventListener("click", async () => {
+    copyButton.addEventListener("click", async () => {
       if (latest === null) return;
 
       try {
@@ -169,6 +200,6 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
       }
     });
 
-    calc();
+    calc("commit");
   </script>
 </Layout>

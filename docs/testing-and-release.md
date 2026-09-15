@@ -1,6 +1,6 @@
 # Testing and release
 
-Last updated: 2026-09-14
+Last updated: 2026-09-15
 
 This is the evidence policy for MathMyRate. A command listed here is a gate to
 run; current local evidence is recorded below and is not staging or production
@@ -33,9 +33,26 @@ Fix every finding before considering the change done. Do not disable anti-slop
 rules or weaken them to make a task pass. See [the agent guide](../AGENTS.md).
 
 Calculator engines and fee rules are unit-tested with Vitest in
-`packages/calculators`. There is no Playwright or other automated browser
-suite. Confirm UI behavior in the running app. Do not count an uninvoked test
-file as coverage.
+`packages/calculators`. The web app has its own Vitest suite in `apps/web`
+for input parsing, the calculator registry, fee-rate labels, and structured
+data. `pnpm run test` runs both. There is no Playwright or other automated
+browser suite. Confirm UI behavior in the running app. Do not count an
+uninvoked test file as coverage.
+
+Indexing has three build checks. Run them one at a time because they share
+`apps/web/dist`:
+
+```sh
+# Preview: expect noindex on every page, Disallow: /, and no sitemap.
+PUBLIC_SERVER_URL=https://api.example.invalid pnpm run build:web
+# Production guard: expect the build to fail with "has no site".
+REQUIRE_SITE_URL=true PUBLIC_SERVER_URL=https://api.example.invalid pnpm run build:web
+# Indexable: expect canonical links, JSON-LD, Allow: /, and sitemap.xml.
+PUBLIC_SITE_URL=https://calculators.example PUBLIC_SERVER_URL=https://api.example.invalid pnpm run build:web
+```
+
+`PUBLIC_SITE_URL`, `REQUIRE_SITE_URL`, and `ALCHEMY_STAGE` are Turborepo
+global environment keys, so changing them invalidates the cached build.
 
 ## Math test matrix
 

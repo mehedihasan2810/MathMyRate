@@ -1,0 +1,92 @@
+---
+/**
+ * A compact copy of the primary result pinned to the top of small screens.
+ * It appears only after the page title has scrolled away, while the form is
+ * on screen and the full result is not. That keeps the number visible during
+ * editing without ever covering the header or its menu.
+ * The page marks its result panel with data-result-panel, the main number with
+ * data-primary-result, its label with data-primary-label, and the form with
+ * data-calculator-form.
+ */
+---
+
+<button type="button" class="sticky-result" data-sticky-result inert>
+  <span class="min-w-0 text-left">
+    <span class="block truncate text-[0.7rem] font-medium uppercase tracking-[0.1em] text-paper/70" data-sticky-label></span>
+    <span class="display block text-xl font-bold" data-sticky-value></span>
+  </span>
+  <span class="shrink-0 text-sm font-semibold text-paper/85">Details <span aria-hidden="true">↓</span></span>
+</button>
+
+<script>
+  const bar = document.querySelector<HTMLButtonElement>("[data-sticky-result]");
+
+  const panel = document.querySelector<HTMLElement>("[data-result-panel]");
+
+  const form = document.querySelector<HTMLElement>("[data-calculator-form]");
+
+  const heading = document.querySelector<HTMLElement>("main h1");
+
+  const value = panel?.querySelector<HTMLElement>("[data-primary-result]");
+
+  const label = panel?.querySelector<HTMLElement>("[data-primary-label]");
+
+  const valueCopy = bar?.querySelector<HTMLElement>("[data-sticky-value]");
+
+  const labelCopy = bar?.querySelector<HTMLElement>("[data-sticky-label]");
+
+  if (bar && panel && form && heading && value && label && valueCopy && labelCopy) {
+    const smallScreen = window.matchMedia("(max-width: 1023.98px)");
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let valueOnScreen = true;
+    let formOnScreen = false;
+    let headingOnScreen = true;
+
+    const sync = () => {
+      valueCopy.textContent = value.textContent;
+      labelCopy.textContent = label.textContent;
+      bar.toggleAttribute("data-stale", panel.hasAttribute("data-stale"));
+    };
+
+    const update = () => {
+      const show = smallScreen.matches && formOnScreen && !valueOnScreen && !headingOnScreen;
+
+      bar.toggleAttribute("data-visible", show);
+      bar.inert = !show;
+    };
+
+    new MutationObserver(sync).observe(panel, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ["data-stale"],
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.target === value) {
+          valueOnScreen = entry.isIntersecting;
+        } else if (entry.target === heading) {
+          headingOnScreen = entry.isIntersecting;
+        } else {
+          formOnScreen = entry.isIntersecting;
+        }
+      }
+
+      update();
+    });
+
+    observer.observe(value);
+    observer.observe(form);
+    observer.observe(heading);
+    smallScreen.addEventListener("change", update);
+
+    bar.addEventListener("click", () => {
+      panel.scrollIntoView({ behavior: reducedMotion.matches ? "auto" : "smooth", block: "start" });
+    });
+
+    sync();
+    update();
+  }
+</script>

@@ -21,6 +21,8 @@ numbers, no tracking without disclosure, `pnpm run lint` and
 
 ### P0.1 Production site configuration and build guard (S)
 
+**Status: done 2026-09-15** (branch `feat/launch-blockers-ux-seo`, based on `b06b53b`, not yet committed). The origin comes from `PUBLIC_SITE_URL` rather than a hard-coded `site`. The guard fails a build when `REQUIRE_SITE_URL=true` or `ALCHEMY_STAGE=production` and no site is set. `lastmod` is the last git commit date of each page source, so an uncommitted page gets none. Still open for the release PR: `packages/infra` must pass `astro: { output: "static" }` to Alchemy, which otherwise defaults to server output.
+
 - Set `site` in `apps/web/astro.config.mjs` from an environment value (for
   example `PUBLIC_SITE_URL` in the Varlock schema) and set
   `trailingSlash: "always"`.
@@ -32,6 +34,8 @@ numbers, no tracking without disclosure, `pnpm run lint` and
   listing every public route with trailing slashes.
 
 ### P0.2 Keyword H1s, titles, and descriptions (S)
+
+**Status: done 2026-09-15** (branch `feat/launch-blockers-ux-seo`, based on `b06b53b`, not yet committed). Calculator, hub, and home H1s now carry the search phrase, and titles derive rates from the fee presets. The four information pages keep their editorial H1s but have 141 to 150 character descriptions. Descriptions say "estimate", not "exact", because provider rounding is disclosed as an estimate.
 
 - H1 becomes the tool name searchers type: "Stripe Fee Calculator",
   "Freelance Hourly Rate Calculator". Keep the current taglines as a
@@ -47,6 +51,8 @@ numbers, no tracking without disclosure, `pnpm run lint` and
 
 ### P0.3 Structured data (S)
 
+**Status: done 2026-09-15** (branch `feat/launch-blockers-ux-seo`, based on `b06b53b`, not yet committed). Home has `WebSite` with `SearchAction` (the page reads `?q=`) and `Organization`. Calculators have `WebApplication` and `BreadcrumbList`, and hubs have `BreadcrumbList`. JSON-LD is emitted only when a site is set. `FAQPage` waits for P0.7. Validation was structural (valid JSON, absolute URLs, expected types per page); Google's Rich Results Test needs a public URL and was not run.
+
 - `Layout.astro` accepts a `jsonLd` prop and renders one
   `<script type="application/ld+json">` per object.
 - Home: `WebSite` with `SearchAction` pointing at `/?q={search_term_string}`
@@ -58,6 +64,8 @@ FinanceApplication`, `offers.price: 0`, `browserRequirements`), plus
 - Accept: every page validates in the Rich Results test with zero errors.
 
 ### P0.4 Mobile navigation, footer, and related tools (M)
+
+**Status: done 2026-09-15** (branch `feat/launch-blockers-ux-seo`, based on `b06b53b`, not yet committed). An "All calculators" disclosure menu works at every width, with hub links beside it on desktop. The footer lists every calculator, pages have breadcrumbs, and each calculator links five related calculators. Deviation: fee pages show no header call to action, because the menu and related block already offer the sibling tools; the hourly page points to the project quote and the project page back to the hourly rate. Keyboard Enter and Space on the menu could not be exercised in the in-app browser, which does not activate even a native button from key presses; the menu relies on native `details`/`summary` behavior.
 
 - Header: a disclosure button ("Menu") below `md` that opens a panel listing
   all six calculators grouped by hub, plus Methodology. Native `<details>` or
@@ -74,6 +82,8 @@ FinanceApplication`, `offers.price: 0`, `browserRequirements`), plus
 
 ### P0.5 Result visible while editing on mobile (M)
 
+**Status: done 2026-09-15** (branch `feat/launch-blockers-ux-seo`, based on `b06b53b`, not yet committed), using the sticky bar. Below 1024 px it appears only after the page title scrolls away, while the form is on screen and the full result is not; "Details" scrolls to the full panel. Result rows wrap with a gap, and no label and value touch at 320 px on the hourly, Gumroad, and PayPal pages.
+
 - Below `lg`, render a sticky bar at the bottom of the viewport with the
   primary number and its label, updated live, that scrolls to the full panel
   on tap. Keep the full panel where it is.
@@ -85,6 +95,8 @@ FinanceApplication`, `offers.price: 0`, `browserRequirements`), plus
   field is focused; no row shows label and value touching at 320 px.
 
 ### P0.6 Forgiving input parsing without blanking results (M)
+
+**Status: done 2026-09-15** (branch `feat/launch-blockers-ux-seo`, based on `b06b53b`, not yet committed). The parser accepts `$`, `%`, commas, spaces, and a dangling decimal point, with 59 web unit tests. While typing, a failed entry dims the last result and disables copy and transfer; leaving the field or pressing Update shows the error. Money fields tidy to `1,250.00`. A finished edit that happens during a mouse press waits for the release, so a newly shown error cannot move the button being clicked; the browser pass found and fixed that lost-click regression. The shared `NumberField` also moves help text out of the label, which is part of P1.7.
 
 - `usdToCents` and `percentToBps` normalize first: strip `$`, `%`, `,`,
   spaces, and a single trailing `.`; treat a leading `.` as `0.`.

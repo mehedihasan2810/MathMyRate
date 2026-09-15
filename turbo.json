@@ -36,12 +36,15 @@
     }
   },
   "globalEnv": [
+    "ALCHEMY_STAGE",
     "BETTER_AUTH_SECRET",
     "BETTER_AUTH_URL",
     "CI",
     "CORS_ORIGIN",
     "NODE_ENV",
     "PUBLIC_SERVER_URL",
+    "PUBLIC_SITE_URL",
+    "REQUIRE_SITE_URL",
     "VERCEL",
     "VERCEL_ENV",
     "VERCEL_PROJECT_PRODUCTION_URL",

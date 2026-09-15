@@ -1,19 +1,85 @@
 ---
+import { hubs, infoLinks, toolAtPath, toolsInHub } from "../data/tools";
+
 const path = Astro.url.pathname;
 
-const links = [{ to: "/freelance/hourly-rate-calculator/", label: "Hourly rate" }, { to: "/freelance/project-rate-calculator/", label: "Project quote" }, { to: "/fees/", label: "Fees" }];
+const currentTool = toolAtPath(path);
+
+/**
+ * The header call to action points at the most useful next step. Fee
+ * calculators show none: their related-calculators block already offers the
+ * sibling tools, and a freelance-rate prompt is off topic there.
+ */
+const callToAction =
+  currentTool?.id === "hourly-rate"
+    ? { href: "/freelance/project-rate-calculator/", label: "Build a project quote" }
+    : currentTool?.id === "project-rate"
+      ? { href: "/freelance/hourly-rate-calculator/", label: "Find your hourly rate" }
+      : currentTool?.hub === "fees"
+        ? null
+        : { href: "/freelance/hourly-rate-calculator/", label: "Calculate a rate" };
 ---
 
-<header class="border-b border-line bg-paper/90 backdrop-blur-sm">
+<header class="relative z-40 border-b border-line bg-paper/90 backdrop-blur-sm">
   <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4 md:px-8">
     <a href="/" class="display flex items-center gap-2 text-xl font-bold tracking-tight"><img src="/favicon.svg" alt="" width="24" height="24" class="h-6 w-6" />MathMyRate<span class="text-gold">.</span></a>
-    <nav aria-label="Main navigation" class="hidden items-center gap-6 text-sm font-medium md:flex">
-      {links.map((link) => (
-        <a href={link.to} aria-current={path === link.to ? "page" : undefined} class:list={["transition-colors hover:text-navy", path === link.to ? "text-navy" : "text-ink/70"]}>
-          {link.label}
-        </a>
-      ))}
-    </nav>
-    <a href="/freelance/hourly-rate-calculator/" class="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper transition-transform hover:-translate-y-0.5">Calculate a rate</a>
+    <div class="flex items-center gap-2 md:gap-6">
+      <nav aria-label="Main navigation" class="hidden items-center gap-6 text-sm font-medium md:flex">
+        {hubs.map((hub) => (
+          <a href={hub.href} aria-current={path === hub.href ? "page" : undefined} class:list={["transition-colors hover:text-navy", path.startsWith(hub.href) ? "text-navy" : "text-ink/70"]}>
+            {hub.name}
+          </a>
+        ))}
+      </nav>
+      <details class="site-menu relative" data-site-menu>
+        <summary class="flex cursor-pointer list-none items-center gap-2 rounded-full border border-line bg-white px-3.5 py-2 text-sm font-semibold text-ink transition-colors hover:border-ink/30">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h11" /></svg>
+          <span class="md:hidden">Menu</span><span class="hidden md:inline">All calculators</span>
+        </summary>
+        <div class="absolute right-0 top-full mt-2 w-[min(22rem,calc(100vw-2.5rem))] rounded-2xl border border-line bg-white p-5 shadow-[0_16px_45px_rgba(19,31,51,.14)]">
+          {hubs.map((hub, index) => (
+            <div class:list={[index > 0 && "mt-5"]}>
+              <a href={hub.href} class="eyebrow block py-1 hover:text-navy">{hub.name}</a>
+              <ul class="mt-1">
+                {toolsInHub(hub.id).map((tool) => (
+                  <li>
+                    <a href={tool.href} aria-current={path === tool.href ? "page" : undefined} class:list={["-mx-2 block rounded-lg px-2 py-2 text-sm font-medium transition-colors hover:bg-mist", path === tool.href ? "text-navy" : "text-ink"]}>
+                      {tool.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          <ul class="mt-5 flex flex-wrap gap-x-4 gap-y-2 border-t border-line pt-4 text-sm text-ink/70">
+            {infoLinks.map((link) => (
+              <li><a href={link.href} class="hover:text-navy">{link.name}</a></li>
+            ))}
+          </ul>
+        </div>
+      </details>
+      {callToAction ? (
+        <a href={callToAction.href} class="hidden rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper transition-transform hover:-translate-y-0.5 sm:inline-block">{callToAction.label}</a>
+      ) : null}
+    </div>
   </div>
 </header>
+
+<script>
+  const menu = document.querySelector<HTMLDetailsElement>("[data-site-menu]");
+
+  if (menu) {
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || !menu.open) return;
+
+      menu.open = false;
+      menu.querySelector("summary")?.focus();
+    });
+
+    document.addEventListener("click", (event) => {
+      if (menu.open && event.target instanceof Node && !menu.contains(event.target)) {
+        menu.open = false;
+      }
+    });
+  }
+</script>

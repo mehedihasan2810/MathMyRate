@@ -1,64 +1,98 @@
 ---
 import { calculateFreelanceRate } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import NumberField from "../../components/NumberField.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import ResultRow from "../../components/ResultRow.astro";
+import StickyResult from "../../components/StickyResult.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
 import Layout from "../../layouts/Layout.astro";
 import { formatUsdGrouped } from "../../scripts/calculator-form";
 
-const defaults = { takeHome: "85000.00", expenses: "7500.00", tax: "27.00", weeks: "46", hoursWeek: "40", billable: "65.00", hoursDay: "7" };
+interface FieldSpec {
+  readonly id: string;
+  readonly label: string;
+  readonly value: string;
+  readonly help: string;
+  readonly unit?: "usd" | "percent";
+  readonly inputMode?: "decimal" | "numeric";
+}
+
+const tool = findTool("hourly-rate");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
 
 const example = calculateFreelanceRate({ annualTakeHomeCents: 8500000n, annualExpensesCents: 750000n, taxRateBps: 2700, weeksPerYear: 46, hoursPerWeek: 40, billablePercentBps: 6500, hoursPerDay: 7 });
 
-const fields = [
-  ["takeHome", "Desired annual take-home", defaults.takeHome, "Enter the money you want to keep after your planning tax reserve."],
-  ["expenses", "Annual business expenses", defaults.expenses, "Software, insurance, subcontractors, and other annual costs."],
-  ["tax", "Effective tax reserve (%)", defaults.tax, "A planning assumption, not a tax calculation."],
-  ["weeks", "Working weeks / year", defaults.weeks, "Whole weeks available for client work."],
-  ["hoursWeek", "Working hours / week", defaults.hoursWeek, "Whole working hours each week."],
-  ["billable", "Billable time (%)", defaults.billable, "The proportion of working time you expect to invoice."],
-  ["hoursDay", "Hours in your day", defaults.hoursDay, "Whole hours used to show a day rate."],
-] as const;
+const fields: readonly FieldSpec[] = [
+  { id: "takeHome", label: "Desired annual take-home", value: "85,000.00", unit: "usd", help: "Enter the money you want to keep after your planning tax reserve." },
+  { id: "expenses", label: "Annual business expenses", value: "7,500.00", unit: "usd", help: "Software, insurance, subcontractors, and other annual costs." },
+  { id: "tax", label: "Effective tax reserve", value: "27.00", unit: "percent", help: "A planning assumption, not a tax calculation." },
+  { id: "weeks", label: "Working weeks per year", value: "46", inputMode: "numeric", help: "Whole weeks available for client work." },
+  { id: "hoursWeek", label: "Working hours per week", value: "40", inputMode: "numeric", help: "Whole working hours each week." },
+  { id: "billable", label: "Billable time", value: "65.00", unit: "percent", help: "The proportion of working time you expect to invoice." },
+  { id: "hoursDay", label: "Hours in your day", value: "7", inputMode: "numeric", help: "Whole hours used to show a day rate." },
+];
 ---
-<Layout title="Freelance Hourly Rate Calculator | MathMyRate" description="Turn an annual take-home target into a practical floor rate." ogImage="/og/hourly-rate.png">
+<Layout title="Freelance Hourly Rate Calculator (and Day Rate) | MathMyRate" description="Turn a yearly take-home goal, expenses, tax reserve, and billable time into the minimum hourly and day rate you need to charge. Free, no sign-up." ogImage="/og/hourly-rate.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
-    <p class="eyebrow">Freelance pricing / 01</p>
-    <h1 class="display mt-2 text-2xl font-bold md:text-3xl">Build a rate with room to work.</h1>
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Build a rate with room to work. Turn a yearly take-home goal into the minimum hourly and day rate that covers tax, expenses, and unbilled time.</p>
     <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
-      <form id="hourly-form" class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate onsubmit="return false">
-        <div class="flex items-baseline justify-between"><h2 class="display text-2xl font-bold">Example working year</h2><span class="text-xs text-ink/50">USD / annual</span></div>
+      <form id="hourly-form" data-calculator-form class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate>
+        <div class="flex items-baseline justify-between gap-3"><h2 class="display text-2xl font-bold">Example working year</h2><span class="shrink-0 text-xs text-ink/50">USD / annual</span></div>
         <p class="mt-2 text-sm text-ink/60">Example defaults: $85,000 take-home, 46 weeks, and 65% billable time.</p>
         <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
         <div class="mt-6 grid gap-5 sm:grid-cols-2">
-          {fields.map(([id, label, value, help]) => <label class="text-sm font-semibold">{label} <span class="text-[#a44631]" aria-hidden="true">*</span><input id={id} data-field={id} aria-required="true" aria-describedby={`${id}-help ${id}-error`} inputmode={["weeks","hoursWeek","hoursDay"].includes(id) ? "numeric" : "decimal"} value={value} class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium" /><span id={`${id}-help`} class="mt-1 block text-xs font-normal text-ink/55">{help}</span><span id={`${id}-error`} class="field-error" role="alert"></span></label>)}
+          {fields.map((field) => <NumberField id={field.id} label={field.label} value={field.value} help={field.help} unit={field.unit} inputMode={field.inputMode} required />)}
         </div>
         <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="hourly-update">Update rate</button><button id="hourly-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
       </form>
-      <aside aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-navy p-7 text-paper shadow-[0_16px_45px_rgba(19,31,51,.16)] md:p-9">
-        <p class="eyebrow !text-[#c3d2ea]">Minimum sustainable rate</p><p id="hourly-result" class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.hourlyRateCents)}</p><p class="mt-1 text-paper/70">per hour before project-specific payment fees</p>
-        <div class="my-7 border-t border-paper/25"></div><div class="flex justify-between"><span class="text-paper/70">Day rate</span><strong id="day-result" class="text-xl">{formatUsdGrouped(example.dayRateCents)}</strong></div><div class="mt-4 flex justify-between"><span class="text-paper/70">Annual revenue needed</span><strong id="revenue-result">{formatUsdGrouped(example.annualRevenueCents)}</strong></div><div class="mt-4 flex justify-between"><span class="text-paper/70">Billable capacity</span><strong id="capacity-result">{example.annualBillableHours.toLocaleString()} hours</strong></div>
-        <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="transfer-rate" type="button" class="rounded-full bg-paper px-4 py-2.5 text-sm font-bold text-ink">Use in project quote</button><button id="copy-hourly" type="button" class="rounded-full border border-paper/35 px-4 py-2.5 text-sm font-bold">Copy result</button><button type="button" onclick="window.print()" class="rounded-full border border-paper/35 px-4 py-2.5 text-sm font-bold">Print</button></div><p id="hourly-message" class="mt-4 text-sm text-[#ccd8ec]"></p>
+      <aside id="hourly-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-navy p-7 text-paper shadow-[0_16px_45px_rgba(19,31,51,.16)] md:p-9">
+        <p class="eyebrow !text-[#c3d2ea]" data-primary-label>Minimum sustainable rate</p><p id="hourly-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.hourlyRateCents)}</p><p class="mt-1 text-paper/70">per hour before project-specific payment fees</p>
+        <div class="my-7 border-t border-paper/25"></div>
+        <div class="[&>:first-child]:mt-0">
+          <ResultRow label="Day rate" valueId="day-result" value={formatUsdGrouped(example.dayRateCents)} valueClass="text-xl" />
+          <ResultRow label="Annual revenue needed" valueId="revenue-result" value={formatUsdGrouped(example.annualRevenueCents)} />
+          <ResultRow label="Billable capacity" valueId="capacity-result" value={`${example.annualBillableHours.toLocaleString("en-US")} hours`} />
+        </div>
+        <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="transfer-rate" type="button" class="rounded-full bg-paper px-4 py-2.5 text-sm font-bold text-ink">Use in project quote</button><button id="copy-hourly" type="button" class="rounded-full border border-paper/35 px-4 py-2.5 text-sm font-bold">Copy result</button><button type="button" data-print class="rounded-full border border-paper/35 px-4 py-2.5 text-sm font-bold">Print</button></div><p id="hourly-message" class="mt-4 text-sm text-[#ccd8ec]"></p>
       </aside>
     </div>
+    <StickyResult />
     <noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">The worked example is shown above. Enable JavaScript to update calculations locally.</p></noscript>
     <section class="mt-14 max-w-3xl border-t border-line pt-10"><h2 class="display text-3xl font-bold">How this number is built</h2><p class="mt-4 leading-relaxed text-ink/70">Annual revenue is your desired take-home grossed up once for the effective tax reserve, plus annual business expenses. That revenue is divided by billable capacity and rounded up to the nearest cent.</p><p class="mt-4 text-sm text-ink/60">Planning estimate only; not tax, accounting, or legal advice. No payment fees or currency conversion are included.</p></section>
+    <RelatedTools current={tool.id} />
   </main>
   <script>
     import { calculateFreelanceRate } from "@MathMyRate/calculators";
     import {
+      type CalculationTrigger,
       formatUsdGrouped,
       focusProblemField,
       InputProblem,
+      markResultsCurrent,
+      markResultsStale,
       percentToBps,
       requireHtmlButton,
       requireHtmlElement,
       requireHtmlForm,
       requireHtmlInput,
       setFieldState,
+      shouldDeferProblem,
       usdToCents,
+      watchCalculatorFields,
       wholeNumber,
     } from "../../scripts/calculator-form";
 
     const form = requireHtmlForm("hourly-form");
 
+    const panel = requireHtmlElement("hourly-panel");
+
     const message = requireHtmlElement("hourly-message");
+
+    const actions = [requireHtmlButton("copy-hourly"), requireHtmlButton("transfer-rate")];
 
     let latest: bigint | null = null;
 
@@ -72,11 +106,14 @@ const fields = [
       }
 
       latest = null;
-      requireHtmlButton("copy-hourly").disabled = true;
-      requireHtmlButton("transfer-rate").disabled = true;
+      markResultsCurrent(panel, []);
+
+      for (const action of actions) {
+        action.disabled = true;
+      }
     }
 
-    function update(focusProblem = false): void {
+    function update(trigger: CalculationTrigger): void {
       try {
         const result = calculateFreelanceRate({
           annualTakeHomeCents: usdToCents(requireHtmlInput("takeHome").value, "takeHome"),
@@ -91,34 +128,38 @@ const fields = [
         setResult("hourly-result", formatUsdGrouped(result.hourlyRateCents));
         setResult("day-result", formatUsdGrouped(result.dayRateCents));
         setResult("revenue-result", formatUsdGrouped(result.annualRevenueCents));
-        setResult("capacity-result", `${result.annualBillableHours.toLocaleString()} hours`);
+        setResult("capacity-result", `${result.annualBillableHours.toLocaleString("en-US")} hours`);
         latest = result.hourlyRateCents;
-        requireHtmlButton("copy-hourly").disabled = false;
-        requireHtmlButton("transfer-rate").disabled = false;
+        markResultsCurrent(panel, actions);
         message.textContent = "";
         setFieldState(form);
       } catch (error) {
-        clear();
-
         const problem =
           error instanceof InputProblem
             ? error
             : new InputProblem("billable", "Working capacity must be greater than zero.");
 
+        if (shouldDeferProblem(form, trigger)) {
+          markResultsStale(panel, actions);
+
+          return;
+        }
+
+        clear();
         setFieldState(form, problem);
 
-        if (focusProblem) focusProblemField(form, problem);
+        if (trigger === "submit") focusProblemField(form, problem);
       }
     }
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      update(true);
+      update("submit");
     });
 
-    requireHtmlButton("hourly-update").addEventListener("click", () => update(true));
+    requireHtmlButton("hourly-update").addEventListener("click", () => update("submit"));
 
-    form.querySelectorAll("input").forEach((element) => element.addEventListener("input", () => update()));
+    watchCalculatorFields(form, update);
 
     requireHtmlButton("hourly-reset").addEventListener("click", () => {
       form.reset();
@@ -129,7 +170,7 @@ const fields = [
         /* localStorage may be unavailable */
       }
 
-      update();
+      update("commit");
     });
 
     requireHtmlButton("transfer-rate").addEventListener("click", () => {
@@ -155,6 +196,6 @@ const fields = [
       }
     });
 
-    update();
+    update("commit");
   </script>
 </Layout>
