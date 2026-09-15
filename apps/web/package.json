@@ -9,7 +9,8 @@
     "astro": "astro",
     "dev:bare": "astro dev",
     "env:generate": "varlock codegen",
-    "og:images": "node scripts/generate-og-images.mjs"
+    "og:images": "node scripts/generate-og-images.mjs",
+    "icons:generate": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "@MathMyRate/api": "workspace:*",
