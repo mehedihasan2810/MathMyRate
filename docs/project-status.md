@@ -290,6 +290,20 @@ buttons and inline guard above now prevent the symptom even when a script
 fails to load. No rebuild was needed for production output, which never
 serves the dev dependency cache.
 
+Required-field markers (added 2026-09-15, same working tree): every required
+input now carries a clay-red `*` beside its label plus `aria-required="true"`
+on the input (the star is `aria-hidden`, so screen readers announce required
+from the attribute); the optional sales-tax fields stay unmarked and keep
+their "(optional)" labels. Coverage: all seven hourly fields, all five project
+fields, and the amount field on all four fee pages. Verified on Astro dev
+`:4399` through Argent: served markup counts match (7/5/1/1/1/1), computed
+star color is `rgb(200, 108, 78)`, the star survives the fee pages' mode
+switch (the script rewrites the label text but not the marker), the keep-target
+recalculation still returns `$103.30` / `$3.30` / `$100.00` for a `$100`
+target, and the cleared-field error flow (summary alert, field error, focus on
+the amount input, cleared results, disabled copy) still works, with reset
+restoring `$96.80`.
+
 For every future status update, record:
 
 1. date, branch, commit, and PR;
