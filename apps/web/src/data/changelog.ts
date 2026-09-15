@@ -13,6 +13,58 @@ export interface ChangelogEntry {
 export const changelog: readonly ChangelogEntry[] = [
   {
     date: "2026-09-15",
+    title: "Fiverr fee calculator added",
+    changes: [
+      "Fiverr: added a calculator for Fiverr's 20% seller commission on orders, Gig Extras, and tips, with PayPal withdrawals (free, $1 minimum) and Payoneer Account withdrawals ($3, $10 minimum), up to $5,000 per withdrawal. Bank Transfer via Payoneer is not included, because Fiverr's pages list both $1 and $3 for it. The buyer's service fee is not estimated, because Fiverr's pages give two different small-order fees.",
+    ],
+    sources: [
+      {
+        title: "Your earnings page – Fiverr Help Center",
+        url: "https://help.fiverr.com/hc/en-us/articles/9234443621137-Your-earnings-page",
+      },
+      {
+        title: "Withdrawing your earnings & managing payout methods – Fiverr Help Center",
+        url: "https://help.fiverr.com/hc/en-us/articles/360010530058-Withdrawing-your-earnings-managing-payout-methods",
+      },
+    ],
+  },
+  {
+    date: "2026-09-15",
+    title: "Upwork fee calculator added",
+    changes: [
+      "Upwork: added a calculator for the Freelancer Service Fee, which Upwork sets between 0% and 15% per contract, so the freelancer enters the rate shown for their contract. Direct Contracts use 5%, or 0% with an active Freelancer Plus membership, and Enterprise clients use Upwork's typical 10%. Withdrawal fees for US freelancers: Direct to U.S. Bank free, Instant Pay $2.00 per transfer, and U.S. dollar wire transfers $50.00. PayPal withdrawals are not included, because Upwork does not publish their fee.",
+    ],
+    sources: [
+      {
+        title: "Learn about the Freelancer Service Fee – Upwork Help",
+        url: "https://support.upwork.com/hc/en-us/articles/211062538-Learn-about-the-Freelancer-Service-Fee",
+      },
+      {
+        title: "How to get paid on Upwork – Upwork Help",
+        url: "https://support.upwork.com/hc/en-us/articles/211060918-How-to-get-paid-on-Upwork",
+      },
+    ],
+  },
+  {
+    date: "2026-09-15",
+    title: "eBay fee calculator added",
+    changes: [
+      "eBay: added sales in most categories (13.6%), Books, Movies & TV, and Music (15.3%), trading cards, comics, and coins (13.25%), and Guitars & Basses (6.7%), each with the $0.40 per-order fee for orders over $10.00; most-category orders of $10.00 or less with the $0.30 fee; international sales with the 1.65% international fee; and Basic Store or higher sales in 12.7% categories. The fee applies to the total amount of the sale, including shipping and sales tax, as eBay's current help pages state.",
+      "Each eBay scenario covers only the amounts its rates apply to. Orders above $7,500.00 ($2,500.00 with a Store), where eBay charges a second rate on part of the sale, are listed as unsupported.",
+    ],
+    sources: [
+      {
+        title: "Selling fees | eBay",
+        url: "https://www.ebay.com/help/selling/fees-credits-invoices/selling-fees?id=4822",
+      },
+      {
+        title: "Store selling fees | eBay",
+        url: "https://www.ebay.com/help/selling/fees-credits-invoices/store-selling-fees-managed-payments-sellers?id=4809",
+      },
+    ],
+  },
+  {
+    date: "2026-09-15",
     title: "Square and Etsy fee calculators added",
     changes: [
       "Square: added in-person card payments on Square Free (2.6% + 15¢), Square Plus (2.5% + 15¢), and Square Premium (2.4% + 15¢); online and invoice card payments on Square Free (3.3% + 30¢) and on Plus or Premium (2.9% + 30¢); manually entered and card-on-file payments (3.5% + 15¢); in-person payments on Square Free with a card issued outside the US (2.6% + 15¢ plus 1.5%); and Afterpay (6% + 30¢). Invoices paid by ACH bank transfer are listed as unsupported, because their $1 minimum and $10 cap are not modeled.",

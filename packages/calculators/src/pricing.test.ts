@@ -4,7 +4,9 @@ import { test } from "vitest";
 import {
   analyzePrice,
   calculateRetainer,
+  calculateServiceFee,
   convertPay,
+  earningsForTarget,
   priceFromMargin,
   priceFromMarkup,
 } from "./pricing.ts";
@@ -168,4 +170,47 @@ test("retainer fees round up and unused months have no used-hour rate", () => {
       months: 1,
     }),
   );
+});
+
+test("a percentage service fee rounds to the nearest cent", () => {
+  // $500.00 at 10%: a $50.00 fee leaves $450.00.
+  assert.deepEqual(calculateServiceFee({ earningsCents: 50_000n, feeBps: 1_000 }), {
+    earningsCents: 50_000n,
+    feeCents: 5_000n,
+    afterFeeCents: 45_000n,
+  });
+
+  // 10% of $266.64 is $26.664, which rounds down to $26.66; 10% of $333.36 is $33.336, which rounds up to $33.34.
+  assert.equal(calculateServiceFee({ earningsCents: 26_664n, feeBps: 1_000 }).feeCents, 2_666n);
+  assert.equal(calculateServiceFee({ earningsCents: 33_336n, feeBps: 1_000 }).feeCents, 3_334n);
+  assert.equal(calculateServiceFee({ earningsCents: 12_345n, feeBps: 0 }).afterFeeCents, 12_345n);
+  assert.throws(() => calculateServiceFee({ earningsCents: 100n, feeBps: 10_000 }));
+});
+
+test("earnings for a target are the least that still reach it", () => {
+  assert.equal(earningsForTarget({ targetCents: 45_000n, feeBps: 1_000 }).earningsCents, 50_000n);
+  assert.equal(earningsForTarget({ targetCents: 7_777n, feeBps: 0 }).earningsCents, 7_777n);
+  assert.equal(earningsForTarget({ targetCents: 0n, feeBps: 1_500 }).earningsCents, 0n);
+
+  // Keeping $100.00 at 15%: $117.65 pays $17.65 and leaves $100.00, while $117.64 also pays $17.65 and leaves $99.99.
+  const quote = earningsForTarget({ targetCents: 10_000n, feeBps: 1_500 });
+
+  assert.equal(quote.earningsCents, 11_765n);
+  assert.equal(quote.afterFeeCents, 10_000n);
+  assert.ok(calculateServiceFee({ earningsCents: 11_764n, feeBps: 1_500 }).afterFeeCents < 10_000n);
+
+  for (const feeBps of [1, 333, 500, 1_000, 1_499, 1_500, 9_999]) {
+    for (const targetCents of [1n, 99n, 101n, 12_345n, 999_999n]) {
+      const result = earningsForTarget({ targetCents, feeBps });
+
+      assert.ok(result.afterFeeCents >= targetCents);
+
+      if (result.earningsCents > 0n) {
+        assert.ok(
+          calculateServiceFee({ earningsCents: result.earningsCents - 1n, feeBps }).afterFeeCents <
+            targetCents,
+        );
+      }
+    }
+  }
 });

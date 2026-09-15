@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 
 import { isOfficialSourceUrl } from "./fee-presets.ts";
+import { MAX_CENTS } from "./money.ts";
 
 const RequiredText = Schema.NonEmptyString.check(Schema.isTrimmed());
 
@@ -65,6 +66,12 @@ export const FeePresetSchema = Schema.Struct({
   customPricingPolicy: Schema.Literals(["excluded", "user-supplied"]),
   revision: Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 2_147_483_647 })),
   components: Schema.Array(FeeComponent),
+  grossRangeCents: Schema.optional(
+    Schema.Struct({
+      minCents: Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: Number(MAX_CENTS) })),
+      maxCents: Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: Number(MAX_CENTS) })),
+    }),
+  ),
   sources: Schema.Array(FeeSource),
   checkedOn: Schema.NullOr(IsoDate),
   assumptions: Schema.NonEmptyArray(RequiredText),
@@ -114,6 +121,13 @@ export const FeePresetSchema = Schema.Struct({
     }
 
     if (preset.blockedReason !== undefined) return "supported rule has a blockedReason";
+
+    if (
+      preset.grossRangeCents &&
+      preset.grossRangeCents.minCents > preset.grossRangeCents.maxCents
+    ) {
+      return "grossRangeCents minimum must not exceed its maximum";
+    }
 
     if (preset.components.length < 1 || preset.components.length > 8) {
       return "one to eight components required";

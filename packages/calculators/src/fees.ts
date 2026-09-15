@@ -36,6 +36,9 @@ function serializeFeePreset(preset: FeePreset): string {
     customPricingPolicy: preset.customPricingPolicy,
     effectiveFrom: preset.effectiveFrom,
     exclusions: [...preset.exclusions],
+    grossRangeCents: preset.grossRangeCents
+      ? { maxCents: preset.grossRangeCents.maxCents, minCents: preset.grossRangeCents.minCents }
+      : null,
     id: preset.id,
     kind: preset.kind ?? null,
     label: preset.label,
@@ -51,6 +54,29 @@ function serializeFeePreset(preset: FeePreset): string {
     taxMode: preset.taxMode,
     tierPolicy: preset.tierPolicy,
   });
+}
+
+/** A charge outside the amounts a scenario covers, such as an order above a documented rate threshold. */
+export class GrossOutOfRangeError extends RangeError {
+  constructor(
+    readonly minCents: bigint,
+    readonly maxCents: bigint,
+  ) {
+    super(`This scenario covers charges from ${minCents} to ${maxCents} cents`);
+    this.name = "GrossOutOfRangeError";
+  }
+}
+
+function requireGrossInRange(preset: FeePreset, grossCents: bigint): void {
+  const range = preset.grossRangeCents;
+
+  if (!range) return;
+
+  const minCents = BigInt(range.minCents);
+  const maxCents = BigInt(range.maxCents);
+
+  if (grossCents < minCents || grossCents > maxCents)
+    throw new GrossOutOfRangeError(minCents, maxCents);
 }
 
 function trustedPreset(input: FeePreset): FeePreset {
@@ -140,6 +166,8 @@ export function calculateFees(input: { preset: FeePreset; grossCents: bigint; ta
 
   if (taxCents > grossCents) throw new RangeError("taxCents cannot exceed grossCents");
 
+  requireGrossInRange(preset, grossCents);
+
   return evaluate(preset, grossCents, taxCents);
 }
 
@@ -183,10 +211,21 @@ export function grossUpFees(input: {
   const start = lower > tax ? lower : tax;
   const end = upper < MAX_CENTS ? upper : MAX_CENTS;
 
-  for (let gross = start > 0n ? start : 1n; gross <= end; gross++) {
+  // A scenario's minimum charge can sit above the whole search interval. Every
+  // charge at or above the interval's upper bound reaches the target, so the
+  // search then starts and ends at that minimum.
+  const floor = BigInt(preset.grossRangeCents?.minCents ?? 1);
+  const first = start > floor ? start : floor;
+  const last = floor > end ? floor : end;
+
+  for (let gross = first; gross <= last; gross++) {
     const result = evaluate(preset, gross, tax);
 
-    if (result.sellerProceedsCents >= target) return { ...result, targetProceedsCents: target };
+    if (result.sellerProceedsCents >= target) {
+      requireGrossInRange(preset, result.grossCents);
+
+      return { ...result, targetProceedsCents: target };
+    }
   }
 
   throw new RangeError("Target cannot be reached within the supported monetary limit");

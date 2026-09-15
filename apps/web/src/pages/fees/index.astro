@@ -3,6 +3,7 @@ import { calculateFees, getFeePreset } from "@MathMyRate/calculators";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import DataTable from "../../components/DataTable.astro";
 import { feeCalculators } from "../../data/fee-calculators";
+import { serviceFeeCalculators } from "../../data/service-fee-calculators";
 import { hubBreadcrumbs, toolsInHub } from "../../data/tools";
 import Layout from "../../layouts/Layout.astro";
 import { formatReadableDate } from "../../lib/dates";
@@ -24,6 +25,14 @@ const summaryRows = feeCalculators.map((config) => {
   return [config.provider, first.label, formatCombinedRate(preset.components), String(config.scenarios.length), preset.checkedOn ? formatReadableDate(preset.checkedOn) : "Not reviewed"];
 });
 
+const serviceSummaryRows = serviceFeeCalculators.map((config) => [
+  config.provider,
+  config.contracts[0]?.label ?? "Contract",
+  config.rateSummary,
+  String(config.contracts.length),
+  formatReadableDate(config.reviewedOn),
+]);
+
 const smallSaleRows = feeCalculators.map((config) => {
   const [first] = config.scenarios;
   const preset = first ? getFeePreset(first.presetId) : undefined;
@@ -32,7 +41,7 @@ const smallSaleRows = feeCalculators.map((config) => {
 
   const at = (grossCents: bigint) => formatUsdGrouped(calculateFees({ preset, grossCents }).feeCents);
 
-  return [`${config.provider}: ${first.label}`, at(1_000n), at(10_000n), at(100_000n)];
+  return [`${config.provider}: ${first.label}`, at(2_000n), at(10_000n), at(100_000n)];
 });
 ---
 <Layout title="Stripe, PayPal, Square & Etsy Fee Calculators | MathMyRate" description="Free fee calculators for Stripe, PayPal, Square, Etsy, Gumroad, and Lemon Squeezy: see what each takes from a sale and what you keep, from official pricing." ogImage="/og/fees.png" breadcrumbs={breadcrumbs}>
@@ -55,7 +64,7 @@ const smallSaleRows = feeCalculators.map((config) => {
     <article class="guide mt-16 max-w-3xl border-t border-line pt-4">
       <h2>Every fee calculator at a glance</h2>
       <p>The first scenario each calculator opens with, its published rate, how many scenarios it covers, and when its official source was last reviewed.</p>
-      <DataTable caption="Fee calculators, headline rates, and source review dates" headers={["Provider", "Default scenario", "Rate", "Scenarios", "Source reviewed"]} rows={summaryRows} />
+      <DataTable caption="Fee calculators, headline rates, and source review dates" headers={["Provider", "Default scenario", "Rate", "Scenarios", "Source reviewed"]} rows={[...summaryRows, ...serviceSummaryRows]} />
 
       <h2>Who these calculators are for</h2>
       <p>They are for anyone who gets paid through a payment processor or marketplace and wants to know the real number: freelancers invoicing clients by card, makers selling on Etsy, shops taking payments in person with Square, and creators selling digital products on Gumroad or Lemon Squeezy. Each one answers the same three questions: what the provider keeps from a sale, what reaches you, and what to charge to keep a set amount.</p>
@@ -65,7 +74,7 @@ const smallSaleRows = feeCalculators.map((config) => {
         <li><strong>Card processors</strong> charge a percentage and a fixed amount per payment. Use <a href="/fees/stripe-fee-calculator/">Stripe</a> or <a href="/fees/paypal-fee-calculator/">PayPal</a> for online payments and invoices, and <a href="/fees/square-fee-calculator/">Square</a> for in-person payments or when your plan matters.</li>
         <li><strong>Marketplaces</strong> add their own fees on top of payment processing. The <a href="/fees/etsy-fee-calculator/">Etsy calculator</a> combines Etsy's transaction, processing, and listing fees, and handles sales tax the way Etsy does.</li>
         <li><strong>Digital product platforms</strong> handle checkout for you and take a larger share. <a href="/fees/gumroad-fee-calculator/">Gumroad</a> separates direct sales from Discover marketplace sales, and <a href="/fees/lemon-squeezy-fee-calculator/">Lemon Squeezy</a> charges on the order total including tax.</li>
-        <li><strong>Deciding between two?</strong> <a href="/fees/stripe-vs-paypal-fees/">Stripe vs PayPal</a> and <a href="/fees/gumroad-vs-lemon-squeezy-fees/">Gumroad vs Lemon Squeezy</a> price the same sale under both.</li>
+        <li><strong>Deciding between two?</strong> <a href="/fees/stripe-vs-paypal-fees/">Stripe vs PayPal</a> and <a href="/fees/gumroad-vs-lemon-squeezy-fees/">Gumroad vs Lemon Squeezy</a> price the same sale under both, and the <a href="/fees/digital-product-platform-fees/">digital product comparison</a> prices one sale across Lemon Squeezy, Gumroad, Etsy, Stripe, and PayPal.</li>
       </ul>
 
       <h2>What every calculator does</h2>
@@ -77,8 +86,8 @@ const smallSaleRows = feeCalculators.map((config) => {
       </ul>
 
       <h2>Why small sales lose a bigger share</h2>
-      <p>Most providers add a fixed charge to every payment, so the same fee structure takes a larger share of a $10 sale than of a $1,000 sale. The table shows each calculator's default scenario at three amounts, with no sales tax.</p>
-      <DataTable caption="Fee on a $10, $100, and $1,000 sale in each default scenario" headers={["Provider and scenario", "$10 sale", "$100 sale", "$1,000 sale"]} rows={smallSaleRows} />
+      <p>Most providers add a fixed charge to every payment, so the same fee structure takes a larger share of a $20 sale than of a $1,000 sale. The table shows each calculator's default scenario at three amounts, with no sales tax.</p>
+      <DataTable caption="Fee on a $20, $100, and $1,000 sale in each default scenario" headers={["Provider and scenario", "$20 sale", "$100 sale", "$1,000 sale"]} rows={smallSaleRows} />
       <p>If your average sale is small, the fixed part matters more than the percentage when you compare providers.</p>
 
       <h2>How the rates are sourced</h2>

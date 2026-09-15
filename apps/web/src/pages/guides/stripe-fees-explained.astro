@@ -1,0 +1,92 @@
+---
+import { calculateFees, effectiveFeeRateBps, grossUpFees } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import GuideTools from "../../components/GuideTools.astro";
+import PageByline from "../../components/PageByline.astro";
+import { findFeeCalculator } from "../../data/fee-calculators";
+import { findGuide, guideBreadcrumbs } from "../../data/guides";
+import Layout from "../../layouts/Layout.astro";
+import { formatCombinedRate } from "../../lib/fee-labels";
+import { commonSaleAmounts, feeFor, feeRowsByAmount, requireOfficialPreset, scenarioRowsAt } from "../../lib/fee-tables";
+import { formatPercentBps, formatUsdGrouped } from "../../scripts/calculator-form";
+
+const guide = findGuide("stripe-fees-explained");
+
+const breadcrumbs = guideBreadcrumbs(guide.id);
+
+const domestic = requireOfficialPreset("stripe-us-online-domestic-card");
+
+const rate = formatCombinedRate(domestic.components);
+
+const sale = calculateFees({ preset: domestic, grossCents: 10_000n });
+
+const small = calculateFees({ preset: domestic, grossCents: 500n });
+
+const target = grossUpFees({ preset: domestic, targetProceedsCents: 10_000n });
+
+const amountRows = feeRowsByAmount(domestic, commonSaleAmounts);
+
+const scenarioRows = scenarioRowsAt(findFeeCalculator("stripe").scenarios, 10_000n);
+
+const sources = [
+  { title: "Pricing & Fees | Stripe", url: "https://stripe.com/pricing" },
+  { title: "Refund and cancel payments | Stripe Documentation", url: "https://docs.stripe.com/refunds" },
+  { title: "How disputes work | Stripe Documentation", url: "https://docs.stripe.com/disputes/how-disputes-work" },
+  { title: "Payouts | Stripe Documentation", url: "https://docs.stripe.com/payouts" },
+  { title: "Stripe Billing pricing", url: "https://stripe.com/billing/pricing" },
+  { title: "Stripe Tax pricing", url: "https://stripe.com/tax/pricing" },
+];
+---
+<Layout title="Stripe Fees Explained, With Worked Examples | MathMyRate" description={guide.description} ogImage="/og/stripe-fees-explained.png" breadcrumbs={breadcrumbs} article={{ headline: guide.title, publishedOn: guide.publishedOn, updatedOn: guide.updatedOn }}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 max-w-3xl text-3xl font-bold md:text-4xl">{guide.title}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">One percentage, one fixed charge, and a short list of add-ons. Here is how each part of a Stripe fee is worked out.</p>
+    <PageByline updatedOn={guide.updatedOn} reviewedOn={domestic.checkedOn} />
+    <article class="guide mt-8">
+      <h2>The standard rate</h2>
+      <p>On standard pricing for a US account, Stripe charges <strong>{rate}</strong> for each successful online card payment with a card issued in the US. Its pricing page lists no setup fees, monthly fees, or closure fees. Custom or negotiated pricing can differ.</p>
+
+      <h2>How one payment's fee is built</h2>
+      <ol>
+        <li><strong>The percentage.</strong> 2.9% of a $100.00 payment is $2.90.</li>
+        <li><strong>The fixed charge.</strong> Stripe adds 30¢, for a fee of {formatUsdGrouped(sale.feeCents)}. You receive {formatUsdGrouped(sale.sellerProceedsCents)}.</li>
+        <li><strong>Rounding.</strong> Stripe's pricing page does not publish a rounding rule, so MathMyRate rounds to the nearest cent, and a statement can differ by a cent.</li>
+      </ol>
+
+      <h2>Why the 30¢ matters on small payments</h2>
+      <p>The fixed charge is the same on every payment, so it takes a bigger share of a small one. A $5.00 payment pays {formatUsdGrouped(small.feeCents)}, which is {formatPercentBps(effectiveFeeRateBps(small.feeCents, small.grossCents))} of the sale.</p>
+      <DataTable caption={`Stripe domestic card fee (${rate}) by payment amount`} headers={["Payment", "Stripe fee", "You receive", "Fee share"]} rows={amountRows} />
+
+      <h2>Card add-ons</h2>
+      <p>Stripe's pricing page lists extra percentages on top of the domestic rate. They add together when more than one applies.</p>
+      <ul>
+        <li><strong>International cards:</strong> + 1.5% for a card issued outside the US.</li>
+        <li><strong>Manually entered cards:</strong> + 0.5%.</li>
+        <li><strong>Currency conversion:</strong> + 1% when a payment has to be converted.</li>
+      </ul>
+      <DataTable caption="Stripe fee on a $100 payment by card type" headers={["Card", "Rate", "Stripe fee", "You receive"]} rows={scenarioRows} />
+
+      <h2>Fees outside a normal payment</h2>
+      <ul>
+        <li><strong>Refunds:</strong> no fee to refund a card payment, but the fees from the original payment are not returned.</li>
+        <li><strong>Disputes:</strong> $15.00 for each dispute, not returned. Responding manually adds a $15.00 countered fee, which is returned if you win.</li>
+        <li><strong>Payouts:</strong> standard payouts are free; Instant Payouts cost 1.5% of the payout, with a 50¢ minimum.</li>
+        <li><strong>ACH Direct Debit:</strong> 0.8% per successful charge, capped at $5.00.</li>
+        <li><strong>Stripe Billing and Stripe Tax:</strong> Billing is 0.7% of billing volume on pay-as-you-go pricing. Tax Basic is 0.5% per transaction for no-code integrations or 50¢ through the API.</li>
+      </ul>
+
+      <h2>Charging enough to cover the fee</h2>
+      <p>To receive $100.00 from a domestic card payment, charge <strong>{formatUsdGrouped(target.grossCents)}</strong>, not $103.20: the fee grows with the price. <a href="/guides/how-to-cover-payment-processing-fees/">How to charge enough to cover payment processing fees</a> explains the formula, and the <a href="/fees/stripe-fee-calculator/">Stripe fee calculator</a> finds the price for any amount.</p>
+
+      <h2>Stripe or PayPal?</h2>
+      <p>On a $100.00 payment, Stripe's domestic card fee is {feeFor("stripe-us-online-domestic-card", 10_000n)}, and PayPal Checkout's is {feeFor("paypal-us-checkout-paypal-payment", 10_000n)}. <a href="/fees/stripe-vs-paypal-fees/">Stripe vs PayPal fees</a> compares them at any amount.</p>
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Stripe's pages were reviewed on the date shown above. MathMyRate is not affiliated with Stripe.</p>
+    </article>
+    <GuideTools guide={guide.id} />
+  </main>
+</Layout>

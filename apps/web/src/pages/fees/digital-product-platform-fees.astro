@@ -1,0 +1,127 @@
+---
+import { calculateFees, type FeePreset } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeComparison from "../../components/FeeComparison.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findFeeComparison } from "../../data/fee-comparisons";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+interface PricedOption {
+  readonly id: string;
+  readonly short: string;
+  readonly paymentOnly: boolean;
+  readonly preset: FeePreset;
+}
+
+const tool = findTool("digital-product-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const comparison = findFeeComparison("digital-products");
+
+const options: readonly PricedOption[] = comparison.options.map((option) => ({
+  id: option.id,
+  short: option.shortLabel ?? option.label,
+  paymentOnly: option.id === "stripe" || option.id === "paypal",
+  preset: requireOfficialPreset(option.presetId),
+}));
+
+const platforms = options.filter((option) => !option.paymentOnly);
+
+const amounts = [1_000n, 2_500n, 5_000n, 10_000n];
+
+function feeOf(option: PricedOption, grossCents: bigint): bigint {
+  return calculateFees({ preset: option.preset, grossCents }).feeCents;
+}
+
+function feeText(id: string, grossCents: bigint): string {
+  const option = options.find((candidate) => candidate.id === id);
+
+  if (!option) throw new Error(`Unknown comparison option: ${id}`);
+
+  return formatUsdGrouped(feeOf(option, grossCents));
+}
+
+/** The option or options with the smallest fee on a sale, joined with "and" when tied. */
+function cheapest(grossCents: bigint, candidates: readonly PricedOption[]): string {
+  const fees = candidates.map((option) => ({ option, fee: feeOf(option, grossCents) }));
+  const lowest = fees.reduce((min, entry) => (entry.fee < min ? entry.fee : min), fees[0]?.fee ?? 0n);
+
+  return fees.flatMap((entry) => (entry.fee === lowest ? [entry.option.short] : [])).join(" and ");
+}
+
+function winnerSummary(candidates: readonly PricedOption[]): string {
+  const winners = amounts.map((grossCents) => cheapest(grossCents, candidates));
+  const [first] = winners;
+
+  if (first && winners.every((winner) => winner === first)) return `${first} has the lowest fee at $10, $25, $50, and $100`;
+
+  return `the lowest fee changes with the price: ${amounts.map((grossCents, index) => `${winners[index]} at ${formatSaleLabel(grossCents)}`).join(", ")}`;
+}
+
+const amountRows = amounts.map((grossCents) => [
+  formatSaleLabel(grossCents),
+  ...options.map((option) => formatUsdGrouped(feeOf(option, grossCents))),
+  cheapest(grossCents, platforms),
+]);
+
+const platformSummary = winnerSummary(platforms);
+
+const overallSummary = winnerSummary(options);
+
+const sources = [...new Map(options.flatMap((option) => option.preset.sources).map((source) => [source.url, source])).values()];
+
+const reviewedOn = options[0]?.preset.checkedOn ?? null;
+
+const updatedOn = "2026-09-15";
+
+const faq: readonly FaqEntry[] = [
+  { question: "What is the cheapest way to sell digital products?", answer: `It depends on whether you already have a website. Among platforms that run the checkout for you, ${platformSummary}. If you can build your own checkout and handle tax yourself, ${overallSummary}, but a payment processor only takes the payment.` },
+  { question: "Why not just take payments with Stripe or PayPal?", answer: "You can, and their per-payment fees are lower. But they only process the payment: you need your own site, a way to deliver files, and your own approach to sales tax. Stripe, for example, sells tax collection as a separate product, Stripe Tax." },
+  { question: "Which of these platforms handle sales tax for me?", answer: "Gumroad and Lemon Squeezy are merchants of record: they collect and remit sales tax and VAT on your sales. Etsy's policy says it calculates, collects, and remits sales tax for orders shipped to customers in the US; check how that applies to your digital listings." },
+  { question: "Is a marketplace worth its higher fee?", answer: `A marketplace can bring buyers who would never find your own site. Gumroad Discover charges 30% on those sales, ${feeText("gumroad-discover", 2_500n)} on a $25 product, and Etsy's fees on a $25 order are ${feeText("etsy", 2_500n)}. Whether that is worth it depends on how much those buyers would cost you to reach another way.` },
+  { question: "Does this comparison include payouts, refunds, or subscriptions?", answer: "No. It prices one card sale with no tax. Each platform's own calculator covers its other scenarios, and the Gumroad vs Lemon Squeezy comparison lists their refund and payout rules." },
+];
+---
+<Layout title="Cheapest Way to Sell Digital Products, by Fees | MathMyRate" description="Compare Lemon Squeezy, Gumroad, Etsy, Stripe, and PayPal fees on the same digital product sale at $10, $25, $50, and $100, from official published rates." ogImage="/og/digital-product-fees.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">What Lemon Squeezy, Gumroad, Etsy, Stripe, and PayPal each keep from the same digital product sale, from their published US rates.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={reviewedOn} />
+    <FeeComparison comparisonId="digital-products" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>The short answer</h2>
+      <p>Among the platforms that run the checkout and deliver the product for you, <strong>{platformSummary}</strong>. On a $25 product, Lemon Squeezy's fee is {feeText("lemon", 2_500n)}, a Gumroad direct sale pays {feeText("gumroad-direct", 2_500n)}, an Etsy order pays {feeText("etsy", 2_500n)}, and a Gumroad Discover sale pays {feeText("gumroad-discover", 2_500n)}.</p>
+      <p>Payment processors cost less per payment: {overallSummary}. A $25 card payment through Stripe pays {feeText("stripe", 2_500n)}. But a processor only takes the money, so you supply the storefront, the file delivery, and the tax handling.</p>
+
+      <h2>Fees at common digital product prices</h2>
+      <p>Card sales with no sales tax. The last column compares only the platforms, not the payment processors.</p>
+      <DataTable caption="Fee on one digital product sale, by price" headers={["Price", ...options.map((option) => option.short), "Lowest platform fee"]} rows={amountRows} />
+
+      <h2>Three ways to sell, three kinds of fee</h2>
+      <ul>
+        <li><strong>Your own storefront on a merchant of record.</strong> Lemon Squeezy and Gumroad direct sales host the checkout, deliver the product, and collect and remit sales tax and VAT. You bring the buyers.</li>
+        <li><strong>A marketplace.</strong> Gumroad Discover and Etsy can put your product in front of buyers already browsing there. Discover's 30% includes processing, and Etsy adds a $0.20 listing fee to its transaction and processing fees.</li>
+        <li><strong>A payment processor.</strong> Stripe and PayPal take card or wallet payments on a site you run. Their fees are the lowest here, and everything else is up to you.</li>
+      </ul>
+
+      <h2>What this comparison leaves out</h2>
+      <p>Sales tax, payouts, refunds, and disputes; subscriptions; PayPal sales on Gumroad, whose rate Gumroad does not publish; Lemon Squeezy's extra fees for international cards and PayPal; Etsy's Offsite Ads fee; Gumroad's lower rate after $20,000 of sales in a month, explained in <a href="/guides/gumroad-20000-threshold/">how Gumroad's threshold works</a>; and custom pricing. Each provider's calculator covers its own scenarios in full.</p>
+
+      <FaqSection entries={faq} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Rates were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with any of these companies. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

@@ -1,0 +1,122 @@
+---
+import { calculateServiceFee, earningsForTarget } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import ServiceFeeCalculator from "../../components/ServiceFeeCalculator.astro";
+import { findServiceFeeCalculator } from "../../data/service-fee-calculators";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatSaleLabel } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("upwork-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const config = findServiceFeeCalculator("upwork");
+
+const example = calculateServiceFee({ earningsCents: 100_000n, feeBps: 1_000 });
+
+const bonus = calculateServiceFee({ earningsCents: 20_000n, feeBps: 1_000 });
+
+const target = earningsForTarget({ targetCents: 100_000n, feeBps: 1_000 });
+
+const rates = [0, 500, 1_000, 1_500];
+
+const earningsRows = [10_000n, 50_000n, 100_000n, 250_000n, 500_000n].map((earningsCents) => [
+  formatSaleLabel(earningsCents),
+  ...rates.map((feeBps) => formatUsdGrouped(calculateServiceFee({ earningsCents, feeBps }).afterFeeCents)),
+]);
+
+const targetRows = [50_000n, 100_000n, 250_000n, 500_000n].map((targetCents) => [
+  formatSaleLabel(targetCents),
+  ...rates.slice(1).map((feeBps) => formatUsdGrouped(earningsForTarget({ targetCents, feeBps }).earningsCents)),
+]);
+
+const updatedOn = "2026-09-15";
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Upwork take from freelancers?", answer: `Upwork's Freelancer Service Fee ranges from 0% to 15% per contract. At 10%, $1,000.00 of earnings pays ${formatUsdGrouped(example.feeCents)} and leaves ${formatUsdGrouped(example.afterFeeCents)}. Direct Contracts cost 5%, or 0% with an active Freelancer Plus membership.` },
+  { question: "How do I find the service fee for my contract?", answer: "Upwork shows the fee percentage when a client sends you an offer or when you submit a proposal, and you can see it in your contract details and transaction summaries. Once a proposal, offer, or contract is sent, the fee is locked in for that contract." },
+  { question: "Does Upwork charge its fee on bonuses and expenses?", answer: `Yes. Upwork says the freelancer service fee is charged on bonus, expense, and miscellaneous payments, just like other earnings. A $200.00 bonus at 10% pays ${formatUsdGrouped(bonus.feeCents)}.` },
+  { question: "What does Upwork charge to withdraw money?", answer: "Direct to U.S. Bank withdrawals are free for freelancers with a United States tax address. Instant Pay costs $2.00 per transfer, up to $2,999 per transfer, and a U.S. dollar wire transfer costs $50.00, with possible bank fees on top. Upwork charges a small fee for PayPal withdrawals but does not publish the amount, so this calculator does not include PayPal." },
+  { question: "Does Upwork return the service fee on a refund?", answer: "Yes. If your client is refunded, by you or through Upwork's payment protection, Upwork returns the Freelancer Service Fee you paid on that amount." },
+  { question: "What should I bill to receive a set amount?", answer: `Choose I want to receive a target. At a 10% service fee, receiving $1,000.00 by free bank transfer takes ${formatUsdGrouped(target.earningsCents)} of earnings.` },
+  { question: "Are there contracts with no freelancer service fee?", answer: "Upwork's help pages say freelancers pay no service fee on Any Hire contracts, on Direct Contracts a client starts, and on Upwork Payroll. Upwork's fee agreement says only certain Any Hire contracts are fee-free, so check your contract details." },
+  { question: "Does the client pay a fee too?", answer: "Yes, separately from yours. Upwork's client pricing page lists a 5% Marketplace fee, or 3% for eligible U.S. clients paying from a checking account, plus a one-time Contract Initiation Fee from $0.99 to $14.99. Its help article describes the Marketplace fee as up to 7.99%, so this calculator does not estimate the client's side." },
+];
+---
+<Layout title="Upwork Fee Calculator: Service Fee and Payout | MathMyRate" description="Estimate Upwork's 0% to 15% Freelancer Service Fee on your contract, Direct Contract rates, and withdrawal fees, and what you receive or should bill." ogImage="/og/upwork.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Upwork's Freelancer Service Fee and your withdrawal method take from contract earnings, or what to bill to receive a set amount.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={config.reviewedOn} />
+    <ServiceFeeCalculator calculatorId="upwork" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The Upwork fee calculator shows what reaches your bank account from contract earnings. Upwork sets a Freelancer Service Fee between 0% and 15% for each contract. At 10%, $1,000.00 of earnings pays <strong>{formatUsdGrouped(example.feeCents)}</strong> and leaves <strong>{formatUsdGrouped(example.afterFeeCents)}</strong>. Your withdrawal method can take a little more.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Choose the kind of contract. For a marketplace contract, enter the fee percentage Upwork shows for it.</li>
+        <li>Choose whether you know what the client paid, or what you want to receive.</li>
+        <li>Enter the amount: hourly or fixed-price earnings, a bonus, or an expense payment.</li>
+        <li>Choose how you withdraw, to include its fee.</li>
+      </ol>
+
+      <h2>Where to find your fee</h2>
+      <p>Upwork does not publish one rate for marketplace contracts. It shows the percentage when you submit a proposal or receive an offer, and in your contract details and transaction summaries. Once a proposal, offer, or contract is sent, the rate is locked in for that contract, so the same contract always uses the same percentage.</p>
+
+      <h2>How the fee is built</h2>
+      <ol>
+        <li><strong>The fee.</strong> 10% of $1,000.00 is {formatUsdGrouped(example.feeCents)}. Upwork rounds fees to the nearest cent.</li>
+        <li><strong>What remains.</strong> $1,000.00 minus the fee is {formatUsdGrouped(example.afterFeeCents)}.</li>
+        <li><strong>Withdrawal.</strong> A free Direct to U.S. Bank withdrawal leaves {formatUsdGrouped(example.afterFeeCents)}; Instant Pay's $2.00 fee leaves {formatUsdGrouped(example.afterFeeCents - 200n)}.</li>
+      </ol>
+
+      <h2>What you keep at each fee rate</h2>
+      <p>Earnings after the service fee, before any withdrawal fee.</p>
+      <DataTable caption="Upwork earnings after the Freelancer Service Fee" headers={["Earnings", "0%", "5%", "10%", "15%"]} rows={earningsRows} />
+
+      <h2>What to bill to receive a set amount</h2>
+      <p>Earnings needed so the amount remains after the service fee, with a free bank withdrawal.</p>
+      <DataTable caption="Upwork earnings needed for a target amount" headers={["To receive", "5%", "10%", "15%"]} rows={targetRows} />
+
+      <h2>Service fees by contract type</h2>
+      <ul>
+        <li><strong>Marketplace contracts:</strong> 0% to 15%, set per contract and locked in once sent.</li>
+        <li><strong>Direct Contracts</strong>, for clients you bring to Upwork: 5% of your earnings.</li>
+        <li><strong>Direct Contracts with Freelancer Plus:</strong> 0% while your membership is active. Upwork's pricing page lists Freelancer Plus at $19.99 a month.</li>
+        <li><strong>Enterprise clients:</strong> typically 10%, unless the Enterprise client's contract says otherwise.</li>
+        <li><strong>Any Hire, client-started Direct Contracts, and Upwork Payroll:</strong> no freelancer service fee, according to Upwork's help pages.</li>
+      </ul>
+
+      <h2>What the fee applies to</h2>
+      <p>The service fee applies to hourly, fixed-price, and Project Catalog work, and to bonus, expense, and miscellaneous payments. If a client is refunded, Upwork returns the service fee on the refunded amount.</p>
+
+      <h2>Costs this calculator does not add</h2>
+      <ul>
+        <li><strong>Connects:</strong> $0.15 each, used to send proposals. The number a proposal needs is shown in each job post.</li>
+        <li><strong>Freelancer Plus:</strong> $19.99 a month on Upwork's pricing page.</li>
+        <li><strong>PayPal withdrawals:</strong> Upwork charges a small fee per transfer but does not publish the amount.</li>
+        <li><strong>Sales tax on fees:</strong> Upwork says U.S. sales tax can apply to fees you pay Upwork and to Connects, depending on your tax location.</li>
+        <li><strong>Client fees:</strong> the client's Marketplace fee and Contract Initiation Fee are charged to the client, not taken from your earnings.</li>
+      </ul>
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId="upwork-fees" />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{config.sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Upwork's pages were reviewed on the date shown at the top of this page. Legacy and custom fee arrangements can differ. MathMyRate is not affiliated with Upwork. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

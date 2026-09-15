@@ -6,7 +6,12 @@
 
 import { toolBreadcrumbs, type Crumb, type ToolId } from "./tools";
 
-export type GuideId = "markup-vs-margin" | "salary-vs-freelance-rate" | "cover-payment-fees";
+export type GuideId =
+  | "markup-vs-margin"
+  | "salary-vs-freelance-rate"
+  | "cover-payment-fees"
+  | "stripe-fees-explained"
+  | "gumroad-threshold";
 
 export interface Guide {
   readonly id: GuideId;
@@ -60,6 +65,30 @@ export const guides: readonly Guide[] = [
     publishedOn: "2026-09-15",
     updatedOn: "2026-09-15",
     tools: ["stripe-fees", "paypal-fees", "square-fees", "etsy-fees", "stripe-vs-paypal"],
+  },
+  {
+    id: "stripe-fees-explained",
+    href: "/guides/stripe-fees-explained/",
+    title: "Stripe Fees Explained: What You Pay per Payment",
+    summary:
+      "Stripe's 2.9% + 30¢, the add-ons for international and manually entered cards, and the fees outside a normal payment, worked out in cents.",
+    description:
+      "Stripe's 2.9% + 30¢ card fee explained with worked examples: international and manual card add-ons, disputes, refunds, payouts, and what to charge.",
+    publishedOn: "2026-09-15",
+    updatedOn: "2026-09-15",
+    tools: ["stripe-fees", "stripe-vs-paypal"],
+  },
+  {
+    id: "gumroad-threshold",
+    href: "/guides/gumroad-20000-threshold/",
+    title: "How Gumroad's $20,000 Monthly Threshold Works",
+    summary:
+      "When Gumroad's direct-sale fee drops from 10% + 50¢ to 5% + 50¢, what it saves on each sale, and what it does not change.",
+    description:
+      "Gumroad's direct-sale fee drops from 10% + 50¢ to 5% + 50¢ after $20,000 of paid sales in a month. See when it applies and what it saves per sale.",
+    publishedOn: "2026-09-15",
+    updatedOn: "2026-09-15",
+    tools: ["gumroad-fees", "gumroad-vs-lemon-squeezy", "digital-product-fees"],
   },
 ];
 

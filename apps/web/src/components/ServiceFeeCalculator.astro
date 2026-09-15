@@ -1,0 +1,263 @@
+---
+import { calculateServiceFee } from "@MathMyRate/calculators";
+import { findServiceFeeCalculator, type ServiceFeeCalculatorId } from "../data/service-fee-calculators";
+import { formatUsdGrouped, formatUsdInput } from "../scripts/calculator-form";
+import NumberField from "./NumberField.astro";
+import ResultRow from "./ResultRow.astro";
+import StickyResult from "./StickyResult.astro";
+
+interface Props {
+  calculatorId: ServiceFeeCalculatorId;
+  /** Embedded copies leave out the pinned result bar. */
+  embedded?: boolean;
+}
+
+const { calculatorId, embedded = false } = Astro.props;
+
+const config = findServiceFeeCalculator(calculatorId);
+
+const [firstContract] = config.contracts;
+
+if (!firstContract) throw new Error(`${config.provider} has no contract options.`);
+
+const exampleCents = BigInt(config.exampleCents);
+
+const example = calculateServiceFee({ earningsCents: exampleCents, feeBps: firstContract.feeBps ?? config.exampleFeeBps });
+
+const exampleFeePercent = String((firstContract.feeBps ?? config.exampleFeeBps) / 100);
+---
+
+<div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]" data-service-fee-calculator={config.id}>
+  <form id="service-form" data-calculator-form class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate>
+    <div class="flex items-baseline justify-between gap-3"><h2 class="display text-2xl font-bold">{config.formHeading}</h2><span class="shrink-0 text-xs text-ink/50">USD</span></div>
+    <p id="contract-note" class="mt-2 text-sm text-ink/60">{firstContract.note}</p>
+    <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
+    {config.contracts.length > 1 ? (
+    <fieldset class="mt-6">
+      <legend class="text-sm font-semibold">{config.contractLegend}</legend>
+      <div class="mt-3 grid gap-2 sm:grid-cols-2">
+        {config.contracts.map((contract, index) => (
+          <label class="flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium">
+            <input type="radio" name="contract" value={contract.id} class="mt-1" checked={index === 0} />
+            <span>{contract.label}<span class="mt-1 block text-xs font-normal text-ink/55">{contract.description}</span></span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+    ) : null}
+    <fieldset class="mt-6">
+      <legend class="text-sm font-semibold">What do you want to work out?</legend>
+      <div class="mt-3 grid gap-2 sm:grid-cols-2">
+        <label class="flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium"><input type="radio" name="serviceMode" value="earned" class="mt-1" checked /><span>{config.paidModeLabel}<span class="mt-1 block text-xs font-normal text-ink/55">See the fee and what you receive.</span></span></label>
+        <label class="flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium"><input type="radio" name="serviceMode" value="target" class="mt-1" /><span>I want to receive a target<span class="mt-1 block text-xs font-normal text-ink/55">Find what to bill for it.</span></span></label>
+      </div>
+    </fieldset>
+    <div class="mt-6 grid gap-5 sm:grid-cols-2">
+      <NumberField id="serviceAmount" label={config.amountLabel} labelTextId="service-amount-label" value={formatUsdInput(exampleCents)} unit="usd" required help={config.amountHelp} />
+      <NumberField id="serviceFee" wrapperId="service-fee-field" hidden={firstContract.feeBps !== null} label="Service fee on this contract" value={exampleFeePercent} unit="percent" required help={config.feeHelp} />
+      <div class="text-sm">
+        <label for="withdrawal" class="font-semibold">Withdrawal method</label>
+        <select id="withdrawal" data-field="withdrawal" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium">
+          {config.withdrawals.map((withdrawal) => <option value={withdrawal.id}>{withdrawal.label}</option>)}
+        </select>
+        <p class="mt-1 text-xs text-ink/55">Fees for one transfer from a US account.</p>
+      </div>
+    </div>
+    <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="service-update">Update</button><button id="service-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
+  </form>
+  <aside id="service-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-navy p-7 text-paper shadow-[0_16px_45px_rgba(19,31,51,.16)] md:p-9">
+    <p class="eyebrow !text-[#c3d2ea]" id="service-primary-label" data-primary-label>You receive</p>
+    <p id="service-primary" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.afterFeeCents)}</p>
+    <p class="mt-1 text-paper/70">before income tax</p>
+    <div class="my-7 border-t border-paper/25"></div>
+    <div class="[&>:first-child]:mt-0">
+      <ResultRow label={config.earningsRowLabel} valueId="service-earnings" value={formatUsdGrouped(example.earningsCents)} />
+      <ResultRow label={config.feeName} valueId="service-fee-result" value={formatUsdGrouped(example.feeCents)} />
+      <ResultRow label="After the service fee" valueId="service-after" value={formatUsdGrouped(example.afterFeeCents)} />
+      <ResultRow label="Withdrawal fee" valueId="service-withdrawal" value="$0.00" />
+      <ResultRow label="Reaches your account" valueId="service-receive" value={formatUsdGrouped(example.afterFeeCents)} />
+    </div>
+    <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-service" type="button" class="rounded-full bg-paper px-4 py-2.5 text-sm font-bold text-ink">Copy result</button><button type="button" data-print class="rounded-full border border-paper/35 px-4 py-2.5 text-sm font-bold">Print</button></div>
+    <p id="service-message" class="mt-4 text-sm text-[#ccd8ec]" aria-live="polite"></p>
+  </aside>
+</div>
+{embedded ? null : <StickyResult />}
+<noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The example shows {formatUsdGrouped(exampleCents)} at a {exampleFeePercent}% fee.</p></noscript>
+
+<script>
+  import { calculateServiceFee, earningsForTarget } from "@MathMyRate/calculators";
+  import { findServiceFeeCalculator } from "../data/service-fee-calculators";
+  import {
+    type CalculationTrigger,
+    focusProblemField,
+    formatUsdGrouped,
+    InputProblem,
+    markResultsCurrent,
+    markResultsStale,
+    percentToBps,
+    requireHtmlButton,
+    requireHtmlElement,
+    requireHtmlForm,
+    requireHtmlInput,
+    requireHtmlSelect,
+    setFieldState,
+    shouldDeferProblem,
+    usdToCents,
+    watchCalculatorFields,
+  } from "../scripts/calculator-form";
+
+  const root = document.querySelector<HTMLElement>("[data-service-fee-calculator]");
+
+  if (root) {
+    const config = findServiceFeeCalculator(root.dataset.serviceFeeCalculator ?? "");
+    const form = requireHtmlForm("service-form");
+    const panel = requireHtmlElement("service-panel");
+    const copyButton = requireHtmlButton("copy-service");
+    const withdrawalSelect = requireHtmlSelect("withdrawal");
+    let latestCopy: string | null = null;
+
+    const setText = (id: string, text: string): void => {
+      requireHtmlElement(id).textContent = text;
+    };
+
+    const checkedValue = (name: string): string | undefined =>
+      form.querySelector<HTMLInputElement>(`input[name="${name}"]:checked`)?.value;
+
+    const currentContract = () => {
+      const contract = config.contracts.find((candidate) => candidate.id === checkedValue("contract")) ?? config.contracts[0];
+
+      if (!contract) throw new Error(`${config.provider} has no contract options.`);
+
+      return contract;
+    };
+
+    const currentWithdrawal = () => {
+      const withdrawal = config.withdrawals.find((candidate) => candidate.id === withdrawalSelect.value) ?? config.withdrawals[0];
+
+      if (!withdrawal) throw new Error(`${config.provider} has no withdrawal options.`);
+
+      return withdrawal;
+    };
+
+    const syncForm = (): void => {
+      const contract = currentContract();
+      const target = checkedValue("serviceMode") === "target";
+
+      setText("contract-note", contract.note);
+      requireHtmlElement("service-fee-field").hidden = contract.feeBps !== null;
+      setText("service-amount-label", target ? "Amount you want to receive" : config.amountLabel);
+      setText("service-primary-label", target ? config.targetPrimaryLabel : "You receive");
+    };
+
+    const clear = (): void => {
+      for (const id of ["service-primary", "service-earnings", "service-fee-result", "service-after", "service-withdrawal", "service-receive"]) {
+        setText(id, "—");
+      }
+
+      latestCopy = null;
+      markResultsCurrent(panel, []);
+      copyButton.disabled = true;
+    };
+
+    const calculate = (trigger: CalculationTrigger): void => {
+      const contract = currentContract();
+      const withdrawal = currentWithdrawal();
+      const target = checkedValue("serviceMode") === "target";
+
+      try {
+        const amount = usdToCents(requireHtmlInput("serviceAmount").value, "serviceAmount");
+        const feeBps = contract.feeBps ?? percentToBps(requireHtmlInput("serviceFee").value, "serviceFee", config.maxFeeBps);
+        const withdrawalFee = BigInt(withdrawal.feeCents);
+
+        const result = target
+          ? earningsForTarget({ targetCents: amount + withdrawalFee, feeBps })
+          : calculateServiceFee({ earningsCents: amount, feeBps });
+
+        const received = result.afterFeeCents > withdrawalFee ? result.afterFeeCents - withdrawalFee : 0n;
+        const rate = `${feeBps / 100}%`;
+
+        setText("service-primary", formatUsdGrouped(target ? result.earningsCents : received));
+        setText("service-earnings", formatUsdGrouped(result.earningsCents));
+        setText("service-fee-result", `${formatUsdGrouped(result.feeCents)} (${rate})`);
+        setText("service-after", formatUsdGrouped(result.afterFeeCents));
+        setText("service-withdrawal", formatUsdGrouped(withdrawalFee));
+        setText("service-receive", formatUsdGrouped(received));
+
+        const overLimit = withdrawal.maxTransferCents !== null && result.afterFeeCents > BigInt(withdrawal.maxTransferCents);
+
+        const withdrawalName = withdrawal.label.replace(/ \(.*\)$/u, "");
+        const belowMinimum = withdrawal.minTransferCents !== null && result.afterFeeCents < BigInt(withdrawal.minTransferCents);
+
+        setText(
+          "service-message",
+          result.afterFeeCents < withdrawalFee
+            ? "The withdrawal fee is larger than these earnings."
+            : belowMinimum && withdrawal.minTransferCents !== null
+              ? `${withdrawalName} withdrawals need at least ${formatUsdGrouped(BigInt(withdrawal.minTransferCents))}.`
+              : overLimit && withdrawal.maxTransferCents !== null
+                ? `${withdrawalName} sends at most ${formatUsdGrouped(BigInt(withdrawal.maxTransferCents))} per withdrawal, so this amount needs more than one withdrawal, each with its own fee.`
+                : "",
+        );
+
+        latestCopy = target
+          ? `To receive ${formatUsdGrouped(amount)} from a ${config.provider} ${config.copyNoun} at a ${rate} fee, charge ${formatUsdGrouped(result.earningsCents)}.`
+          : `A ${formatUsdGrouped(result.earningsCents)} ${config.provider} ${config.copyNoun} at a ${rate} fee: ${formatUsdGrouped(result.feeCents)} fee, ${formatUsdGrouped(received)} reaches your account.`;
+
+        markResultsCurrent(panel, [copyButton]);
+        setFieldState(form);
+      } catch (error) {
+        const problem = error instanceof InputProblem ? error : new InputProblem("serviceAmount", "Check your inputs.");
+
+        if (shouldDeferProblem(form, trigger)) {
+          markResultsStale(panel, [copyButton]);
+
+          return;
+        }
+
+        clear();
+        setFieldState(form, problem);
+
+        if (trigger === "submit") focusProblemField(form, problem);
+        setText("service-message", "");
+      }
+    };
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      calculate("submit");
+    });
+
+    requireHtmlButton("service-update").addEventListener("click", () => calculate("submit"));
+
+    form.querySelectorAll('input[name="contract"], input[name="serviceMode"]').forEach((element) => {
+      element.addEventListener("change", () => {
+        syncForm();
+        calculate("commit");
+      });
+    });
+
+    withdrawalSelect.addEventListener("change", () => calculate("commit"));
+
+    watchCalculatorFields(form, calculate);
+
+    requireHtmlButton("service-reset").addEventListener("click", () => {
+      form.reset();
+      syncForm();
+      calculate("commit");
+    });
+
+    copyButton.addEventListener("click", async () => {
+      if (latestCopy === null) return;
+
+      try {
+        await navigator.clipboard.writeText(`${latestCopy} Estimate; sources reviewed ${config.reviewedOn}.`);
+        setText("service-message", "Result copied.");
+      } catch {
+        setText("service-message", "Copy was unavailable. Select the result to copy it manually.");
+      }
+    });
+
+    syncForm();
+    calculate("commit");
+  }
+</script>

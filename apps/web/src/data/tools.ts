@@ -16,10 +16,14 @@ export type ToolId =
   | "paypal-fees"
   | "square-fees"
   | "etsy-fees"
+  | "ebay-fees"
+  | "upwork-fees"
+  | "fiverr-fees"
   | "gumroad-fees"
   | "lemon-squeezy-fees"
   | "stripe-vs-paypal"
-  | "gumroad-vs-lemon-squeezy";
+  | "gumroad-vs-lemon-squeezy"
+  | "digital-product-fees";
 
 export interface Crumb {
   readonly name: string;
@@ -136,6 +140,37 @@ export const tools: readonly Tool[] = [
       "etsy seller fees transaction fee listing fee etsy payments processing shop handmade shipping",
   },
   {
+    id: "ebay-fees",
+    hub: "fees",
+    href: "/fees/ebay-fee-calculator/",
+    name: "eBay Fee Calculator",
+    menuLabel: "eBay fees",
+    summary: "eBay's final value fee and per-order fee on a sale, by category, and what you keep.",
+    searchTerms:
+      "ebay seller fees final value fee per order fee store international category selling",
+  },
+  {
+    id: "upwork-fees",
+    hub: "fees",
+    href: "/fees/upwork-fee-calculator/",
+    name: "Upwork Fee Calculator",
+    menuLabel: "Upwork fees",
+    summary:
+      "Upwork's Freelancer Service Fee and withdrawal fees on contract earnings, and what to bill.",
+    searchTerms:
+      "upwork freelancer service fee direct contract withdrawal instant pay freelance platform",
+  },
+  {
+    id: "fiverr-fees",
+    hub: "fees",
+    href: "/fees/fiverr-fee-calculator/",
+    name: "Fiverr Fee Calculator",
+    menuLabel: "Fiverr fees",
+    summary: "Fiverr's 20% seller commission and withdrawal fees on an order, and what to charge.",
+    searchTerms:
+      "fiverr seller commission fee gig extras tips withdrawal paypal payoneer freelance platform",
+  },
+  {
     id: "gumroad-fees",
     hub: "fees",
     href: "/fees/gumroad-fee-calculator/",
@@ -172,6 +207,17 @@ export const tools: readonly Tool[] = [
     summary: "Compare what Gumroad and Lemon Squeezy keep from a digital product sale.",
     searchTerms:
       "gumroad lemon squeezy compare comparison digital products merchant of record fees",
+  },
+  {
+    id: "digital-product-fees",
+    hub: "fees",
+    href: "/fees/digital-product-platform-fees/",
+    name: "Cheapest Way to Sell Digital Products",
+    menuLabel: "Digital product fees",
+    summary:
+      "Compare Lemon Squeezy, Gumroad, Etsy, Stripe, and PayPal fees on the same digital product sale.",
+    searchTerms:
+      "cheapest way sell digital products ebook course download platform fees compare gumroad lemon squeezy etsy stripe paypal",
   },
 ];
 

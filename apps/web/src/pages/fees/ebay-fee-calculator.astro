@@ -1,0 +1,166 @@
+---
+import { calculateFees, effectiveFeeRateBps, grossUpFees, type FeePreset } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findFeeCalculator } from "../../data/fee-calculators";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatCombinedRate } from "../../lib/fee-labels";
+import { formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatPercentBps, formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("ebay-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const config = findFeeCalculator("ebay");
+
+const most = requireOfficialPreset("ebay-us-most-categories");
+
+const small = requireOfficialPreset("ebay-us-most-categories-small-order");
+
+const international = requireOfficialPreset("ebay-us-international-most-categories");
+
+const store = requireOfficialPreset("ebay-us-store-most-categories");
+
+const rate = formatCombinedRate(most.components);
+
+const sale = calculateFees({ preset: most, grossCents: 10_000n });
+
+const worked = calculateFees({ preset: most, grossCents: 42_400n, taxCents: 2_400n });
+
+const smallSale = calculateFees({ preset: small, grossCents: 800n });
+
+const internationalSale = calculateFees({ preset: international, grossCents: 10_000n });
+
+const storeSale = calculateFees({ preset: store, grossCents: 10_000n });
+
+const target = grossUpFees({ preset: most, targetProceedsCents: 10_000n });
+
+const fee = formatUsdGrouped(sale.feeCents);
+
+const kept = formatUsdGrouped(sale.sellerProceedsCents);
+
+function presetFor(grossCents: bigint): FeePreset {
+  return grossCents <= 1_000n ? small : most;
+}
+
+const amountRows = [500n, 1_000n, 2_500n, 5_000n, 10_000n, 25_000n, 50_000n, 100_000n, 500_000n].map((grossCents) => {
+  const result = calculateFees({ preset: presetFor(grossCents), grossCents });
+
+  return [formatSaleLabel(grossCents), formatUsdGrouped(result.feeCents), formatUsdGrouped(result.sellerProceedsCents), formatPercentBps(effectiveFeeRateBps(result.feeCents, result.grossCents))];
+});
+
+const scenarioRows = config.scenarios.flatMap((scenario) => {
+  const preset = requireOfficialPreset(scenario.presetId);
+  const range = preset.grossRangeCents;
+
+  if (range && (range.minCents > 10_000 || range.maxCents < 10_000)) return [];
+
+  const result = calculateFees({ preset, grossCents: 10_000n });
+
+  return [[scenario.label, formatCombinedRate(preset.components), formatUsdGrouped(result.feeCents), formatUsdGrouped(result.sellerProceedsCents)]];
+});
+
+const updatedOn = "2026-09-15";
+
+const title = `${tool.name} (${rate}) | MathMyRate`;
+
+const description = `Estimate eBay's ${rate} final value and per-order fee by category, for Stores and international buyers, and what you keep from each sale.`;
+
+const guideSources = [
+  { title: "Selling fees | eBay", url: "https://www.ebay.com/help/selling/fees-credits-invoices/selling-fees?id=4822" },
+  { title: "Store selling fees | eBay", url: "https://www.ebay.com/help/selling/fees-credits-invoices/store-selling-fees-managed-payments-sellers?id=4809" },
+  { title: "Fee credits | eBay", url: "https://www.ebay.com/help/selling/fees-credits-invoices/fee-credits?id=4128" },
+  { title: "Getting paid for items you've sold | eBay", url: "https://www.ebay.com/help/selling/getting-paid/getting-paid-items-sold-?id=4814" },
+  { title: "General campaign strategy | eBay", url: "https://www.ebay.com/help/selling/ebay-advertising/promoted-listings/general-campaign-strategy?id=4164" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does eBay take from a sale?", answer: `In most categories, eBay charges a final value fee of 13.6% of the total amount of the sale, up to $7,500 per item, plus a per-order fee of $0.40 for orders over $10.00. A $100 sale pays ${fee} and leaves ${kept}.` },
+  { question: "Does eBay charge fees on shipping and sales tax?", answer: "Yes. eBay's selling fees page says the total amount of the sale includes the item price, handling, shipping charged to the buyer, sales tax, and other applicable fees. An older eBay seller fees FAQ says sales tax is excluded, but the current help pages and their worked examples include it, and this calculator follows them." },
+  { question: "What is eBay's per-order fee?", answer: `It is $0.30 for orders of $10.00 or less and $0.40 for orders over $10.00, charged once per order. eBay does not say whether the $10.00 test uses the item price or the order total, so the scenarios assume both sit on the same side of $10.00. An $8.00 order pays ${formatUsdGrouped(smallSale.feeCents)} in total.` },
+  { question: "Does an eBay Store lower the fees?", answer: `A Basic, Premium, Anchor, or Enterprise Store does. Most categories drop to 12.7% up to $2,500, so a $100 sale pays ${formatUsdGrouped(storeSale.feeCents)}. A Starter Store pays the same rates as no Store. eBay lists the Basic Store at $27.95 a month on a monthly renewal, or $21.95 a month on a yearly renewal.` },
+  { question: "What does eBay charge on international sales?", answer: `eBay adds a 1.65% international fee when the buyer's delivery address or registered address is outside the US, unless the item ships with eBay International Shipping. A $100 international sale in most categories pays ${formatUsdGrouped(internationalSale.feeCents)}.` },
+  { question: "Does eBay refund its fees when I refund a buyer?", answer: "eBay's fee credits page says the final value fee is credited on eligible cancellations and refunds, in proportion for partial refunds. The per-order fee is credited only when the buyer asked to cancel or had an address problem, or on a full refund for a buyer's change of mind. Refunds made outside eBay get no credit." },
+  { question: "What are eBay insertion fees?", answer: "Without a Store, you get up to 250 zero insertion fee listings a month. After that, each listing costs $0.35 per category, and the fee is not refunded if the item does not sell." },
+  { question: "Are Promoted Listings fees included?", answer: "No. Promoted Listings are optional. With the general strategy you choose an ad rate between 2% and 100% of the item's total sale amount, charged only when the item sells within 30 days of a click on your ad." },
+  { question: "Does eBay charge to pay out my earnings?", answer: "Standard payouts to your bank account are free. Express payouts cost a flat $2.00 each." },
+];
+---
+<Layout title={title} description={description} ogImage="/og/ebay.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what eBay keeps from a sale: the final value fee for your category and the per-order fee, with shipping and sales tax counted the way eBay counts them.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={most.checkedOn} />
+    <FeeCalculator calculatorId="ebay" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The eBay fee calculator shows what eBay keeps from a sale and what reaches you. In most categories, eBay charges <strong>{rate}</strong> on the total amount of the sale, so a $100 sale pays <strong>{fee}</strong> and leaves <strong>{kept}</strong>. It covers the categories with their own rates, small orders, international buyers, and Basic Store rates, and it can work backward from the amount you want to keep.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Choose the category you sold in, or the Store or international scenario.</li>
+        <li>Enter the total amount of the sale: the item price plus the shipping and handling the buyer paid, and any sales tax.</li>
+        <li>Enter the sales tax separately, so it is not counted as yours. eBay's fee still applies to it.</li>
+        <li>To find a price instead, choose I want to keep a target.</li>
+      </ol>
+
+      <h2>How the fee is built</h2>
+      <p>eBay's selling fees page works through a sale of $424.00, including 6% sales tax. The same code as the calculator gives the same answer.</p>
+      <ol>
+        <li><strong>Final value fee.</strong> 13.6% of $424.00 is $57.664, which rounds to {formatUsdGrouped(worked.lineItems[0]?.feeCents ?? 0n)}.</li>
+        <li><strong>Per-order fee.</strong> The order is over $10.00, so eBay adds $0.40, for a total of {formatUsdGrouped(worked.feeCents)}.</li>
+        <li><strong>What you keep.</strong> After the $24.00 of sales tax is set aside, you keep {formatUsdGrouped(worked.sellerProceedsCents)}.</li>
+        <li><strong>Working backward.</strong> To keep $100.00 from a sale with no sales tax, the total amount of the sale needs to be {formatUsdGrouped(target.grossCents)}.</li>
+      </ol>
+
+      <h2>eBay fees at common sale amounts</h2>
+      <p>Most categories, with no Store and no sales tax. Orders of $10 or less pay the $0.30 per-order fee; larger orders pay $0.40.</p>
+      <DataTable caption="eBay fees in most categories by total amount of the sale" headers={["Sale", "eBay fees", "You keep", "Fee share"]} rows={amountRows} />
+
+      <h2>The same $100 sale in each scenario</h2>
+      <DataTable caption="eBay fees on a $100 sale with no sales tax" headers={["Scenario", "Rate", "eBay fees", "You keep"]} rows={scenarioRows} />
+
+      <h2>Categories this calculator does not cover</h2>
+      <p>These categories on eBay's fee table change rate at a threshold, so a single rate cannot describe them:</p>
+      <ul>
+        <li><strong>Women's Bags &amp; Handbags:</strong> 15% if the sale is $2,000 or less, 9% above.</li>
+        <li><strong>Jewelry &amp; Watches, except watches:</strong> 15% if the sale is $5,000 or less, 9% above.</li>
+        <li><strong>Watches, Parts &amp; Accessories:</strong> 15% up to $1,000, 6.5% on the portion from $1,000 to $7,500, and 3% above.</li>
+        <li><strong>Men's and Women's Athletic Shoes:</strong> 8% with no per-order fee at $150 or more, 13.6% below $150.</li>
+        <li><strong>Bullion:</strong> 13.6% if the sale is $7,500 or less, 7% above.</li>
+        <li><strong>Any sale above $7,500</strong> ($2,500 with a Basic Store or above), where eBay charges 2.35% on the portion over the threshold in most categories.</li>
+      </ul>
+
+      <h2>Other eBay fees this calculator does not add</h2>
+      <ul>
+        <li><strong>Insertion fees:</strong> 250 zero insertion fee listings a month without a Store, then $0.35 per listing, not refunded if the item does not sell.</li>
+        <li><strong>Seller performance:</strong> sellers rated Below Standard pay an additional 6% of the total amount of the sale, rising to 7% after four months in a row. A very high rate of item-not-as-described returns in a category adds 5%, rising to 6%.</li>
+        <li><strong>Promoted Listings:</strong> an ad rate you choose, between 2% and 100% of the total sale amount, when a promoted item sells.</li>
+        <li><strong>Disputes:</strong> $20.00 for each dispute you are found responsible for.</li>
+        <li><strong>Store subscriptions:</strong> from $7.95 a month for a Starter Store on a monthly renewal.</li>
+        <li><strong>Payouts and currency:</strong> express payouts cost $2.00 each, and eBay's currency conversion charge for US sellers is 3%.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="ebay" blockedPresetIds={["ebay-us-above-threshold"]} />
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId="ebay-fees" />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{guideSources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">eBay's pages were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with eBay. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

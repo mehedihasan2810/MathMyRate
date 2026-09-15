@@ -1,0 +1,125 @@
+---
+import { calculateServiceFee, earningsForTarget } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import ServiceFeeCalculator from "../../components/ServiceFeeCalculator.astro";
+import { findServiceFeeCalculator } from "../../data/service-fee-calculators";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatSaleLabel } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("fiverr-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const config = findServiceFeeCalculator("fiverr");
+
+const feeBps = 2_000;
+
+const order = calculateServiceFee({ earningsCents: 10_000n, feeBps });
+
+const tip = calculateServiceFee({ earningsCents: 1_000n, feeBps });
+
+const discounted = calculateServiceFee({ earningsCents: 8_000n, feeBps });
+
+const target = earningsForTarget({ targetCents: 10_000n, feeBps });
+
+const orderRows = [500n, 1_000n, 2_500n, 5_000n, 10_000n, 25_000n, 50_000n, 100_000n].map((earningsCents) => {
+  const result = calculateServiceFee({ earningsCents, feeBps });
+
+  return [formatSaleLabel(earningsCents), formatUsdGrouped(result.feeCents), formatUsdGrouped(result.afterFeeCents), formatUsdGrouped(result.afterFeeCents > 300n ? result.afterFeeCents - 300n : 0n)];
+});
+
+const targetRows = [4_000n, 10_000n, 25_000n, 50_000n, 100_000n].map((targetCents) => [
+  formatSaleLabel(targetCents),
+  formatUsdGrouped(earningsForTarget({ targetCents, feeBps }).earningsCents),
+  formatUsdGrouped(earningsForTarget({ targetCents: targetCents + 300n, feeBps }).earningsCents),
+]);
+
+const updatedOn = "2026-09-15";
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Fiverr take from sellers?", answer: `Fiverr keeps 20% of each purchase, and you earn 80%. A $100 order pays Fiverr ${formatUsdGrouped(order.feeCents)} and earns you ${formatUsdGrouped(order.afterFeeCents)}.` },
+  { question: "Does Fiverr take 20% of tips and Gig Extras?", answer: `Yes. Fiverr's earnings page says you earn 80% of the purchase amount, including Gig Extras and tips. A $10 tip earns you ${formatUsdGrouped(tip.afterFeeCents)}.` },
+  { question: "What should I charge to earn a set amount on Fiverr?", answer: `Divide what you want by 0.8. To earn $100.00 from an order, price it at ${formatUsdGrouped(target.earningsCents)}. Choose I want to receive a target to include a withdrawal fee as well.` },
+  { question: "How does a coupon change Fiverr's fee?", answer: `Fiverr takes its 20% from the discounted price, and the discount comes out of your earnings. A $100 order sold for $80 with a coupon earns you ${formatUsdGrouped(discounted.afterFeeCents)}.` },
+  { question: "What does the buyer pay on top?", answer: "Fiverr charges the buyer a 5.5% service fee on every payment, plus a small-order fee. Fiverr's pages disagree on that small-order fee: one says $3.50 on orders under $200, another says $3.00 on orders under $100. The buyer's fee does not change what you earn, so this calculator does not estimate it." },
+  { question: "What does it cost to withdraw Fiverr earnings?", answer: "Withdrawing to PayPal is free, with a $1 minimum. A Payoneer Account withdrawal costs $3, with a $10 minimum. Each withdrawal can be up to $5,000. Fiverr's pages list both $1 and $3 for a bank transfer through Payoneer, so that method is not included here." },
+  { question: "When can I withdraw my Fiverr earnings?", answer: "Earnings become available 14 days after an order is completed. Fiverr's order process page gives 7 days for Seller Plus, Top Rated, and Pro freelancers; its Seller Plus page lists 7-day clearance on the Standard and Premium plans." },
+  { question: "What is Fiverr Early Payout?", answer: "Early Payout clears earnings sooner for a fee of 1% of the earned revenue being cleared. It is available to Top Rated freelancers and Seller Plus Premium members." },
+  { question: "What happens to the fee on a partial refund?", answer: "Fiverr recalculates your fee on the final price after the partial refund, so you pay 20% of what the buyer paid in the end." },
+];
+---
+<Layout title="Fiverr Fee Calculator: 20% Commission and Payout | MathMyRate" description="Estimate Fiverr's 20% seller commission on orders, Gig Extras, and tips, PayPal and Payoneer withdrawal fees, and what to price an order at to earn a target." ogImage="/og/fiverr.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Fiverr's 20% commission and your withdrawal method leave from an order, or what to charge to earn a set amount.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={config.reviewedOn} />
+    <ServiceFeeCalculator calculatorId="fiverr" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The Fiverr fee calculator shows what reaches you from an order. Fiverr keeps <strong>20%</strong> of each purchase, including Gig Extras and tips, so a $100 order earns you <strong>{formatUsdGrouped(order.afterFeeCents)}</strong>. Withdrawing to PayPal is free; a Payoneer Account withdrawal takes $3 more.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Choose whether you know the order price, or what you want to earn.</li>
+        <li>Enter the price of the order, Gig Extra, or tip, before the buyer's service fee.</li>
+        <li>Choose how you withdraw, to include its fee.</li>
+      </ol>
+
+      <h2>How the fee is built</h2>
+      <ol>
+        <li><strong>Commission.</strong> 20% of a $100.00 order is {formatUsdGrouped(order.feeCents)}.</li>
+        <li><strong>Your earnings.</strong> The remaining 80% is {formatUsdGrouped(order.afterFeeCents)}.</li>
+        <li><strong>Withdrawal.</strong> PayPal leaves {formatUsdGrouped(order.afterFeeCents)}; a Payoneer Account withdrawal leaves {formatUsdGrouped(order.afterFeeCents - 300n)}.</li>
+        <li><strong>Working backward.</strong> To earn $100.00, price the order at {formatUsdGrouped(target.earningsCents)}.</li>
+      </ol>
+
+      <h2>Fiverr earnings at common order prices</h2>
+      <DataTable caption="Fiverr commission and seller earnings by order price" headers={["Order", "Fiverr's 20%", "You earn", "After a $3 Payoneer withdrawal"]} rows={orderRows} />
+
+      <h2>What to charge to earn a set amount</h2>
+      <DataTable caption="Order price needed to earn each amount on Fiverr" headers={["To earn", "Withdrawn to PayPal", "Withdrawn to a Payoneer Account"]} rows={targetRows} />
+
+      <h2>Coupons, partial refunds, and the buyer's fee</h2>
+      <ul>
+        <li><strong>Coupons and promotions:</strong> Fiverr's 20% is calculated on the discounted price, and the discount comes out of your earnings.</li>
+        <li><strong>Partial refunds:</strong> your fee is recalculated on the final price after the refund.</li>
+        <li><strong>The buyer's service fee:</strong> 5.5% of each payment plus a small-order fee, charged to the buyer on top of your price. Fiverr's pages list the small-order fee as both $3.50 under $200 and $3.00 under $100, so it is not estimated here.</li>
+      </ul>
+
+      <h2>Getting paid</h2>
+      <ul>
+        <li><strong>Clearance:</strong> earnings become available 14 days after an order is completed, or 7 days for Seller Plus, Top Rated, and Pro freelancers according to Fiverr's order process page.</li>
+        <li><strong>PayPal:</strong> no withdrawal fee, $1 minimum.</li>
+        <li><strong>Payoneer Account:</strong> $3 per withdrawal, $10 minimum.</li>
+        <li><strong>Bank Transfer via Payoneer:</strong> Fiverr's withdrawals page lists $1, while its Payoneer page lists $3 for local currency and $1 for a USD wire. It is not included in the calculator.</li>
+        <li><strong>Limits:</strong> up to $5,000 per withdrawal.</li>
+        <li><strong>Early Payout:</strong> 1% of the earned revenue being cleared, for Top Rated freelancers and Seller Plus Premium members.</li>
+      </ul>
+
+      <h2>Costs this calculator does not add</h2>
+      <ul>
+        <li><strong>Seller Plus:</strong> from $15 a month for Kickstart; Standard is $25 and Premium $49 a month. No Fiverr page says a plan changes the 20% commission.</li>
+        <li><strong>Taxes:</strong> freelancers are responsible for their own tax obligations, and Fiverr shows earnings before taxes.</li>
+        <li><strong>Provider fees:</strong> PayPal or Payoneer may charge their own fees or conversion costs.</li>
+      </ul>
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId="fiverr-fees" />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{config.sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Fiverr's help pages were reviewed on the date shown at the top of this page. Fiverr does not publish how it rounds its commission, so a statement can differ by a cent. MathMyRate is not affiliated with Fiverr. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>
