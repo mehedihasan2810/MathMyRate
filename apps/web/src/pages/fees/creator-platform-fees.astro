@@ -1,0 +1,141 @@
+---
+import { calculateFees, repeatSale, type FeePreset } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeComparison from "../../components/FeeComparison.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findFeeComparison } from "../../data/fee-comparisons";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { feeColumnsByAmount, formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+interface Platform {
+  readonly id: string;
+  readonly short: string;
+  /** What the platform charges a creator each month, apart from per-payment fees. */
+  readonly monthlyPlanCents: bigint;
+  readonly preset: FeePreset;
+}
+
+const tool = findTool("creator-platform-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const comparison = findFeeComparison("creator-platforms");
+
+// Monthly prices from each platform's own pricing page. Platforms not listed
+// here charge nothing a month: Patreon, Substack, Ko-fi's free plan, and Whop.
+const monthlyPlans: readonly (readonly [string, bigint])[] = [
+  ["kofi-gold", 1_200n],
+  ["podia-mover", 4_900n],
+  ["podia-paid", 9_900n],
+];
+
+const platforms: readonly Platform[] = comparison.options.map((option) => ({
+  id: option.id,
+  short: option.shortLabel ?? option.label,
+  monthlyPlanCents: monthlyPlans.find(([id]) => id === option.id)?.[1] ?? 0n,
+  preset: requireOfficialPreset(option.presetId),
+}));
+
+const paymentAmounts = [300n, 500n, 1_000n, 2_500n, 5_000n];
+
+const paymentRows = feeColumnsByAmount(
+  comparison.options.map((option) => option.presetId),
+  paymentAmounts,
+);
+
+/** A month of same-size payments: the platform's plan price plus its fee on every payment. */
+function monthlyCostCents(platform: Platform, paymentCents: bigint, count: number): bigint {
+  const month = repeatSale(calculateFees({ preset: platform.preset, grossCents: paymentCents }), count);
+
+  return platform.monthlyPlanCents + month.feeCents;
+}
+
+const monthlyPayment = 1_000n;
+
+const monthlyCounts = [25, 50, 100, 250, 500];
+
+const monthlyRows = monthlyCounts.map((count) => {
+  const costs = platforms.map((platform) => ({ platform, cost: monthlyCostCents(platform, monthlyPayment, count) }));
+  const lowest = costs.reduce((least, entry) => (entry.cost < least ? entry.cost : least), costs[0]?.cost ?? 0n);
+  const winners = costs.flatMap((entry) => (entry.cost === lowest ? [entry.platform.short] : []));
+
+  return [formatSaleLabel(monthlyPayment * BigInt(count)), ...costs.map((entry) => formatUsdGrouped(entry.cost)), winners.join(" and ")];
+});
+
+function feeAt(id: string, grossCents: bigint): string {
+  const platform = platforms.find((candidate) => candidate.id === id);
+
+  if (!platform) throw new Error(`Unknown platform: ${id}`);
+
+  return formatUsdGrouped(calculateFees({ preset: platform.preset, grossCents }).feeCents);
+}
+
+// Ko-fi Gold and Podia's paid plans pay for themselves once the fee they remove costs more.
+const goldBreakEvenCents = (1_200n * 10_000n) / 500n;
+
+const podiaBreakEvenCents = ((9_900n - 4_900n) * 10_000n) / 500n;
+
+const sources = [
+  ...new Map(platforms.flatMap((platform) => platform.preset.sources).map((source) => [source.url, source])).values(),
+];
+
+const reviewedOn = platforms[0]?.preset.checkedOn ?? null;
+
+const updatedOn = "2026-09-16";
+
+const faq: readonly FaqEntry[] = [
+  { question: "Which creator platform has the lowest fees?", answer: `On a single $10 payment, Whop's ${feeAt("whop", 1_000n)} is lowest, followed by Ko-fi Gold and Podia's paid plans at ${feeAt("kofi-gold", 1_000n)}, which each cost a monthly price. Among platforms with no monthly price, Ko-fi's free plan charges ${feeAt("kofi", 1_000n)} against Patreon's ${feeAt("patreon", 1_000n)} and Substack's ${feeAt("substack", 1_000n)}.` },
+  { question: "Do the monthly plans change the answer?", answer: `Yes, once you earn enough. Ko-fi Gold costs $12 a month and removes Ko-fi's 5%, so it beats Ko-fi's free plan above ${formatSaleLabel(goldBreakEvenCents)} a month. Podia's Shaker plan costs $50 a month more than Mover and removes the same 5%, so it beats Mover above ${formatSaleLabel(podiaBreakEvenCents)} a month. Whop charges the lowest card rate here, 2.7% + 30¢, with no monthly price.` },
+  { question: "Which platforms collect sales tax for me?", answer: "Patreon adds sales tax, VAT, or GST to member payments where the law requires it and sends it on. Whop offers managed tax for 2% per transaction and handles applicable Discover sales itself. Podia collects tax at checkout for jurisdictions you register but does not remit it. Substack collects only if you turn on Stripe Tax, and Ko-fi does not collect tax." },
+  { question: "What do iOS app purchases cost?", answer: "On Patreon, Apple takes 30% of an eligible in-app purchase, or 15% after a year, and Patreon's 10% still applies. Substack says Apple's fee is 15-30% without saying which applies, so it is not compared here." },
+  { question: "Is the cheapest platform the right one?", answer: "Not always. These numbers cover fees only. Patreon and Podia run memberships and courses, Substack runs a newsletter with its own discovery, Ko-fi keeps payments in your own Stripe or PayPal account, and Whop is a marketplace with its own add-ons." },
+  { question: "What is not in these numbers?", answer: "Payouts, refunds, disputes, currency conversion, marketplace commissions, and any sales tax. Each platform's own calculator covers its other scenarios." },
+];
+---
+<Layout title="Creator Platform Fees Compared: Patreon, Substack & More | MathMyRate" description="Compare Patreon, Substack, Ko-fi, Podia, and Whop fees on the same payment, and see each platform's real monthly cost once plan prices are counted." ogImage="/og/creator-platform-fees.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">What Patreon, Substack, Ko-fi, Podia, and Whop each keep from the same payment, and what they cost a month once plan prices are counted.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={reviewedOn} />
+    <FeeComparison comparisonId="creator-platforms" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>The short answer</h2>
+      <p>Per payment, the platforms that take no cut of their own are cheapest: on a <strong>$10</strong> payment Whop charges {feeAt("whop", 1_000n)}, and Ko-fi Gold and Podia's paid plans charge {feeAt("kofi-gold", 1_000n)} because only the card fee applies. Ko-fi's free plan and Podia's Mover plan each add 5%, at {feeAt("kofi", 1_000n)}. Patreon takes {feeAt("patreon", 1_000n)} and Substack {feeAt("substack", 1_000n)}, because both charge 10% and Substack adds Stripe's Billing fee.</p>
+      <p>Plan prices change the ranking at higher earnings, so the second table prices a whole month.</p>
+
+      <h2>Fees on one payment</h2>
+      <p>Card payments with no tax. Ko-fi, Podia, and Substack use your own Stripe account at its published US card rate.</p>
+      <DataTable caption="Fee on one payment, by platform" headers={["Payment", ...platforms.map((platform) => platform.short)]} rows={paymentRows} />
+
+      <h2>What a month costs</h2>
+      <p>Each row is a month of $10 payments, counting both the per-payment fees and the platform's monthly price: $12 for Ko-fi Gold, $49 for Podia Mover, and $99 for a Podia paid plan.</p>
+      <DataTable caption="Monthly cost by platform for a month of $10 payments" headers={["Payments a month", ...platforms.map((platform) => platform.short), "Cheapest"]} rows={monthlyRows} />
+
+      <h2>What each platform gives you</h2>
+      <ul>
+        <li><strong>Patreon:</strong> memberships with tiers, and it adds and remits sales tax for you. Its standard plan takes 10%.</li>
+        <li><strong>Substack:</strong> a paid newsletter with its own network. It takes 10%, and Stripe adds a 0.7% Billing fee on recurring payments.</li>
+        <li><strong>Ko-fi:</strong> tips, shop sales, and memberships, paid straight into your own PayPal or Stripe account. 5% on most payments, or nothing with Gold at $12 a month.</li>
+        <li><strong>Podia:</strong> courses, downloads, coaching, and community. 5% on Mover, nothing on the paid plans, with your own Stripe or PayPal account.</li>
+        <li><strong>Whop:</strong> a marketplace for communities and digital products, at 2.7% + 30¢ with optional add-ons.</li>
+      </ul>
+
+      <h2>What these numbers leave out</h2>
+      <p>Payouts, refunds, disputes, currency conversion, iOS in-app purchases, and marketplace commissions, none of which every platform publishes; and sales tax, which each platform handles differently. Each platform's own calculator covers its remaining scenarios: <a href="/fees/patreon-fee-calculator/">Patreon</a>, <a href="/fees/substack-fee-calculator/">Substack</a>, <a href="/fees/ko-fi-fee-calculator/">Ko-fi</a>, <a href="/fees/podia-fee-calculator/">Podia</a>, and <a href="/fees/whop-fee-calculator/">Whop</a>.</p>
+
+      <FaqSection entries={faq} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Rates were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with any of these companies. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

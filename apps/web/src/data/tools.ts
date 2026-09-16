@@ -40,7 +40,8 @@ export type ToolId =
   | "patreon-vs-kofi"
   | "substack-vs-patreon"
   | "payhip-vs-gumroad"
-  | "kickstarter-vs-indiegogo";
+  | "kickstarter-vs-indiegogo"
+  | "creator-platform-fees";
 
 export interface Crumb {
   readonly name: string;
@@ -412,6 +413,17 @@ export const tools: readonly Tool[] = [
       "What Kickstarter and Indiegogo each keep from the same pledge and from a whole campaign.",
     searchTerms:
       "kickstarter indiegogo compare comparison crowdfunding campaign fees which is cheaper platform processing",
+  },
+  {
+    id: "creator-platform-fees",
+    hub: "fees",
+    href: "/fees/creator-platform-fees/",
+    name: "Creator Platform Fees Compared",
+    menuLabel: "Creator platforms",
+    summary:
+      "Patreon, Substack, Ko-fi, Podia, and Whop fees on the same payment, and their monthly cost.",
+    searchTerms:
+      "creator platform fees compare patreon substack ko-fi kofi podia whop membership community newsletter cheapest",
   },
 ];
 

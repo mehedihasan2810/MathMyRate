@@ -80,6 +80,7 @@ outside launch scope.
 | `/fees/substack-vs-patreon-fees/`               | Substack and Patreon fees on the same payment               |
 | `/fees/payhip-vs-gumroad-fees/`                 | Payhip and Gumroad fees on the same sale                    |
 | `/fees/kickstarter-vs-indiegogo-fees/`          | Kickstarter and Indiegogo fees on the same pledge           |
+| `/fees/creator-platform-fees/`                  | Creator platform fees and monthly cost compared             |
 | `/methodology/`                                 | Calculations, sourcing, rounding, review, and corrections   |
 | `/about/`                                       | Truthful product/operator information                       |
 | `/privacy/`                                     | Actual data collection and storage disclosures              |

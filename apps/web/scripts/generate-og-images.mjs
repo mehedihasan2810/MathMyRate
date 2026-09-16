@@ -238,6 +238,14 @@ const cards = [
     path: "/fees/kickstarter-vs-indiegogo-fees/",
   },
   {
+    file: "creator-platform-fees",
+    eyebrow: "Compare / Creator platforms",
+    accent: palette.navy,
+    title: "Creator platform fees",
+    description: "Patreon, Substack, Ko-fi, Podia, and Whop on the same payment.",
+    path: "/fees/creator-platform-fees/",
+  },
+  {
     file: "kdp-royalties",
     eyebrow: "Royalties / Amazon KDP",
     accent: palette.navy,

@@ -284,7 +284,7 @@ Comparisons and hubs
 
 - "Cheapest way to sell digital products" comparison across the sourced
   platforms at $10, $25, $50, $100.
-- A hub page per platform family with its own content.
+- A hub page per platform family with its own content (creator platforms done 2026-09-16).
 
 ### P2.2 Hub pages with real content (M)
 
