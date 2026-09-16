@@ -1,0 +1,89 @@
+---
+import { calculateFees, repeatSale } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { feeRowsByAmount, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("indiegogo-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const preset = requireOfficialPreset("indiegogo-us-contribution");
+
+const fee = (grossCents: bigint): string => formatUsdGrouped(calculateFees({ preset, grossCents }).feeCents);
+
+const keep = (grossCents: bigint): string => formatUsdGrouped(calculateFees({ preset, grossCents }).sellerProceedsCents);
+
+const amountRows = feeRowsByAmount(preset, [1_000n, 2_500n, 5_000n, 10_000n, 25_000n, 50_000n]);
+
+// Indiegogo's own example: $10,000 raised over 100 contributions.
+const officialExample = repeatSale(calculateFees({ preset, grossCents: 10_000n }), 100);
+
+const campaign = repeatSale(calculateFees({ preset, grossCents: 5_000n }), 200);
+
+const updatedOn = "2026-09-16";
+
+const guideSources = [
+  { title: "Fees - Indiegogo", url: "https://www.indiegogo.com/en/info/fees" },
+  { title: "Fees - Indiegogo Help Center", url: "https://help.indiegogo.com/article/596-fees" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Indiegogo take?", answer: `Indiegogo charges a 5% platform fee on successfully collected payments plus payment processing of 3% + $0.20 per transaction. A $50 contribution pays ${fee(5_000n)} and leaves ${keep(5_000n)}.` },
+  { question: "What happens if my project misses its goal?", answer: "Indiegogo says you pay nothing at all, including payment processing fees, if your project does not reach its goal." },
+  { question: "Does Indiegogo's own example match this calculator?", answer: `Yes. Indiegogo's fee article says a project raising $10,000 over 100 transactions pays $500 in platform fees and $320 in processing, and receives $9,180. This calculator gives ${formatUsdGrouped(officialExample.feeCents)} in fees and ${formatUsdGrouped(officialExample.sellerProceedsCents)} received for 100 contributions of $100.` },
+  { question: "What does the pledge manager cost?", answer: "Indiegogo says you pay nothing for managing pledges: the same 5% plus 3% + $0.20 applies to each payment it collects, and setting up the project is free." },
+  { question: "Are there other Indiegogo fees?", answer: "Indiegogo's fees page lists performance marketing for external platforms at 10% of ad revenue. Stretch Pay, pledge management, project setup, and premium support are listed as free." },
+  { question: "Does this include shipping or tax?", answer: "No. Indiegogo does not say whether its fees apply to shipping, tax, or tips, so this calculator covers a contribution without them." },
+];
+---
+<Layout title="Indiegogo Fee Calculator: 5% Plus Processing | MathMyRate" description="Estimate Indiegogo's 5% platform fee and 3% + 20¢ payment processing on a contribution and across a campaign, and see what reaches your bank account." ogImage="/og/indiegogo.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Indiegogo's platform fee and payment processing take from one contribution and from a funded campaign.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={preset.checkedOn} />
+    <FeeCalculator calculatorId="indiegogo" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>Indiegogo charges a <strong>5%</strong> platform fee on the money you collect and <strong>3% + $0.20</strong> in payment processing for each transaction. A $50 contribution pays <strong>{fee(5_000n)}</strong> and leaves {keep(5_000n)}. Across a campaign of 200 contributions of $50, the fees come to <strong>{formatUsdGrouped(campaign.feeCents)}</strong> and you receive {formatUsdGrouped(campaign.sellerProceedsCents)}.</p>
+      <p>If your project does not reach its goal, Indiegogo says you pay nothing, including payment processing.</p>
+
+      <h2>Checked against Indiegogo's own example</h2>
+      <p>Indiegogo's fee article works through a project that raises $10,000 across 100 transactions: $500 in platform fees, $320 in processing, and $9,180 paid out. Priced one contribution at a time, this calculator gives <strong>{formatUsdGrouped(officialExample.feeCents)}</strong> in fees and <strong>{formatUsdGrouped(officialExample.sellerProceedsCents)}</strong> received.</p>
+
+      <h2>Fees at common contribution amounts</h2>
+      <DataTable caption="Indiegogo fees and what you receive, by contribution" headers={["Contribution", "Fees", "You receive", "Fee share"]} rows={amountRows} />
+
+      <h2>What else Indiegogo charges</h2>
+      <ul>
+        <li><strong>Pledge management:</strong> free. The same 5% plus 3% + $0.20 applies to each payment it collects.</li>
+        <li><strong>Setting up the project, Stretch Pay, and premium support:</strong> listed as free on Indiegogo's fees page.</li>
+        <li><strong>Performance marketing on external platforms:</strong> 10% of ad revenue.</li>
+        <li><strong>Not estimated:</strong> currency conversion, refunds, and chargebacks, and whether fees apply to shipping, tax, or tips, which Indiegogo does not state.</li>
+      </ul>
+      <p>Comparing platforms? See <a href="/fees/kickstarter-vs-indiegogo-fees/">Kickstarter vs Indiegogo fees</a>.</p>
+
+      <FeeRuleDetails calculatorId="indiegogo" />
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId="indiegogo-fees" />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{guideSources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Indiegogo's pages were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Indiegogo. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

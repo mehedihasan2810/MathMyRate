@@ -114,6 +114,11 @@ const expectedFees = new Map([
   ["payhip-us-free-stripe-card", 820n], // 5% = 500, + 290, + 30
   ["payhip-us-plus-stripe-card", 520n], // 2% = 200, + 290, + 30
   ["payhip-us-pro-stripe-card", 320n], // 290 + 30
+  ["podia-us-mover-stripe-card", 820n], // 5% = 500, + 290, + 30
+  ["podia-us-no-fee-stripe-card", 320n], // 290 + 30
+  ["indiegogo-us-contribution", 820n], // 5% = 500, + 3% = 300, + 20
+  ["whop-us-card", 300n], // 2.7% = 270, + 30
+  ["whop-us-international-card", 450n], // 270 + 30 + 1.5% = 150
 ]);
 
 // Presets whose range excludes $100 get a fixture at an amount inside their range.

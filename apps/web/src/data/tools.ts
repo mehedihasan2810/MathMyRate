@@ -27,6 +27,9 @@ export type ToolId =
   | "kofi-fees"
   | "substack-fees"
   | "payhip-fees"
+  | "podia-fees"
+  | "whop-fees"
+  | "indiegogo-fees"
   | "kdp-royalties"
   | "gumroad-fees"
   | "lemon-squeezy-fees"
@@ -36,7 +39,8 @@ export type ToolId =
   | "upwork-vs-fiverr"
   | "patreon-vs-kofi"
   | "substack-vs-patreon"
-  | "payhip-vs-gumroad";
+  | "payhip-vs-gumroad"
+  | "kickstarter-vs-indiegogo";
 
 export interface Crumb {
   readonly name: string;
@@ -267,6 +271,37 @@ export const tools: readonly Tool[] = [
       "payhip digital downloads ebooks courses coaching free plus pro plan transaction fee stripe",
   },
   {
+    id: "podia-fees",
+    hub: "fees",
+    href: "/fees/podia-fee-calculator/",
+    name: "Podia Fee Calculator",
+    menuLabel: "Podia fees",
+    summary: "Podia's 5% Mover fee or no fee on the paid plans, with Stripe card processing.",
+    searchTerms:
+      "podia courses coaching community digital downloads mover shaker earthquaker transaction fee stripe",
+  },
+  {
+    id: "whop-fees",
+    hub: "fees",
+    href: "/fees/whop-fee-calculator/",
+    name: "Whop Fee Calculator",
+    menuLabel: "Whop fees",
+    summary: "Whop's 2.7% + 30¢ card fee, the international card rate, and its optional add-ons.",
+    searchTerms:
+      "whop communities memberships digital products courses card processing fee international add-ons discover",
+  },
+  {
+    id: "indiegogo-fees",
+    hub: "fees",
+    href: "/fees/indiegogo-fee-calculator/",
+    name: "Indiegogo Fee Calculator",
+    menuLabel: "Indiegogo fees",
+    summary:
+      "Indiegogo's 5% platform fee and 3% + 20¢ processing on a contribution and a campaign.",
+    searchTerms:
+      "indiegogo crowdfunding campaign platform fee payment processing pledge manager late pledge goal funds raised",
+  },
+  {
     id: "kdp-royalties",
     hub: "fees",
     href: "/fees/kdp-royalty-calculator/",
@@ -366,6 +401,17 @@ export const tools: readonly Tool[] = [
       "Payhip's plans and Gumroad's direct and Discover fees on the same digital product sale.",
     searchTerms:
       "payhip gumroad compare comparison digital products ebook course fees which is cheaper discover plus pro",
+  },
+  {
+    id: "kickstarter-vs-indiegogo",
+    hub: "fees",
+    href: "/fees/kickstarter-vs-indiegogo-fees/",
+    name: "Kickstarter vs Indiegogo Fees",
+    menuLabel: "Kickstarter vs Indiegogo",
+    summary:
+      "What Kickstarter and Indiegogo each keep from the same pledge and from a whole campaign.",
+    searchTerms:
+      "kickstarter indiegogo compare comparison crowdfunding campaign fees which is cheaper platform processing",
   },
 ];
 

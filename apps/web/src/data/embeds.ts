@@ -40,6 +40,9 @@ const feeHeights: Readonly<Record<FeeCalculatorId, number>> = {
   kofi: 1_800,
   substack: 1_700,
   payhip: 1_750,
+  podia: 1_650,
+  whop: 1_550,
+  indiegogo: 1_600,
   gumroad: 1_750,
   "lemon-squeezy": 1_900,
 };

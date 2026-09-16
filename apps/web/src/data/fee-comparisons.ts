@@ -6,7 +6,8 @@ export type FeeComparisonId =
   | "digital-products"
   | "patreon-vs-kofi"
   | "substack-vs-patreon"
-  | "payhip-vs-gumroad";
+  | "payhip-vs-gumroad"
+  | "kickstarter-vs-indiegogo";
 
 export interface ComparisonOption {
   readonly id: string;
@@ -250,6 +251,33 @@ export const feeComparisons: readonly FeeComparisonConfig[] = [
         label: "Gumroad, Discover sale",
         shortLabel: "Gumroad Discover",
         href: "/fees/gumroad-fee-calculator/",
+      },
+    ],
+  },
+  {
+    id: "kickstarter-vs-indiegogo",
+    caption: "Kickstarter and Indiegogo fees on the same pledge, USD, funded project, no tax",
+    options: [
+      {
+        id: "kickstarter",
+        presetId: "kickstarter-us-pledge",
+        label: "Kickstarter, pledge of $10 or more",
+        shortLabel: "Kickstarter",
+        href: "/fees/kickstarter-fee-calculator/",
+      },
+      {
+        id: "kickstarter-micro",
+        presetId: "kickstarter-us-micropledge",
+        label: "Kickstarter, pledge under $10",
+        shortLabel: "Kickstarter micropledge",
+        href: "/fees/kickstarter-fee-calculator/",
+      },
+      {
+        id: "indiegogo",
+        presetId: "indiegogo-us-contribution",
+        label: "Indiegogo, project reaches its goal",
+        shortLabel: "Indiegogo",
+        href: "/fees/indiegogo-fee-calculator/",
       },
     ],
   },

@@ -184,6 +184,46 @@ const payhipStripe = {
   title: "Connect Your Stripe Account - Help Center",
 };
 
+const indiegogoFees = {
+  url: "https://www.indiegogo.com/en/info/fees",
+  title: "Fees - Indiegogo",
+};
+
+const indiegogoFeesHelp = {
+  url: "https://help.indiegogo.com/article/596-fees",
+  title: "Fees - Indiegogo Help Center",
+};
+
+const whopPricing = {
+  url: "https://whop.com/network/pricing/",
+  title: "Whop Payments",
+};
+
+const whopFees = {
+  url: "https://docs.whop.com/fees",
+  title: "Fees - Whop Docs",
+};
+
+const whopTaxes = {
+  url: "https://docs.whop.com/payments-and-billing/fees/taxes",
+  title: "Taxes - Whop Docs",
+};
+
+const podiaPricing = {
+  url: "https://www.podia.com/pricing",
+  title: "Podia Pricing: Plans, Transaction Fees & Free Trial — Podia",
+};
+
+const podiaTransactionFees = {
+  url: "https://help.podia.com/en/articles/11371138-understanding-podia-transaction-fees",
+  title: "Understanding Podia transaction fees | Podia Help Center",
+};
+
+const podiaPayments = {
+  url: "https://help.podia.com/en/articles/11370248-accepting-payments-in-podia",
+  title: "Accepting payments in Podia | Podia Help Center",
+};
+
 const lemonGettingPaid = {
   url: "https://docs.lemonsqueezy.com/help/getting-started/getting-paid",
   title: "Docs: Getting Paid • Lemon Squeezy",
@@ -2018,6 +2058,178 @@ const officialPresetRecords: FeePreset[] = [
     exclusions: [
       "The $99 monthly plan price, and subscriptions and payment plans, which Payhip bills through Stripe without saying whether Stripe's Billing fee applies.",
       "PayPal and Square payments, international cards, currency conversion, refunds, disputes, and video hosting.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "indiegogo-us-contribution",
+    label: "Indiegogo contribution on a funded project",
+    provider: "indiegogo",
+    taxMode: "zero-only",
+    paymentProduct: "Indiegogo contribution",
+    channel: "online",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "indiegogo-platform",
+        label: "Indiegogo platform fee",
+        rateBps: 500,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "indiegogo-processing",
+        label: "Payment processing",
+        rateBps: 300,
+        fixedCents: 20,
+        base: "gross",
+      },
+    ],
+    sources: [indiegogoFees, indiegogoFeesHelp],
+    assumptions: [
+      "US project raising USD whose goal is reached, so fees apply. Indiegogo says a project that does not reach its goal pays nothing, including payment processing.",
+      "Indiegogo charges a 5% platform fee on successfully collected payments, and payment processing of 3% + $0.20 per transaction in USD.",
+      "Indiegogo's help center describes crowdfunding processing as a fixed fee plus 0.2 without the percentage, but its own example, its fee page, and its pledge manager section all give 3% + $0.20, which this estimate follows.",
+      "One contribution with no shipping, tax, or tip. Indiegogo does not say whether its fees apply to those amounts.",
+      "The estimator rounds each component to cents; Indiegogo's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Projects that miss their goal, which pay nothing, and the 5% of funds Indiegogo holds in reserve for 180 days, which it calls a hold rather than a fee.",
+      "Performance marketing at 10% of ad revenue, currency conversion, chargebacks, and refunds.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "whop-us-card",
+    label: "Whop standard pricing, domestic card",
+    provider: "whop",
+    taxMode: "zero-only",
+    paymentProduct: "Whop sale",
+    channel: "online",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "whop-processing",
+        label: "Whop card processing",
+        rateBps: 270,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    sources: [whopPricing, whopFees, whopTaxes],
+    assumptions: [
+      "US seller in USD on Whop's standard pricing, which has no setup or monthly fee and charges 2.7% + $0.30 for every successful card transaction, here with a card issued in the US.",
+      "No optional revenue-optimization add-on is on. Whop charges 0.8% for orchestration, 0.5% for billing, and 2% for tax and remittance, each when enabled, and states 6% + $0.30 as the stacked maximum.",
+      "A sale with no sales tax collected, and no currency conversion, which adds 1%.",
+      "The estimator rounds each component to cents; Whop's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Marketplace sales through Whop Discover, whose commission Whop does not publish, iOS in-app purchases, and custom pricing for high volume.",
+      "ACH, financing, crypto, and local payment methods, whose rates Whop's fee and local payment pages state differently; payouts, the $15 dispute fee, and per-transaction 3D Secure and Radar fees.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "whop-us-international-card",
+    label: "Whop standard pricing, international card",
+    provider: "whop",
+    taxMode: "zero-only",
+    paymentProduct: "Whop sale",
+    channel: "online",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "whop-processing",
+        label: "Whop card processing",
+        rateBps: 270,
+        fixedCents: 30,
+        base: "gross",
+      },
+      {
+        id: "whop-international-card",
+        label: "Whop international card fee",
+        rateBps: 150,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    sources: [whopPricing, whopFees, whopTaxes],
+    assumptions: [
+      "US seller in USD on Whop's standard pricing, with a card issued outside the US, which adds 1.5% to the 2.7% + $0.30 card rate.",
+      "The charge needs no currency conversion, which adds 1% when it applies.",
+      "No optional revenue-optimization add-on is on, and no sales tax is collected.",
+      "The estimator rounds each component to cents; Whop's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Currency conversion, marketplace sales through Whop Discover, iOS in-app purchases, and custom pricing for high volume.",
+      "ACH, financing, crypto, and local payment methods; payouts, the $15 dispute fee, and per-transaction 3D Secure and Radar fees.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "podia-us-mover-stripe-card",
+    label: "Podia Mover plan, domestic card through Stripe",
+    provider: "podia",
+    taxMode: "zero-only",
+    paymentProduct: "Podia sale",
+    channel: "Stripe",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "podia-transaction",
+        label: "Podia transaction fee",
+        rateBps: 500,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "stripe-processing",
+        label: "Stripe card processing",
+        rateBps: 290,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    sources: [podiaPricing, podiaTransactionFees, podiaPayments, stripePricing],
+    assumptions: [
+      "US creator in USD on Podia's Mover plan, which costs $49 a month or $42 a month billed yearly (not included here) and adds a 5% transaction fee on each sale.",
+      "The buyer pays by US card through the creator's own Stripe account. Podia gives the processor's fee as 2.9% + 30¢ and says it may vary by location; Stripe's pricing page lists the same rate for US domestic cards.",
+      "A sale with no sales tax collected. Podia can collect tax at checkout for jurisdictions you register, but does not say whether its 5% applies to tax.",
+      "The estimator rounds each component to cents; Podia's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "The monthly plan price, PayPal payments (available on the Shaker and Earthquaker plans, at PayPal's own rates), and coupons, whose effect on Podia's fee is not stated.",
+      "Currency conversion, affiliate commissions, refunds, disputes, and Podia Email subscriptions.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "podia-us-no-fee-stripe-card",
+    label: "Podia Shaker or Earthquaker plan, domestic card through Stripe",
+    provider: "podia",
+    taxMode: "zero-only",
+    paymentProduct: "Podia sale",
+    channel: "Stripe",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "stripe-processing",
+        label: "Stripe card processing",
+        rateBps: 290,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    sources: [podiaPricing, podiaTransactionFees, podiaPayments, stripePricing],
+    assumptions: [
+      "US creator in USD on Podia's Shaker plan ($99 a month, or $84 billed yearly) or Earthquaker plan ($179 a month, or $150 billed yearly), neither included here, which carry no Podia transaction fee.",
+      "The buyer pays by US card through the creator's own Stripe account, at Stripe's published 2.9% + 30¢ US card rate.",
+      "A sale with no sales tax collected.",
+      "The estimator rounds each component to cents; Stripe's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "The monthly plan price and PayPal payments, which these plans allow at PayPal's own rates.",
+      "Currency conversion, affiliate commissions, refunds, disputes, and Podia Email subscriptions.",
     ],
     status: "supported",
   }),

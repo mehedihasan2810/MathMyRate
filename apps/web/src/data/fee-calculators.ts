@@ -16,6 +16,9 @@ export type FeeCalculatorId =
   | "kofi"
   | "substack"
   | "payhip"
+  | "podia"
+  | "whop"
+  | "indiegogo"
   | "gumroad"
   | "lemon-squeezy";
 
@@ -566,6 +569,91 @@ export const feeCalculators: readonly FeeCalculatorConfig[] = [
         description: "$99 a month. No Payhip fee; Stripe's 2.9% + 30¢ still applies.",
         note: "Supported scenario: US seller in USD on Payhip's Pro plan, a one-time sale paid by US card through Stripe, with no tax, shipping, or discount. The $99 monthly price is not included.",
         copyName: "Payhip Pro plan sale",
+      },
+    ],
+  },
+  {
+    id: "podia",
+    toolId: "podia-fees",
+    provider: "Podia",
+    formHeading: "Sale details",
+    scenarioLegend: "Which Podia plan are you on?",
+    panelTone: "ink",
+    taxHelp: "",
+    scenarios: [
+      {
+        id: "mover",
+        presetId: "podia-us-mover-stripe-card",
+        label: "Mover plan",
+        description: "$49 a month. 5% Podia fee plus Stripe's 2.9% + 30¢.",
+        note: "Supported scenario: US creator in USD on Podia's Mover plan, a sale paid by US card through the creator's own Stripe account, with no tax collected. The plan price is not included.",
+        copyName: "Podia Mover plan sale",
+      },
+      {
+        id: "no-fee",
+        presetId: "podia-us-no-fee-stripe-card",
+        label: "Shaker or Earthquaker plan",
+        description: "$99 or $179 a month. No Podia fee; Stripe's 2.9% + 30¢ applies.",
+        note: "Supported scenario: US creator in USD on Podia's Shaker or Earthquaker plan, a sale paid by US card through the creator's own Stripe account, with no tax collected. The plan price is not included.",
+        copyName: "Podia sale with no Podia fee",
+      },
+    ],
+  },
+  {
+    id: "whop",
+    toolId: "whop-fees",
+    provider: "Whop",
+    formHeading: "Sale details",
+    scenarioLegend: "Where is the buyer's card from?",
+    panelTone: "navy",
+    taxHelp: "",
+    scenarios: [
+      {
+        id: "domestic",
+        presetId: "whop-us-card",
+        label: "US card",
+        description: "Whop's standard 2.7% + 30¢ per successful card transaction.",
+        note: "Supported scenario: US seller in USD on Whop's standard pricing, a card issued in the US, no add-ons enabled, and no tax collected.",
+        copyName: "Whop sale",
+      },
+      {
+        id: "international",
+        presetId: "whop-us-international-card",
+        label: "International card",
+        description: "Adds Whop's 1.5% for cards issued outside the US.",
+        note: "Supported scenario: US seller in USD on Whop's standard pricing, a card issued outside the US with no currency conversion, no add-ons enabled, and no tax collected.",
+        copyName: "Whop sale on an international card",
+      },
+    ],
+  },
+  {
+    id: "indiegogo",
+    toolId: "indiegogo-fees",
+    provider: "Indiegogo",
+    formHeading: "Contribution details",
+    scenarioLegend: "Which fees apply?",
+    panelTone: "navy",
+    taxHelp: "",
+    volume: {
+      fieldLabel: "Number of contributions (optional)",
+      fieldHelp: "Same-size collected contributions. Adds campaign totals.",
+      unitSingular: "contribution",
+      unitPlural: "contributions",
+      perPeriod: null,
+      feesLabel: "Fees on these contributions",
+      keepLabel: "You receive",
+      yearly: false,
+      shareLabel: "Fees as a share of funds raised",
+      shareNoun: "funds raised",
+    },
+    scenarios: [
+      {
+        id: "funded",
+        presetId: "indiegogo-us-contribution",
+        label: "Project reaches its goal",
+        description: "Indiegogo's 5% platform fee plus 3% + 20¢ processing.",
+        note: "Supported scenario: US project in USD that reaches its goal, one collected contribution with no shipping, tax, or tip. A project that misses its goal pays nothing.",
+        copyName: "Indiegogo contribution",
       },
     ],
   },

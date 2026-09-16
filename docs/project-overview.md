@@ -66,6 +66,9 @@ outside launch scope.
 | `/fees/ko-fi-fee-calculator/`                   | Ko-fi's service fee and Stripe processing                   |
 | `/fees/substack-fee-calculator/`                | Substack's 10% fee and Stripe card and Billing fees         |
 | `/fees/payhip-fee-calculator/`                  | Payhip plan fees and Stripe processing on a sale            |
+| `/fees/podia-fee-calculator/`                   | Podia plan fees and Stripe processing on a sale             |
+| `/fees/whop-fee-calculator/`                    | Whop's card fee and what a sale leaves you                  |
+| `/fees/indiegogo-fee-calculator/`               | Indiegogo platform and processing fees on a campaign        |
 | `/fees/kdp-royalty-calculator/`                 | Amazon KDP eBook, paperback, and hardcover royalties        |
 | `/fees/gumroad-fee-calculator/`                 | Gumroad direct/Discover take-home                           |
 | `/fees/lemon-squeezy-fee-calculator/`           | Order fees and separate payout estimate                     |
@@ -76,6 +79,7 @@ outside launch scope.
 | `/fees/patreon-vs-ko-fi-fees/`                  | Patreon and Ko-fi fees on the same payment                  |
 | `/fees/substack-vs-patreon-fees/`               | Substack and Patreon fees on the same payment               |
 | `/fees/payhip-vs-gumroad-fees/`                 | Payhip and Gumroad fees on the same sale                    |
+| `/fees/kickstarter-vs-indiegogo-fees/`          | Kickstarter and Indiegogo fees on the same pledge           |
 | `/methodology/`                                 | Calculations, sourcing, rounding, review, and corrections   |
 | `/about/`                                       | Truthful product/operator information                       |
 | `/privacy/`                                     | Actual data collection and storage disclosures              |

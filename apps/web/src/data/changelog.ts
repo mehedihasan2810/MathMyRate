@@ -13,6 +13,29 @@ export interface ChangelogEntry {
 export const changelog: readonly ChangelogEntry[] = [
   {
     date: "2026-09-16",
+    title: "Podia, Whop, and Indiegogo calculators added",
+    changes: [
+      "Podia: added sales on the Mover plan, which charges a 5% transaction fee, and on the Shaker and Earthquaker plans, which charge none, each with Stripe's 2.9% + $0.30 US card rate. Podia gives the processor's fee as 2.9% + $0.30 and says it can vary by location. The monthly plan prices ($49, $99, and $179, or $42, $84, and $150 billed yearly) are not taken from each sale and are not included.",
+      "Whop: added its standard pricing of 2.7% + $0.30 per successful card transaction, and the 1.5% it adds for a card issued outside the US. The optional orchestration (0.8%), billing (0.5%), and tax and remittance (2%) add-ons, marketplace sales through Discover, and payment methods whose rates two Whop pages state differently are not estimated.",
+      "Indiegogo: added contributions to a project that reaches its goal, at a 5% platform fee plus 3% + $0.20 payment processing. Results match Indiegogo's own example of $10,000 over 100 transactions paying $500 and $320. A project that misses its goal pays nothing. Indiegogo's help center omits the 3% in one sentence; its worked example, its fee page, and its pledge manager section all include it.",
+      "Added a Kickstarter vs Indiegogo comparison. A comparison row whose scenario does not cover the amount, such as Kickstarter's under-$10 pledge rate at $100, now shows a dash and names the amounts it covers instead of failing the table.",
+    ],
+    sources: [
+      {
+        title: "Podia Pricing: Plans, Transaction Fees & Free Trial — Podia",
+        url: "https://www.podia.com/pricing",
+      },
+      {
+        title: "Understanding Podia transaction fees | Podia Help Center",
+        url: "https://help.podia.com/en/articles/11371138-understanding-podia-transaction-fees",
+      },
+      { title: "Fees - Whop Docs", url: "https://docs.whop.com/fees" },
+      { title: "Fees - Indiegogo", url: "https://www.indiegogo.com/en/info/fees" },
+      { title: "Fees - Indiegogo Help Center", url: "https://help.indiegogo.com/article/596-fees" },
+    ],
+  },
+  {
+    date: "2026-09-16",
     title: "Substack and Payhip calculators added",
     changes: [
       "Substack: added paid subscription payments on the web with Substack's 10% fee, Stripe's 2.9% + $0.30 card fee, and Stripe's 0.7% Billing fee on recurring payments, plus Stripe's 1.5% fee for a card issued outside the US paying in USD. One older Substack page still lists a 0.5% Billing fee; Substack's cost page says that rate ended June 30, 2025, and Stripe's Billing pricing page lists 0.7%. iOS in-app purchases and local-currency prices are not estimated, because Substack gives Apple's fee as 15-30% and the conversion fee as 1% to 2%.",

@@ -1,0 +1,100 @@
+---
+import { calculateFees, type FeePreset } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { feeRowsByAmount, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("whop-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const domestic = requireOfficialPreset("whop-us-card");
+
+const international = requireOfficialPreset("whop-us-international-card");
+
+function fee(preset: FeePreset, grossCents: bigint): string {
+  return formatUsdGrouped(calculateFees({ preset, grossCents }).feeCents);
+}
+
+function keep(preset: FeePreset, grossCents: bigint): string {
+  return formatUsdGrouped(calculateFees({ preset, grossCents }).sellerProceedsCents);
+}
+
+const amountRows = feeRowsByAmount(domestic, [1_000n, 2_500n, 5_000n, 10_000n, 25_000n, 50_000n]);
+
+const addOnRows = [
+  ["Card or wallet payment", "2.7% + $0.30", "Always"],
+  ["International card", "+1.5%", "Card issued outside the US"],
+  ["Currency conversion", "+1%", "When the charge needs conversion"],
+  ["Orchestration", "+0.8%", "Optional, when enabled"],
+  ["Billing", "+0.5%", "Optional, when enabled"],
+  ["Tax and remittance", "+2%", "Optional, when enabled and tax is collected"],
+];
+
+const updatedOn = "2026-09-16";
+
+const guideSources = [
+  { title: "Whop Payments", url: "https://whop.com/network/pricing/" },
+  { title: "Fees - Whop Docs", url: "https://docs.whop.com/fees" },
+  { title: "Taxes - Whop Docs", url: "https://docs.whop.com/payments-and-billing/fees/taxes" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Whop charge per sale?", answer: `Whop's standard pricing is 2.7% + $0.30 for every successful card transaction, with no setup or monthly fee. A $25 sale pays ${fee(domestic, 2_500n)} and leaves ${keep(domestic, 2_500n)}; on a card issued outside the US it pays ${fee(international, 2_500n)}.` },
+  { question: "What are Whop's optional add-ons?", answer: "Whop lists three revenue-optimization add-ons that stack on the base rate when you enable them: orchestration at 0.8%, billing at 0.5%, and tax and remittance at 2% per transaction. Whop gives 6% + $0.30 as the stacked maximum." },
+  { question: "Does Whop handle sales tax?", answer: "Whop offers three options for direct sales: it collects and you remit, it collects and remits, or you handle tax yourself. The two managed options cost 2% per transaction. For applicable Discover sales, Whop says it collects and remits as the marketplace facilitator." },
+  { question: "What does a chargeback cost on Whop?", answer: "Whop's fee page lists a flat $15.00 per dispute and $29.00 per early dispute alert. It also lists 3 cents per 3D Secure check and 7 cents per Radar fraud check." },
+  { question: "What does Whop charge on marketplace sales?", answer: "Whop's published pages do not give a commission for sales its marketplace brings you, so this calculator covers your own traffic only. Its documentation names a platform fee line without a rate." },
+  { question: "What about ACH, crypto, or local payment methods?", answer: "They are not estimated here. Whop's fee page and its local payment methods page state different rates for several of them, including ACH at 1.5% capped at $5 on one page and 0.8% capped at $5 on the other." },
+];
+---
+<Layout title="Whop Fee Calculator: 2.7% + 30¢ Card Fee | MathMyRate" description="Estimate Whop's 2.7% + 30¢ card fee and its international card rate on a sale, see the optional add-ons, and find what a sale leaves you." ogImage="/og/whop.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Whop keeps from a community, course, or digital product sale, and what reaches you.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={domestic.checkedOn} />
+    <FeeCalculator calculatorId="whop" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>Whop charges one pay-as-you-go rate with no setup or monthly cost: <strong>2.7% + $0.30</strong> per successful card transaction. A <strong>$25</strong> sale pays <strong>{fee(domestic, 2_500n)}</strong> and leaves {keep(domestic, 2_500n)}. A card issued outside the US adds 1.5%, so the same sale pays {fee(international, 2_500n)}.</p>
+
+      <h2>Whop's published rates</h2>
+      <DataTable caption="Whop's card rate and the fees that add to it" headers={["Fee", "Rate", "When it applies"]} rows={addOnRows} />
+      <p>The add-ons are optional and stack on the base rate. Whop states 6% + $0.30 as the maximum with everything enabled, so this calculator covers the base rate with no add-ons.</p>
+
+      <h2>What you keep at common prices</h2>
+      <p>Card sales on Whop's standard pricing, with no add-ons and no tax collected.</p>
+      <DataTable caption="Whop fees and what you keep, by sale price" headers={["Sale", "Fees", "You keep", "Fee share"]} rows={amountRows} />
+
+      <h2>Tax, disputes, and other charges</h2>
+      <ul>
+        <li><strong>Sales tax:</strong> for direct sales you choose who collects and remits. Whop's two managed options cost 2% per transaction; handling tax yourself costs nothing extra. Whop says it collects and remits for applicable Discover sales as the marketplace facilitator.</li>
+        <li><strong>Disputes:</strong> $15.00 per dispute, and $29.00 per early dispute alert.</li>
+        <li><strong>Fraud checks:</strong> 3 cents per 3D Secure check and 7 cents per Radar check.</li>
+        <li><strong>Other payment methods:</strong> ACH, financing, crypto, and local methods have their own rates, and two Whop pages state several of them differently, so they are not estimated here.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="whop" />
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId="whop-fees" />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{guideSources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Whop's pages were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Whop. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>
