@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "astro build",
+    "budget": "node scripts/check-budget.mjs",
     "check-types": "tsc -b ../../packages/api && astro check",
     "astro": "astro",
     "dev:bare": "astro dev",

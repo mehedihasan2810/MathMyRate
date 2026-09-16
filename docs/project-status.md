@@ -563,6 +563,67 @@ Browser evidence:
   Stripe Instant Payout ($0.50 fee, $33.83 from the balance), and the
   $10,000 range error.
 
+### Accessibility and performance pass (2026-09-16)
+
+Branch `feat/a11y-performance`, after PRs #10 to #14 were merged into `main`:
+
+- **Screen reader announcements (P1.7).** Result panels are no longer live
+  regions. `watchCalculatorFields` adds one polite status message per
+  calculator. It is spoken after a committed edit, an option change, Update,
+  Reset, or Enter, and says the primary result, such as "Reaches you:
+  $970.00.", or "Comparison updated.". Typing is silent. Field errors lost
+  `role="alert"`, so the error summary reads each error once. Text is written
+  only when it changes, and an unchanged error is repeated once through the
+  status message after a change or Update. Copy confirmations repeat.
+- **Layout shift.** Inter is wider than the fallback font, so text rewrapped
+  when it loaded and pushed calculators down (CLS 0.21 to 0.24 on fee pages).
+  Astro's Fonts API now emits size-adjusted fallback faces.
+- **Fonts.** One Latin variable Inter file (47 KB) replaces four static
+  weights (95 KB). The rendered text has no other Inter characters. It is not
+  preloaded, because a preload delayed first paint.
+- **JavaScript.** `@MathMyRate/calculators` is marked `sideEffects: false`, so
+  pages that price no fee no longer ship the preset registry.
+- **Budget.** `pnpm run budget` in `apps/web` checks every built page's
+  gzipped HTML, CSS, JavaScript, and font download against the playbook.
+
+Throttled load in Chrome 153 (412 px viewport, 4x CPU slowdown, 150 ms RTT,
+1.6 Mbps down, cache disabled, median of five runs; `main` and the branch
+measured back to back, both served uncompressed by the same static server).
+Largest Contentful Paint varies by about 50 ms between runs of the same build:
+
+| Page                        | CLS before | CLS after | LCP before | LCP after | Load before | Load after | Fonts before/after | JS before/after (uncompressed) |
+| --------------------------- | ---------- | --------- | ---------- | --------- | ----------- | ---------- | ------------------ | ------------------------------ |
+| `/`                         | 0          | 0         | 892 ms     | 736 ms    | 1,351 ms    | 1,034 ms   | 95 / 47 KB         | 0 / 0 KB                       |
+| Hourly rate calculator      | 0.001      | 0.019     | 824 ms     | 688 ms    | 2,187 ms    | 1,338 ms   | 95 / 47 KB         | 193 / 75 KB                    |
+| Stripe fee calculator       | 0.237      | 0.004     | 976 ms     | 812 ms    | 2,500 ms    | 2,067 ms   | 95 / 47 KB         | 222 / 208 KB                   |
+| Payout fee calculator       | 0.236      | 0.004     | 864 ms     | 760 ms    | 2,248 ms    | 1,918 ms   | 95 / 47 KB         | 197 / 184 KB                   |
+| Creator platform comparison | 0.214      | 0.004     | 784 ms     | 764 ms    | 2,267 ms    | 1,935 ms   | 95 / 47 KB         | 201 / 187 KB                   |
+| Markup vs margin guide      | 0.101      | 0         | 660 ms     | 628 ms    | 1,220 ms    | 922 ms     | 95 / 47 KB         | 0 / 0 KB                       |
+
+The hourly page's remaining 0.019 is its subtitle wrapping one line
+differently in the adjusted fallback than in Inter.
+
+Other checks on 2026-09-16:
+
+| Check                                                      | Observed result                                                                                                                                                                                                              |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Live regions, all 39 calculator pages                      | Typing: no announcement. Committed edit, option or select change, edit then mouse Update, Reset: exactly one status message or, when the new option does not cover the amount, one alert. Invalid value: one alert           |
+| Live region edge cases (Stripe page)                       | Update on an unchanged error repeats it once; a new error is one alert; Enter, Space on Reset, and arrow keys on options each give one message; a second copy repeats "Result copied."; the embed has its own status message |
+| Rendering                                                  | Stripe page at 1280 px: same page height (8,197 px) and heading widths within 1 px of `main`                                                                                                                                 |
+| Embeds                                                     | All 29 embed pages at 360 px are within their suggested iframe heights                                                                                                                                                       |
+| Regression scripts                                         | Payout, Skool, Teachable, and creator comparison figures match independent calculations; no console errors                                                                                                                   |
+| iOS Safari (iPhone 17 simulator)                           | Inter renders; scenario changes update the Stripe calculator                                                                                                                                                                 |
+| `pnpm run budget`                                          | Passed: 87 pages; largest 113 KB total, 47.6 KB JavaScript, 47.1 KB fonts                                                                                                                                                    |
+| `pnpm run lint`, `pnpm run format:check`                   | Passed with 0 findings                                                                                                                                                                                                       |
+| `pnpm run check-types`                                     | Passed: 7 of 7 tasks; `astro check` 0 errors                                                                                                                                                                                 |
+| `pnpm run test`                                            | Passed: 151 calculator tests and 119 web tests, including the result announcement wording and the payout fee share                                                                                                           |
+| Guard build (`REQUIRE_SITE_URL=true`, no site)             | Failed as intended                                                                                                                                                                                                           |
+| Site build (`PUBLIC_SITE_URL=https://calculators.example`) | Passed; 87 pages; SEO audit 0 problems                                                                                                                                                                                       |
+
+No real screen reader was run: controlling VoiceOver from a script needs a
+system setting to be changed. The live region checks record what each region
+would announce.
+
 ### Infrastructure and deployment
 
 Alchemy remains the infrastructure owner for the existing Cloudflare Workers,
