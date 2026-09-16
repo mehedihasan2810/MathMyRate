@@ -262,6 +262,14 @@ const cards = [
     path: "/fees/creator-platform-fees/",
   },
   {
+    file: "teachable-vs-podia",
+    eyebrow: "Compare / Course platforms",
+    accent: palette.gold,
+    title: "Teachable vs Podia fees",
+    description: "Plan prices and per-sale fees on the same course sale.",
+    path: "/fees/teachable-vs-podia-fees/",
+  },
+  {
     file: "kdp-royalties",
     eyebrow: "Royalties / Amazon KDP",
     accent: palette.navy,

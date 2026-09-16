@@ -43,7 +43,8 @@ export type ToolId =
   | "substack-vs-patreon"
   | "payhip-vs-gumroad"
   | "kickstarter-vs-indiegogo"
-  | "creator-platform-fees";
+  | "creator-platform-fees"
+  | "teachable-vs-podia";
 
 export interface Crumb {
   readonly name: string;
@@ -447,6 +448,16 @@ export const tools: readonly Tool[] = [
       "Patreon, Substack, Ko-fi, Podia, and Whop fees on the same payment, and their monthly cost.",
     searchTerms:
       "creator platform fees compare patreon substack ko-fi kofi podia whop membership community newsletter cheapest",
+  },
+  {
+    id: "teachable-vs-podia",
+    hub: "fees",
+    href: "/fees/teachable-vs-podia-fees/",
+    name: "Teachable vs Podia Fees",
+    menuLabel: "Teachable vs Podia",
+    summary: "Teachable's and Podia's plan fees and monthly prices on the same course sale.",
+    searchTerms:
+      "teachable podia compare comparison course platform fees plans monthly price which is cheaper starter mover",
   },
 ];
 

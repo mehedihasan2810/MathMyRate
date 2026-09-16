@@ -440,6 +440,29 @@ Browser evidence (each value checked against an independent calculation):
   appeared anywhere. In iOS Safari the Skool calculator renders with its
   scenario note and all three bands.
 
+### Course platform comparison and hub content (2026-09-16)
+
+Same branch, after the Skool and Teachable calculators:
+
+- `/fees/teachable-vs-podia-fees/` compares the two course platforms on one
+  sale and across a month, counting each plan's monthly price. The monthly
+  table starts low enough to show the crossover: Teachable Starter is cheapest
+  at two and four sales of $99 a month, Podia Mover at five, and Teachable's
+  paid plan from ten.
+- The freelance hub's summary table and its "how the calculators fit together"
+  flow now cover the early payment discount, rate increase, and 1099 vs W-2
+  calculators, which were missing from both.
+- Break-evens on the comparison round up, matching the Teachable page's
+  $666.67 rather than showing $666.66.
+
+Checks on 2026-09-16: lint, `format:check`, `check-types` (7 of 7 tasks, 0
+errors), and tests (140 calculator, 110 web) all passed; the guard build failed
+as intended; the site build produced 83 pages with 0 SEO audit problems and 54
+sitemap URLs. In Chrome every figure matched an independent calculation, the
+loss message still appears at $0.05, the freelance hub lists all eight
+calculators with working links, tables scroll inside their boxes at 360 px, and
+no console errors appeared.
+
 Local checks on 2026-09-16 for the 1099 vs W-2 rate calculator (branch
 `feat/contractor-rate-more-platforms`; browser work on the preview build at
 `:4321`, in Chrome 153 over the DevTools protocol and in iOS Safari on the

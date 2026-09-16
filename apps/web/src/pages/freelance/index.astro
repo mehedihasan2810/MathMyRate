@@ -16,6 +16,9 @@ const summaryRows = [
   ["Freelance Retainer Calculator", "Hourly rate, included hours, and discount", "Monthly fee and effective rate"],
   ["Markup and Margin Calculator", "Cost, and a markup, margin, or price", "Price, profit, markup, and margin"],
   ["Salary to Hourly Calculator", "Pay for any period, hours, and weeks", "Pay per hour, day, week, month, and year"],
+  ["Early Payment Discount Calculator", "Invoice amount and terms such as 2/10 net 30", "Discount, early payment, and its yearly cost"],
+  ["Rate Increase Calculator", "Current rate, the raise, and billable hours", "New rate, monthly and yearly change, hours you could lose"],
+  ["1099 vs W-2 Rate Calculator", "Salary, benefits, expenses, and billable hours", "Contractor income and hourly rate that match the salary"],
 ];
 
 const quote = calculateProjectRate({ hourlyRateCents: 9_000n, estimatedMinutes: 1_800, directExpensesCents: 60_000n, contingencyBps: 1_000 });
@@ -31,7 +34,7 @@ const offer = convertPay({ amountCents: 9_000n, period: "hour", hoursPerWeekHund
     <Breadcrumbs items={breadcrumbs} />
     <h1 class="display mt-4 max-w-3xl text-4xl font-bold leading-tight md:text-5xl">Freelance Pricing Calculators</h1>
     <p class="mt-4 max-w-2xl text-xl font-semibold text-ink">Start with the work. Then price it properly.</p>
-    <p class="mt-3 max-w-2xl text-lg leading-relaxed text-ink/70">Find a rate that covers your year, then turn it into project quotes and retainers, price resold costs, and compare against a salary.</p>
+    <p class="mt-3 max-w-2xl text-lg leading-relaxed text-ink/70">Find a rate that covers your year, then turn it into project quotes and retainers, price resold costs, set payment terms, plan a raise, and compare against a salary.</p>
     <ul class="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {freelanceTools.map((tool) => (
         <li>
@@ -56,7 +59,8 @@ const offer = convertPay({ amountCents: 9_000n, period: "hour", hoursPerWeekHund
         <li><strong>Quote projects.</strong> The <a href="/freelance/project-rate-calculator/">project rate calculator</a> turns the rate into a fixed price. At $90 an hour, a 30-hour project with 10% contingency and $600 of expenses is a {formatUsdGrouped(quote.targetReceiptsCents)} quote.</li>
         <li><strong>Sell ongoing work.</strong> The <a href="/freelance/retainer-calculator/">retainer calculator</a> prices a monthly commitment. Ten hours a month at the same rate, with a 5% discount, is {formatUsdGrouped(retainer.monthlyFeeCents)} a month.</li>
         <li><strong>Price resold costs.</strong> The <a href="/freelance/markup-margin-calculator/">markup and margin calculator</a> prices subcontracted work and products. Keeping a 20% margin on a $600 subcontract means charging {formatUsdGrouped(resale.priceCents)}.</li>
-        <li><strong>Compare with a job.</strong> The <a href="/freelance/salary-to-hourly-calculator/">salary to hourly calculator</a> converts pay between periods. $90 an hour for a full-time year would be {formatUsdGrouped(offer.yearlyCents)}, though a freelancer bills far fewer hours than that.</li>
+        <li><strong>Compare with a job.</strong> The <a href="/freelance/salary-to-hourly-calculator/">salary to hourly calculator</a> converts pay between periods. $90 an hour for a full-time year would be {formatUsdGrouped(offer.yearlyCents)}, though a freelancer bills far fewer hours than that. The <a href="/freelance/1099-vs-w2-calculator/">1099 vs W-2 calculator</a> goes further and works out the contractor income that matches a salary after Social Security and Medicare tax.</li>
+        <li><strong>Get paid sooner, or charge more.</strong> The <a href="/freelance/early-payment-discount-calculator/">early payment discount calculator</a> prices terms like 2/10 net 30 and shows what that discount costs you as a yearly rate, and the <a href="/freelance/rate-increase-calculator/">rate increase calculator</a> shows what a raise adds and how much work you could lose and still earn the same.</li>
       </ol>
 
       <h2>Then account for payment fees</h2>
@@ -72,6 +76,8 @@ const offer = convertPay({ amountCents: 9_000n, period: "hour", hoursPerWeekHund
         <li><strong>Discounting a retainer below your floor.</strong> A retainer discount lowers every hour you deliver. The retainer calculator shows the rate per included hour, so you can check it against your hourly rate.</li>
         <li><strong>Comparing a freelance rate with a salary's hourly figure.</strong> A salary pays for every working hour and paid leave; a freelance rate has to cover unbilled time and costs as well. The salary to hourly calculator gives the starting number, and the hourly rate calculator gives the rate that replaces it.</li>
         <li><strong>Forgetting the payment fee.</strong> A client paying by card or PayPal sends less than the invoice total. The fee calculators work out what to invoice so you receive the full quote.</li>
+        <li><strong>Offering an early payment discount without pricing it.</strong> Two percent off for paying twenty days sooner is worth more than 37% a year to the client. The early payment discount calculator turns any terms into that yearly rate.</li>
+        <li><strong>Quoting a contract rate from a salary.</strong> A contractor pays both halves of Social Security and Medicare and buys their own benefits, so matching a salary takes more than the salary. The 1099 vs W-2 calculator works out how much more.</li>
       </ul>
 
       <h2>What the calculators do not do</h2>

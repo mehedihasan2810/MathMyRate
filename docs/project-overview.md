@@ -83,6 +83,7 @@ outside launch scope.
 | `/fees/payhip-vs-gumroad-fees/`                 | Payhip and Gumroad fees on the same sale                    |
 | `/fees/kickstarter-vs-indiegogo-fees/`          | Kickstarter and Indiegogo fees on the same pledge           |
 | `/fees/creator-platform-fees/`                  | Creator platform fees and monthly cost compared             |
+| `/fees/teachable-vs-podia-fees/`                | Teachable and Podia plan fees on the same course sale       |
 | `/methodology/`                                 | Calculations, sourcing, rounding, review, and corrections   |
 | `/about/`                                       | Truthful product/operator information                       |
 | `/privacy/`                                     | Actual data collection and storage disclosures              |

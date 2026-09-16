@@ -8,7 +8,8 @@ export type FeeComparisonId =
   | "substack-vs-patreon"
   | "payhip-vs-gumroad"
   | "kickstarter-vs-indiegogo"
-  | "creator-platforms";
+  | "creator-platforms"
+  | "teachable-vs-podia";
 
 export interface ComparisonOption {
   readonly id: string;
@@ -362,6 +363,40 @@ export const feeComparisons: readonly FeeComparisonConfig[] = [
         label: "Substack, US card on the web",
         shortLabel: "Substack",
         href: "/fees/substack-fee-calculator/",
+      },
+    ],
+  },
+  {
+    id: "teachable-vs-podia",
+    caption: "Teachable and Podia fees on the same course sale, US card, USD, no tax",
+    options: [
+      {
+        id: "teachable-starter",
+        presetId: "teachable-us-starter-card",
+        label: "Teachable Starter, $39 a month",
+        shortLabel: "Teachable Starter",
+        href: "/fees/teachable-fee-calculator/",
+      },
+      {
+        id: "teachable-paid",
+        presetId: "teachable-us-paid-plan-card",
+        label: "Teachable Builder or Growth, from $89 a month",
+        shortLabel: "Teachable paid plan",
+        href: "/fees/teachable-fee-calculator/",
+      },
+      {
+        id: "podia-mover",
+        presetId: "podia-us-mover-stripe-card",
+        label: "Podia Mover, $49 a month",
+        shortLabel: "Podia Mover",
+        href: "/fees/podia-fee-calculator/",
+      },
+      {
+        id: "podia-paid",
+        presetId: "podia-us-no-fee-stripe-card",
+        label: "Podia Shaker or Earthquaker, from $99 a month",
+        shortLabel: "Podia paid plan",
+        href: "/fees/podia-fee-calculator/",
       },
     ],
   },

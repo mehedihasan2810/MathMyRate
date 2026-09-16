@@ -1,0 +1,126 @@
+---
+import { calculateFees, repeatSale, type FeePreset } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeComparison from "../../components/FeeComparison.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findFeeComparison } from "../../data/fee-comparisons";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { feeColumnsByAmount, formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+interface Plan {
+  readonly short: string;
+  readonly monthlyCents: bigint;
+  readonly preset: FeePreset;
+}
+
+const tool = findTool("teachable-vs-podia");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const comparison = findFeeComparison("teachable-vs-podia");
+
+// Monthly prices from each platform's own pricing page.
+const monthlyPrices: readonly (readonly [string, bigint])[] = [
+  ["teachable-starter", 3_900n],
+  ["teachable-paid", 8_900n],
+  ["podia-mover", 4_900n],
+  ["podia-paid", 9_900n],
+];
+
+const plans: readonly Plan[] = comparison.options.map((option) => ({
+  short: option.shortLabel ?? option.label,
+  monthlyCents: monthlyPrices.find(([id]) => id === option.id)?.[1] ?? 0n,
+  preset: requireOfficialPreset(option.presetId),
+}));
+
+const salePrice = 9_900n;
+
+const saleRows = feeColumnsByAmount(
+  comparison.options.map((option) => option.presetId),
+  [2_900n, 4_900n, 9_900n, 19_900n, 49_900n],
+);
+
+const monthlyRows = [2, 4, 5, 10, 25, 50, 100].map((count) => {
+  const costs = plans.map((plan) => plan.monthlyCents + repeatSale(calculateFees({ preset: plan.preset, grossCents: salePrice }), count).feeCents);
+  const lowest = costs.reduce((least, cost) => (cost < least ? cost : least), costs[0] ?? 0n);
+
+  return [`${count} sales`, ...costs.map((cost) => formatUsdGrouped(cost)), plans.flatMap((plan, index) => (costs[index] === lowest ? [plan.short] : [])).join(" and ")];
+});
+
+function feeAt(id: string, grossCents: bigint): string {
+  const option = comparison.options.find((candidate) => candidate.id === id);
+
+  if (!option) throw new Error(`Unknown option: ${id}`);
+
+  return formatUsdGrouped(calculateFees({ preset: requireOfficialPreset(option.presetId), grossCents }).feeCents);
+}
+
+// Where the cheaper plan changes hands, counting only each platform's own fee.
+// Rounded up, so the named amount is always past the crossover.
+const ceilDivide = (numerator: bigint, denominator: bigint): bigint => (numerator + denominator - 1n) / denominator;
+
+const starterOverMoverCents = ceilDivide((4_900n - 3_900n) * 10_000n, 750n - 500n);
+
+const builderOverStarterCents = ceilDivide((8_900n - 3_900n) * 10_000n, 750n);
+
+const moverOverShakerCents = ceilDivide((9_900n - 4_900n) * 10_000n, 500n);
+
+const sources = [
+  ...new Map(plans.flatMap((plan) => plan.preset.sources).map((source) => [source.url, source])).values(),
+];
+
+const updatedOn = "2026-09-16";
+
+const faq: readonly FaqEntry[] = [
+  { question: "Is Teachable or Podia cheaper?", answer: `It depends on your sales. Teachable Starter costs $39 a month and takes 7.5% a sale; Podia Mover costs $49 and takes 5%. Teachable's lower price wins below about ${formatSaleLabel(starterOverMoverCents)} of sales a month, and Podia's lower rate wins above it. Both platforms' bigger plans drop the percentage entirely.` },
+  { question: "What does each platform charge per sale?", answer: `On a $99 course sale paid by US card, Teachable Starter takes ${feeAt("teachable-starter", 9_900n)} and Podia Mover takes ${feeAt("podia-mover", 9_900n)}. On the plans with no platform fee, both take ${feeAt("teachable-paid", 9_900n)}, which is the card fee alone.` },
+  { question: "When should I move up a plan?", answer: `On fees alone, Teachable's Builder plan beats Starter above ${formatSaleLabel(builderOverStarterCents)} of sales a month, and Podia's Shaker plan beats Mover above ${formatSaleLabel(moverOverShakerCents)}.` },
+  { question: "Who processes the payment?", answer: "Teachable runs the payment itself through Teachable Payments and collects and remits sales tax on its own gateway. On Podia you connect your own Stripe or PayPal account, and Podia collects tax at checkout only for jurisdictions you register." },
+  { question: "What about subscriptions and payment plans?", answer: "Teachable's Standard bundle adds 0.7% to recurring transactions, and 0.5% where tax is assessed. Podia does not publish a different rate for recurring payments, so the same figures apply." },
+  { question: "What is not included here?", answer: "The monthly plan prices are counted only in the monthly table, not in the per-sale figures. International cards are left out, because Teachable's own pages give two different rates. Refunds, disputes, affiliate payouts, and Podia's video hosting are not included." },
+];
+---
+<Layout title="Teachable vs Podia Fees: Which Costs Less? | MathMyRate" description="Compare Teachable's and Podia's plan fees and monthly prices on the same course sale, and find the sales level where each platform becomes cheaper." ogImage="/og/teachable-vs-podia.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">What Teachable and Podia each take from the same course sale, and what each plan costs once its monthly price is counted.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={plans[0]?.preset.checkedOn ?? null} />
+    <FeeComparison comparisonId="teachable-vs-podia" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>The short answer</h2>
+      <p>Per sale, Podia's entry plan takes less: on a <strong>$99</strong> course sale, Podia Mover's fees are <strong>{feeAt("podia-mover", 9_900n)}</strong> against Teachable Starter's <strong>{feeAt("teachable-starter", 9_900n)}</strong>, because Podia charges 5% and Teachable 7.5% on top of the same 2.9% + 30¢ card fee. Teachable Starter costs $10 a month less, though, so it wins below about <strong>{formatSaleLabel(starterOverMoverCents)}</strong> of sales a month.</p>
+      <p>On the plans with no platform fee, the fees are identical, and Teachable's Builder plan costs $10 a month less than Podia's Shaker plan.</p>
+
+      <h2>Fees on one sale</h2>
+      <p>US card sales with no tax. The monthly plan price is not included here.</p>
+      <DataTable caption="Fees on one course sale, by plan" headers={["Sale", ...plans.map((plan) => plan.short)]} rows={saleRows} />
+
+      <h2>What a month costs</h2>
+      <p>Each row is a month of $99 sales, counting the plan price and the fees together.</p>
+      <DataTable caption="Monthly cost by plan for a month of $99 sales" headers={["Sales a month", ...plans.map((plan) => plan.short), "Cheapest"]} rows={monthlyRows} />
+
+      <h2>Where each platform is different</h2>
+      <ul>
+        <li><strong>Payments:</strong> Teachable runs the payment itself and can collect and remit sales tax. On Podia you connect your own Stripe or PayPal account and keep the customer relationship there.</li>
+        <li><strong>Subscriptions:</strong> Teachable adds 0.7% to recurring transactions on its Standard bundle; Podia publishes no separate recurring rate.</li>
+        <li><strong>Plans:</strong> Teachable is $39, $89, and $189 a month; Podia is $49, $99, and $179, each cheaper billed yearly.</li>
+        <li><strong>Refunds:</strong> Podia says its own fee comes back when you refund a payment. Teachable says processing fees are not returned.</li>
+      </ul>
+      <p>Each platform's own calculator covers its remaining scenarios: <a href="/fees/teachable-fee-calculator/">Teachable</a> and <a href="/fees/podia-fee-calculator/">Podia</a>. For memberships and newsletters, see <a href="/fees/creator-platform-fees/">creator platform fees compared</a>.</p>
+
+      <FaqSection entries={faq} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Rates were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Teachable or Podia. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

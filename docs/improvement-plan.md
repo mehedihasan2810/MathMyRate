@@ -296,7 +296,8 @@ Comparisons and hubs
 
 - `/freelance/` and `/fees/` gain 800 to 1,200 words: who the tools are for,
   how they connect, and a summary table of every tool with its rate and
-  review date. Hubs link to every child and every child links back in the
+  review date. Done; the freelance hub's table and flow were extended to the
+  invoice, rate increase, and 1099 vs W-2 calculators on 2026-09-16. Hubs link to every child and every child links back in the
   breadcrumb and related block.
 
 ### P2.3 Guides that feed the calculators (M each)
