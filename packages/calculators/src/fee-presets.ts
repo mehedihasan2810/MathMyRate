@@ -184,6 +184,11 @@ const payhipStripe = {
   title: "Connect Your Stripe Account - Help Center",
 };
 
+const gumroadPayouts = {
+  url: "https://gumroad.com/help/article/13-getting-paid",
+  title: "Getting paid",
+};
+
 const skoolPricing = {
   url: "https://www.skool.com/pricing",
   title: "Skool: Pricing",
@@ -2078,6 +2083,68 @@ const officialPresetRecords: FeePreset[] = [
     exclusions: [
       "The $99 monthly plan price, and subscriptions and payment plans, which Payhip bills through Stripe without saying whether Stripe's Billing fee applies.",
       "PayPal and Square payments, international cards, currency conversion, refunds, disputes, and video hosting.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "gumroad-us-paypal-payout",
+    label: "Gumroad payout to PayPal",
+    provider: "gumroad",
+    taxMode: "zero-only",
+    paymentProduct: "Gumroad payout",
+    channel: "PayPal",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "gumroad-payout",
+        label: "PayPal payout fee",
+        rateBps: 200,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 10_000 },
+    sources: [gumroadPayouts],
+    assumptions: [
+      "US creator moving a settled Gumroad balance to PayPal, where Gumroad says PayPal payouts carry a 2% processing fee and arrive in USD.",
+      "The balance is at or above Gumroad's standard $100 payout threshold, so a payout is sent.",
+      "This prices the payout only. Gumroad's sale fees and payment processing were already deducted before the balance existed.",
+      "The estimator rounds the fee to cents; Gumroad's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Bank payouts, for which Gumroad publishes no fee, and instant payouts, which are a separate scenario.",
+      "Currency conversion, refunds and chargebacks taken from the balance, and holds or reserves.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "gumroad-us-instant-payout",
+    label: "Gumroad instant payout",
+    provider: "gumroad",
+    taxMode: "zero-only",
+    paymentProduct: "Gumroad payout",
+    channel: "instant",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "gumroad-payout",
+        label: "Instant payout fee",
+        rateBps: 300,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { maxCents: 1_000_000 },
+    sources: [gumroadPayouts],
+    assumptions: [
+      "US creator taking an instant Gumroad payout, which Gumroad says pays within minutes for amounts up to $10K and a 3% fee.",
+      "Instant payouts are open to US creators who have completed at least one payout, and they do not wait out the seven-day balance hold.",
+      "This prices the payout only; Gumroad's sale fees were already deducted before the balance existed.",
+      "The estimator rounds the fee to cents; Gumroad's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Payouts above $10,000, which instant payouts do not cover, and the standard bank and PayPal payouts, which are separate scenarios.",
+      "Currency conversion, refunds and chargebacks taken from the balance, and holds or reserves.",
     ],
     status: "supported",
   }),

@@ -117,6 +117,8 @@ const expectedFees = new Map([
   ["podia-us-mover-stripe-card", 820n], // 5% = 500, + 290, + 30
   ["podia-us-no-fee-stripe-card", 320n], // 290 + 30
   ["indiegogo-us-contribution", 820n], // 5% = 500, + 3% = 300, + 20
+  ["gumroad-us-paypal-payout", 200n], // 2% of 10,000
+  ["gumroad-us-instant-payout", 300n], // 3% of 10,000
   ["skool-us-pro-standard", 320n], // 2.9% = 290, + 30
   ["skool-us-hobby", 1_030n], // 10% = 1000, + 30
   ["teachable-us-starter-card", 1_070n], // 7.5% = 750, + 290, + 30
