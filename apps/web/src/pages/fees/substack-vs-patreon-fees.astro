@@ -1,0 +1,105 @@
+---
+import { calculateFees, type FeePreset } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeComparison from "../../components/FeeComparison.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findFeeComparison } from "../../data/fee-comparisons";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { feeColumnsByAmount, formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("substack-vs-patreon");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const comparison = findFeeComparison("substack-vs-patreon");
+
+const substack = requireOfficialPreset("substack-us-web-domestic-card");
+
+const patreon = requireOfficialPreset("patreon-us-standard-web");
+
+function feeCents(preset: FeePreset, grossCents: bigint): bigint {
+  return calculateFees({ preset, grossCents }).feeCents;
+}
+
+const amounts = [500n, 800n, 1_000n, 1_500n, 3_000n, 5_000n, 15_000n];
+
+const amountRows = feeColumnsByAmount(
+  comparison.options.map((option) => option.presetId),
+  amounts,
+);
+
+const billingBps = BigInt(substack.components.find((component) => component.id === "stripe-billing")?.rateBps ?? 0);
+
+// Patreon's fee for one payout by Stripe direct deposit, from its creator fees overview.
+const patreonPayoutCents = 25n;
+
+const payoutBreakEvenCents = billingBps === 0n ? 0n : (patreonPayoutCents * 10_000n + billingBps - 1n) / billingBps;
+
+const substackPayoutSources = [
+  { title: "How do payouts work on Substack?", url: "https://support.substack.com/hc/en-us/articles/360037833691-How-do-payouts-work-on-Substack" },
+  { title: "Can my subscribers pay on the Substack iOS app?", url: "https://support.substack.com/hc/en-us/articles/19718129670420-Can-my-subscribers-pay-on-the-Substack-iOS-app" },
+  { title: "Does Substack integrate with Stripe Tax?", url: "https://support.substack.com/hc/en-us/articles/12282257442580-Does-Substack-integrate-with-Stripe-Tax" },
+];
+
+const sources = [
+  ...new Map(
+    [...comparison.options.flatMap((option) => requireOfficialPreset(option.presetId).sources), ...substackPayoutSources].map((source) => [source.url, source]),
+  ).values(),
+];
+
+const updatedOn = "2026-09-16";
+
+const faq: readonly FaqEntry[] = [
+  { question: "Is Substack cheaper than Patreon?", answer: `Per payment, Patreon's standard plan costs slightly less. Both take 10% plus 2.9% + $0.30 for the card, and Substack's writers also pay Stripe's 0.7% Billing fee. On a $10 payment, Substack's fees are ${formatUsdGrouped(feeCents(substack, 1_000n))} and Patreon's are ${formatUsdGrouped(feeCents(patreon, 1_000n))}. Patreon charges for payouts, though, which Substack's pages do not list.` },
+  { question: "Which platform collects sales tax?", answer: "Patreon adds sales tax, VAT, or GST to member payments where the law requires it and sends it to the tax authorities, and calculates its fee before tax. Substack collects sales tax only after you turn on Stripe Tax and add tax registrations in Stripe." },
+  { question: "What do iOS app purchases cost?", answer: "On Patreon, Apple takes 30% of an eligible iOS purchase, or 15% after a year of continuous billing, and Patreon's 10% still applies. Substack says Apple's fee is 15-30% and comes out along with Substack's fee, without saying which rate applies, so it is not compared here." },
+  { question: "How do payouts differ?", answer: "Patreon holds your earnings and charges $0.25 per payout by Stripe direct deposit, or 1% for PayPal with a $0.25 minimum and a $20 cap. Substack pays into your own Stripe account, usually within 48 hours of each payment, and the first payout on a new Stripe account takes 7-14 days." },
+  { question: "Does Patreon's 10% apply to every creator?", answer: "Patreon's 10% standard plan applies to pages published after August 4, 2025. Creators on older plans, such as the legacy 8% Pro plan, pay those plans' rates, which the Patreon fee calculator covers." },
+];
+---
+<Layout title="Substack vs Patreon Fees: Side-by-Side | MathMyRate" description="Compare Substack's 10% fee plus Stripe's card and 0.7% Billing fees with Patreon's 10% plan on the same payment, with tax, iOS purchases, and payouts." ogImage="/og/substack-vs-patreon.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">What Substack and Patreon each take from the same subscription or membership payment, from their published fees.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={substack.checkedOn} />
+    <FeeComparison comparisonId="substack-vs-patreon" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>The short answer</h2>
+      <p>The fees are nearly the same. Both platforms take <strong>10%</strong>, and both charge 2.9% + $0.30 for a card payment. Substack's writers also pay Stripe's <strong>0.7%</strong> Billing fee on recurring payments, so on a $10 payment Substack's fees are <strong>{formatUsdGrouped(feeCents(substack, 1_000n))}</strong> and Patreon's are <strong>{formatUsdGrouped(feeCents(patreon, 1_000n))}</strong>, and on $50 they are {formatUsdGrouped(feeCents(substack, 5_000n))} and {formatUsdGrouped(feeCents(patreon, 5_000n))}.</p>
+      <p>Patreon charges $0.25 for each payout by Stripe direct deposit. Counting one payout a month, that fee is smaller than Substack's Billing fee once a month's payments pass about <strong>{formatSaleLabel(payoutBreakEvenCents)}</strong>.</p>
+
+      <h2>Fees at common prices</h2>
+      <p>Web payments by card, with no sales tax.</p>
+      <DataTable caption="Fees on one payment, by platform" headers={["Payment", ...comparison.options.map((option) => option.shortLabel ?? option.label)]} rows={amountRows} />
+
+      <h2>How each platform charges</h2>
+      <ul>
+        <li><strong>Substack:</strong> 10% of each paid transaction. Stripe charges 2.9% + $0.30 for a US card, 1.5% more for a card from outside the US, and 0.7% on recurring payments for Billing.</li>
+        <li><strong>Patreon:</strong> a 10% platform fee on its standard plan for pages published after August 4, 2025, calculated before sales tax, plus 2.9% + $0.30 processing on card and US PayPal payments. Payments in another currency add 2.5%.</li>
+      </ul>
+
+      <h2>Where they differ beyond the fee</h2>
+      <ul>
+        <li><strong>Sales tax:</strong> Patreon adds and remits sales tax, VAT, or GST where required. Substack collects tax only if you turn on Stripe Tax.</li>
+        <li><strong>iOS app:</strong> Patreon's iOS purchases pay Apple 30%, or 15% after a year. Substack gives Apple's fee only as 15-30%.</li>
+        <li><strong>Other currencies:</strong> Patreon adds 2.5%. Substack shows local-currency prices by default, and Stripe charges 1% to 2% to convert them.</li>
+        <li><strong>Payouts:</strong> Patreon holds earnings and charges per payout. Substack pays into your own Stripe account, usually within 48 hours.</li>
+      </ul>
+      <p>The <a href="/fees/substack-fee-calculator/">Substack fee calculator</a> and the <a href="/fees/patreon-fee-calculator/">Patreon fee calculator</a> cover each platform's other scenarios and monthly totals.</p>
+
+      <FaqSection entries={faq} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Rates were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Substack, Patreon, or Stripe. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

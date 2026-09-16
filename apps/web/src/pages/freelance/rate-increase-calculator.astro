@@ -1,0 +1,85 @@
+---
+import { raiseRateByPercent } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import PageByline from "../../components/PageByline.astro";
+import RateIncreaseCalculator from "../../components/RateIncreaseCalculator.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatPercentBps, formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("rate-increase");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const example = raiseRateByPercent({ currentRateCents: 8_000n, increaseBps: 1_000, billableMinutesPerMonth: 6_000 });
+
+const twenty = raiseRateByPercent({ currentRateCents: 8_000n, increaseBps: 2_000, billableMinutesPerMonth: 6_000 });
+
+function shareText(bps: bigint | null): string {
+  return bps === null ? "None" : formatPercentBps(bps);
+}
+
+const raiseRows = [500, 1_000, 1_500, 2_000, 2_500, 3_000, 5_000].map((increaseBps) => {
+  const result = raiseRateByPercent({ currentRateCents: 8_000n, increaseBps, billableMinutesPerMonth: 6_000 });
+
+  return [`${increaseBps / 100}%`, formatUsdGrouped(result.newRateCents), formatUsdGrouped(result.monthlyChangeCents), formatUsdGrouped(result.yearlyChangeCents), shareText(result.hoursLossShareBps)];
+});
+
+const updatedOn = "2026-09-16";
+
+const faq: readonly FaqEntry[] = [
+  { question: "How do I calculate a rate increase?", answer: "Multiply your current rate by one plus the raise. A 10% raise on $80 an hour is $80 × 1.10 = $88. To find the percentage between two rates, divide the difference by the current rate: ($88 − $80) ÷ $80 = 10%." },
+  { question: "How much work can I lose after raising my rates?", answer: `Divide the raise per hour by the new rate. After a 10% raise from $80 to $88, you could lose ${shareText(example.hoursLossShareBps)} of your billable hours and still earn the same; after a 20% raise, ${shareText(twenty.hoursLossShareBps)}.` },
+  { question: "What does a rate increase add in a year?", answer: `Multiply the raise per hour by your billable hours. A $8 raise over 100 billable hours a month adds ${formatUsdGrouped(example.monthlyChangeCents)} a month and ${formatUsdGrouped(example.yearlyChangeCents)} a year.` },
+  { question: "What if I lower my rate?", answer: "Choose Compare a new rate and enter the lower rate. The calculator shows the monthly and yearly loss and how many hours you would need to bill to earn what you earn now." },
+  { question: "Does this include taxes or expenses?", answer: "No. It compares revenue before tax and expenses. Use the hourly rate calculator to set a rate from what you need to take home." },
+  { question: "Is my information saved or sent anywhere?", answer: "No. Everything is calculated in your browser, and nothing is stored." },
+];
+---
+<Layout title="Rate Increase Calculator for Freelancers | MathMyRate" description="See your new hourly rate after a raise, what it adds each month and year, and how many billable hours you could lose and still earn what you earn now." ogImage="/og/rate-increase.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Work out a new hourly rate from a percentage raise, or compare two rates, and see what the change does to a month and a year of billable work.</p>
+    <PageByline updatedOn={updatedOn} />
+    <RateIncreaseCalculator />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The rate increase calculator shows what a raise is worth. Raising <strong>$80</strong> an hour by 10% gives <strong>{formatUsdGrouped(example.newRateCents)}</strong>. Over 100 billable hours a month, that adds <strong>{formatUsdGrouped(example.monthlyChangeCents)}</strong> a month and <strong>{formatUsdGrouped(example.yearlyChangeCents)}</strong> a year, and you could lose <strong>{shareText(example.hoursLossShareBps)}</strong> of those hours and still earn what you earn now.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Choose whether to raise by a percentage or to compare a new rate you have in mind.</li>
+        <li>Enter your current hourly rate and the raise or the new rate.</li>
+        <li>Enter your billable hours in a typical month: hours you invoice, not hours you work.</li>
+      </ol>
+
+      <h2>The formulas</h2>
+      <ul>
+        <li><strong>New rate</strong> = current rate × (1 + raise), rounded up to the cent</li>
+        <li><strong>Change per month</strong> = new monthly revenue − current monthly revenue</li>
+        <li><strong>Hours you could lose</strong> = (new rate − current rate) ÷ new rate</li>
+        <li><strong>Hours for today's revenue</strong> = current rate × billable hours ÷ new rate</li>
+      </ul>
+
+      <h2>Raises on $80 an hour</h2>
+      <p>Each row assumes 100 billable hours a month.</p>
+      <DataTable caption="New rate, added revenue, and the share of hours you could lose for each raise on $80 an hour" headers={["Raise", "New rate", "Added per month", "Added per year", "Hours you could lose"]} rows={raiseRows} />
+
+      <h2>Why a raise can survive losing clients</h2>
+      <p>A higher rate means each remaining hour earns more, so you can bill fewer hours for the same revenue. The share you could lose is always smaller than the raise itself: a 10% raise covers {shareText(example.hoursLossShareBps)} fewer hours, not 10%, and a 50% raise covers 33.33%. The freed hours can go to new clients at the new rate, or to work you do not bill for.</p>
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId={tool.id} />
+
+      <p class="text-sm text-ink/60">Planning estimate only; not tax, accounting, or legal advice. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

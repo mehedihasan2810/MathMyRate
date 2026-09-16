@@ -14,7 +14,9 @@ export type StandaloneEmbedId =
   | "salary-to-hourly"
   | "upwork-fees"
   | "fiverr-fees"
-  | "kdp-royalties";
+  | "kdp-royalties"
+  | "early-payment-discount"
+  | "rate-increase";
 
 export type EmbeddableTool =
   | {
@@ -50,6 +52,8 @@ const standaloneEmbedIds: readonly StandaloneEmbedId[] = [
   "upwork-fees",
   "fiverr-fees",
   "kdp-royalties",
+  "early-payment-discount",
+  "rate-increase",
 ];
 
 const standaloneHeights: Readonly<Record<StandaloneEmbedId, number>> = {
@@ -61,6 +65,8 @@ const standaloneHeights: Readonly<Record<StandaloneEmbedId, number>> = {
   "upwork-fees": 1_950,
   "fiverr-fees": 1_400,
   "kdp-royalties": 1_650,
+  "early-payment-discount": 1_400,
+  "rate-increase": 1_750,
 };
 
 export const embeddableTools: readonly EmbeddableTool[] = [
