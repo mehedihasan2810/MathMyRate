@@ -65,7 +65,7 @@ const exampleFeePercent = String((firstContract.feeBps ?? config.exampleFeeBps) 
     </div>
     <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="service-update">Update</button><button id="service-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
   </form>
-  <aside id="service-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-navy p-7 text-paper shadow-[0_16px_45px_rgba(19,31,51,.16)] md:p-9">
+  <aside id="service-panel" data-result-panel class="print-card h-fit rounded-[1.5rem] bg-navy p-7 text-paper shadow-[0_16px_45px_rgba(19,31,51,.16)] md:p-9">
     <p class="eyebrow !text-[#c3d2ea]" id="service-primary-label" data-primary-label>You receive</p>
     <p id="service-primary" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.afterFeeCents)}</p>
     <p class="mt-1 text-paper/70">before income tax</p>
@@ -95,12 +95,14 @@ const exampleFeePercent = String((firstContract.feeBps ?? config.exampleFeeBps) 
     markResultsCurrent,
     markResultsStale,
     percentToBps,
+    repeatMessage,
     requireHtmlButton,
     requireHtmlElement,
     requireHtmlForm,
     requireHtmlInput,
     requireHtmlSelect,
     setFieldState,
+    setTextContent,
     shouldDeferProblem,
     usdToCents,
     watchCalculatorFields,
@@ -117,7 +119,7 @@ const exampleFeePercent = String((firstContract.feeBps ?? config.exampleFeeBps) 
     let latestCopy: string | null = null;
 
     const setText = (id: string, text: string): void => {
-      requireHtmlElement(id).textContent = text;
+      setTextContent(id, text);
     };
 
     const checkedValue = (name: string): string | undefined =>
@@ -251,9 +253,9 @@ const exampleFeePercent = String((firstContract.feeBps ?? config.exampleFeeBps) 
 
       try {
         await navigator.clipboard.writeText(`${latestCopy} Estimate; sources reviewed ${config.reviewedOn}.`);
-        setText("service-message", "Result copied.");
+        repeatMessage("service-message", "Result copied.");
       } catch {
-        setText("service-message", "Copy was unavailable. Select the result to copy it manually.");
+        repeatMessage("service-message", "Copy was unavailable. Select the result to copy it manually.");
       }
     });
 

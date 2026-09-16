@@ -77,7 +77,7 @@ const scenarioColumns = config.scenarios.length === 3 ? "sm:grid-cols-3" : "sm:g
     </div>
     <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="fee-update">Update fees</button><button id="fee-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
   </form>
-  <aside id="fee-panel" data-result-panel aria-live="polite" class:list={["print-card h-fit rounded-[1.5rem] p-7 text-paper shadow-[0_16px_45px_rgba(19,31,51,.16)] md:p-9", panelClass]}>
+  <aside id="fee-panel" data-result-panel class:list={["print-card h-fit rounded-[1.5rem] p-7 text-paper shadow-[0_16px_45px_rgba(19,31,51,.16)] md:p-9", panelClass]}>
     <p class="eyebrow !text-[#c3d2ea]" id="primary-label" data-primary-label>You keep from this sale</p>
     <p id="fee-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.sellerProceedsCents)}</p>
     <p class="mt-1 text-paper/70">before expenses and income tax</p>

@@ -18,11 +18,13 @@ import {
   InputProblem,
   markResultsCurrent,
   markResultsStale,
+  repeatMessage,
   requireHtmlButton,
   requireHtmlElement,
   requireHtmlForm,
   requireHtmlInput,
   setFieldState,
+  setTextContent,
   shouldDeferProblem,
   usdToCents,
   watchCalculatorFields,
@@ -41,7 +43,7 @@ function requirePreset(id: string): FeePreset {
 }
 
 function setText(id: string, text: string): void {
-  requireHtmlElement(id).textContent = text;
+  setTextContent(id, text);
 }
 
 function renderLineItems(items: ReadonlyArray<{ label: string; feeCents: bigint }>): void {
@@ -264,9 +266,9 @@ export function mountFeeCalculator(): void {
 
     try {
       await navigator.clipboard.writeText(latestCopy);
-      setText("fee-message", "Result copied.");
+      repeatMessage("fee-message", "Result copied.");
     } catch {
-      setText("fee-message", "Copy was unavailable. Select the result to copy it manually.");
+      repeatMessage("fee-message", "Copy was unavailable. Select the result to copy it manually.");
     }
   });
 

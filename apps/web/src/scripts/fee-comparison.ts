@@ -20,6 +20,7 @@ import {
   requireHtmlForm,
   requireHtmlInput,
   setFieldState,
+  setTextContent,
   shouldDeferProblem,
   usdToCents,
   watchCalculatorFields,
@@ -34,7 +35,7 @@ function requirePreset(id: string): FeePreset {
 }
 
 function setText(id: string, text: string): void {
-  requireHtmlElement(id).textContent = text;
+  setTextContent(id, text);
 }
 
 /** Wires the comparison table rendered by FeeComparison.astro, if the page has one. */

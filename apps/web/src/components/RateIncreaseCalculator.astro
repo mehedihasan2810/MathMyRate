@@ -38,7 +38,7 @@ const example = raiseRateByPercent({ currentRateCents: 8_000n, increaseBps: 1_00
     </div>
     <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="raise-update">Update rate</button><button id="raise-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
   </form>
-  <aside id="raise-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
+  <aside id="raise-panel" data-result-panel class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
     <p class="eyebrow !text-[#f2e3bd]" id="raise-primary-label" data-primary-label>New hourly rate</p><p id="raise-primary-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.newRateCents)}</p><p id="raise-primary-note" class="mt-1 text-[#f3f5fa]/80">rounded up to the cent</p>
     <div class="my-7 border-t border-[#f3f5fa]/30"></div>
     <div class="[&>:first-child]:mt-0">
@@ -71,11 +71,13 @@ const example = raiseRateByPercent({ currentRateCents: 8_000n, increaseBps: 1_00
     markResultsCurrent,
     markResultsStale,
     percentToBps,
+    repeatMessage,
     requireHtmlButton,
     requireHtmlElement,
     requireHtmlForm,
     requireHtmlInput,
     setFieldState,
+    setTextContent,
     shouldDeferProblem,
     usdToCents,
     watchCalculatorFields,
@@ -92,7 +94,7 @@ const example = raiseRateByPercent({ currentRateCents: 8_000n, increaseBps: 1_00
   let latest: { readonly mode: RaiseMode; readonly minutes: number; readonly result: RateChangeResult } | null = null;
 
   function setText(id: string, text: string): void {
-    requireHtmlElement(id).textContent = text;
+    setTextContent(id, text);
   }
 
   function currentMode(): RaiseMode {
@@ -234,9 +236,9 @@ const example = raiseRateByPercent({ currentRateCents: 8_000n, increaseBps: 1_00
 
     try {
       await navigator.clipboard.writeText(copyText(latest.minutes, latest.result));
-      setText("raise-message", "Result copied.");
+      repeatMessage("raise-message", "Result copied.");
     } catch {
-      setText("raise-message", "Copy was unavailable. Select the result to copy it manually.");
+      repeatMessage("raise-message", "Copy was unavailable. Select the result to copy it manually.");
     }
   });
 

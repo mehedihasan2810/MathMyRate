@@ -32,7 +32,7 @@ const example = calculateRetainer({ hourlyRateCents: 10_000n, includedMinutes: 1
     </div>
     <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="retainer-update">Update retainer</button><button id="retainer-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
   </form>
-  <aside id="retainer-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
+  <aside id="retainer-panel" data-result-panel class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
     <p class="eyebrow !text-[#f2e3bd]" data-primary-label>Monthly retainer fee</p><p id="retainer-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.monthlyFeeCents)}</p><p class="mt-1 text-[#f3f5fa]/80">before any payment processing fees</p>
     <div class="my-7 border-t border-[#f3f5fa]/30"></div>
     <div class="[&>:first-child]:mt-0">
@@ -59,11 +59,13 @@ const example = calculateRetainer({ hourlyRateCents: 10_000n, includedMinutes: 1
     markResultsCurrent,
     markResultsStale,
     percentToBps,
+    repeatMessage,
     requireHtmlButton,
     requireHtmlElement,
     requireHtmlForm,
     requireHtmlInput,
     setFieldState,
+    setTextContent,
     shouldDeferProblem,
     usdToCents,
     watchCalculatorFields,
@@ -82,7 +84,7 @@ const example = calculateRetainer({ hourlyRateCents: 10_000n, includedMinutes: 1
   let latest: { readonly includedMinutes: number; readonly months: number; readonly result: RetainerResult } | null = null;
 
   function setText(id: string, text: string): void {
-    requireHtmlElement(id).textContent = text;
+    setTextContent(id, text);
   }
 
   function monthMinutes(field: string, minimum: number): number {
@@ -167,9 +169,9 @@ const example = calculateRetainer({ hourlyRateCents: 10_000n, includedMinutes: 1
 
     try {
       await navigator.clipboard.writeText(text);
-      setText("retainer-message", "Retainer copied.");
+      repeatMessage("retainer-message", "Retainer copied.");
     } catch {
-      setText("retainer-message", "Copy was unavailable. Select the result to copy it manually.");
+      repeatMessage("retainer-message", "Copy was unavailable. Select the result to copy it manually.");
     }
   });
 

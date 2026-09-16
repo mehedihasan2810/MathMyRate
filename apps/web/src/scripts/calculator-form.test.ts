@@ -7,6 +7,7 @@ import {
   hoursToHundredths,
   hoursToMinutes,
   percentToBps,
+  resultAnnouncement,
   usdToCents,
   wholeNumber,
 } from "./calculator-form";
@@ -193,5 +194,29 @@ describe("decimalToHundredths", () => {
     ["1.234", "Use a number with up to 2 decimal places."],
   ])("rejects %j", (text, message) => {
     expect(() => decimalToHundredths(text, "size", "MB", 65_000)).toThrow(message);
+  });
+});
+
+describe("resultAnnouncement", () => {
+  it("names the primary result with its label", () => {
+    expect(resultAnnouncement({ label: " Reaches you ", value: "$970.00", stale: false })).toBe(
+      "Reaches you: $970.00.",
+    );
+    expect(
+      resultAnnouncement({ label: "You keep\n  from this sale", value: "$96.80", stale: false }),
+    ).toBe("You keep from this sale: $96.80.");
+    expect(resultAnnouncement({ label: null, value: "$96.80", stale: false })).toBe("$96.80.");
+  });
+
+  it("says a comparison changed when there is no single result", () => {
+    expect(resultAnnouncement({ label: null, value: null, stale: false })).toBe(
+      "Comparison updated.",
+    );
+  });
+
+  it("stays quiet while the result is stale or empty", () => {
+    expect(resultAnnouncement({ label: "Reaches you", value: "$970.00", stale: true })).toBeNull();
+    expect(resultAnnouncement({ label: "Reaches you", value: "—", stale: false })).toBeNull();
+    expect(resultAnnouncement({ label: "Reaches you", value: "  ", stale: false })).toBeNull();
   });
 });
