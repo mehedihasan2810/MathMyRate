@@ -30,6 +30,8 @@ export type ToolId =
   | "podia-fees"
   | "whop-fees"
   | "indiegogo-fees"
+  | "skool-fees"
+  | "teachable-fees"
   | "kdp-royalties"
   | "gumroad-fees"
   | "lemon-squeezy-fees"
@@ -40,7 +42,9 @@ export type ToolId =
   | "patreon-vs-kofi"
   | "substack-vs-patreon"
   | "payhip-vs-gumroad"
-  | "kickstarter-vs-indiegogo";
+  | "kickstarter-vs-indiegogo"
+  | "creator-platform-fees"
+  | "teachable-vs-podia";
 
 export interface Crumb {
   readonly name: string;
@@ -302,6 +306,27 @@ export const tools: readonly Tool[] = [
       "indiegogo crowdfunding campaign platform fee payment processing pledge manager late pledge goal funds raised",
   },
   {
+    id: "skool-fees",
+    hub: "fees",
+    href: "/fees/skool-fee-calculator/",
+    name: "Skool Fee Calculator",
+    menuLabel: "Skool fees",
+    summary:
+      "Skool's Pro and Hobby transaction fees on a membership payment, including the $900 band.",
+    searchTerms:
+      "skool community membership group pro hobby transaction fee 2.9% 10% payout stripe express",
+  },
+  {
+    id: "teachable-fees",
+    hub: "fees",
+    href: "/fees/teachable-fee-calculator/",
+    name: "Teachable Fee Calculator",
+    menuLabel: "Teachable fees",
+    summary: "Teachable's 7.5% Starter fee or no plan fee, with card processing and subscriptions.",
+    searchTerms:
+      "teachable course school starter builder growth transaction fee processing subscription payment plan",
+  },
+  {
     id: "kdp-royalties",
     hub: "fees",
     href: "/fees/kdp-royalty-calculator/",
@@ -412,6 +437,27 @@ export const tools: readonly Tool[] = [
       "What Kickstarter and Indiegogo each keep from the same pledge and from a whole campaign.",
     searchTerms:
       "kickstarter indiegogo compare comparison crowdfunding campaign fees which is cheaper platform processing",
+  },
+  {
+    id: "creator-platform-fees",
+    hub: "fees",
+    href: "/fees/creator-platform-fees/",
+    name: "Creator Platform Fees Compared",
+    menuLabel: "Creator platforms",
+    summary:
+      "Patreon, Substack, Ko-fi, Podia, and Whop fees on the same payment, and their monthly cost.",
+    searchTerms:
+      "creator platform fees compare patreon substack ko-fi kofi podia whop membership community newsletter cheapest",
+  },
+  {
+    id: "teachable-vs-podia",
+    hub: "fees",
+    href: "/fees/teachable-vs-podia-fees/",
+    name: "Teachable vs Podia Fees",
+    menuLabel: "Teachable vs Podia",
+    summary: "Teachable's and Podia's plan fees and monthly prices on the same course sale.",
+    searchTerms:
+      "teachable podia compare comparison course platform fees plans monthly price which is cheaper starter mover",
   },
 ];
 

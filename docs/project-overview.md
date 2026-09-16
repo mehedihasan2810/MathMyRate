@@ -68,6 +68,8 @@ outside launch scope.
 | `/fees/payhip-fee-calculator/`                  | Payhip plan fees and Stripe processing on a sale            |
 | `/fees/podia-fee-calculator/`                   | Podia plan fees and Stripe processing on a sale             |
 | `/fees/whop-fee-calculator/`                    | Whop's card fee and what a sale leaves you                  |
+| `/fees/skool-fee-calculator/`                   | Skool Pro and Hobby transaction fees on a payment           |
+| `/fees/teachable-fee-calculator/`               | Teachable plan fees and processing on a course sale         |
 | `/fees/indiegogo-fee-calculator/`               | Indiegogo platform and processing fees on a campaign        |
 | `/fees/kdp-royalty-calculator/`                 | Amazon KDP eBook, paperback, and hardcover royalties        |
 | `/fees/gumroad-fee-calculator/`                 | Gumroad direct/Discover take-home                           |
@@ -80,6 +82,8 @@ outside launch scope.
 | `/fees/substack-vs-patreon-fees/`               | Substack and Patreon fees on the same payment               |
 | `/fees/payhip-vs-gumroad-fees/`                 | Payhip and Gumroad fees on the same sale                    |
 | `/fees/kickstarter-vs-indiegogo-fees/`          | Kickstarter and Indiegogo fees on the same pledge           |
+| `/fees/creator-platform-fees/`                  | Creator platform fees and monthly cost compared             |
+| `/fees/teachable-vs-podia-fees/`                | Teachable and Podia plan fees on the same course sale       |
 | `/methodology/`                                 | Calculations, sourcing, rounding, review, and corrections   |
 | `/about/`                                       | Truthful product/operator information                       |
 | `/privacy/`                                     | Actual data collection and storage disclosures              |

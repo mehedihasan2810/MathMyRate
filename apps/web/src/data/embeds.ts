@@ -43,6 +43,8 @@ const feeHeights: Readonly<Record<FeeCalculatorId, number>> = {
   podia: 1_650,
   whop: 1_550,
   indiegogo: 1_600,
+  skool: 1_700,
+  teachable: 1_900,
   gumroad: 1_750,
   "lemon-squeezy": 1_900,
 };

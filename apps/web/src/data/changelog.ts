@@ -13,6 +13,24 @@ export interface ChangelogEntry {
 export const changelog: readonly ChangelogEntry[] = [
   {
     date: "2026-09-16",
+    title: "Skool and Teachable calculators added",
+    changes: [
+      "Skool: added its transaction fees, which are the whole charge because Skool processes payments itself and a creator cannot use their own Stripe account. The Pro plan charges 2.9% + 30¢ up to $899 and 3.9% + 30¢ from $900, up to Skool's $100,000 limit; the Hobby plan charges 10% + 30¢. Results match Skool's own example of a $999 price paying out $959.74. Skool's pricing page shows only 2.9% and 10%, without the 30¢ or the higher band. Charges between $899 and $900 fall outside both bands and are refused.",
+      "Teachable: added one-time sales and subscription payments by US card through Teachable Payments on the Standard bundle. The Starter plan adds a 7.5% transaction fee, Builder and Growth add none, card processing is 2.9% + $0.30, and recurring transactions add 0.7%. International cards are not estimated, because Teachable's pricing page says 3.9% + 30¢ and its fee article says 4.4% + $0.30.",
+      "Both platforms joined the creator platform comparison, whose monthly table counts each plan price alongside the per-payment fees.",
+    ],
+    sources: [
+      { title: "Skool: Pricing", url: "https://www.skool.com/pricing" },
+      { title: "Subscriptions FAQs", url: "https://help.skool.com/article/86-subscriptions-faq" },
+      { title: "Pricing | Teachable", url: "https://teachable.com/pricing" },
+      {
+        title: "Understand your transaction fees and bundles | Teachable Support",
+        url: "https://support.teachable.com/en/articles/15661316-understand-your-transaction-fees-and-bundles",
+      },
+    ],
+  },
+  {
+    date: "2026-09-16",
     title: "Podia, Whop, and Indiegogo calculators added",
     changes: [
       "Podia: added sales on the Mover plan, which charges a 5% transaction fee, and on the Shaker and Earthquaker plans, which charge none, each with Stripe's 2.9% + $0.30 US card rate. Podia gives the processor's fee as 2.9% + $0.30 and says it can vary by location. The monthly plan prices ($49, $99, and $179, or $42, $84, and $150 billed yearly) are not taken from each sale and are not included.",

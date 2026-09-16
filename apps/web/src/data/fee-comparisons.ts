@@ -7,7 +7,9 @@ export type FeeComparisonId =
   | "patreon-vs-kofi"
   | "substack-vs-patreon"
   | "payhip-vs-gumroad"
-  | "kickstarter-vs-indiegogo";
+  | "kickstarter-vs-indiegogo"
+  | "creator-platforms"
+  | "teachable-vs-podia";
 
 export interface ComparisonOption {
   readonly id: string;
@@ -278,6 +280,123 @@ export const feeComparisons: readonly FeeComparisonConfig[] = [
         label: "Indiegogo, project reaches its goal",
         shortLabel: "Indiegogo",
         href: "/fees/indiegogo-fee-calculator/",
+      },
+    ],
+  },
+  {
+    id: "creator-platforms",
+    caption: "Fees on the same payment from a fan or member, USD, no tax",
+    options: [
+      {
+        id: "whop",
+        presetId: "whop-us-card",
+        label: "Whop, card payment",
+        shortLabel: "Whop",
+        href: "/fees/whop-fee-calculator/",
+      },
+      {
+        id: "kofi-gold",
+        presetId: "kofi-us-stripe-no-fee",
+        label: "Ko-fi Gold, card through Stripe",
+        shortLabel: "Ko-fi Gold",
+        href: "/fees/ko-fi-fee-calculator/",
+      },
+      {
+        id: "podia-paid",
+        presetId: "podia-us-no-fee-stripe-card",
+        label: "Podia Shaker or Earthquaker, card through Stripe",
+        shortLabel: "Podia paid plan",
+        href: "/fees/podia-fee-calculator/",
+      },
+      {
+        id: "kofi",
+        presetId: "kofi-us-stripe-5-percent",
+        label: "Ko-fi free plan, card through Stripe",
+        shortLabel: "Ko-fi",
+        href: "/fees/ko-fi-fee-calculator/",
+      },
+      {
+        id: "podia-mover",
+        presetId: "podia-us-mover-stripe-card",
+        label: "Podia Mover, card through Stripe",
+        shortLabel: "Podia Mover",
+        href: "/fees/podia-fee-calculator/",
+      },
+      {
+        id: "teachable-paid",
+        presetId: "teachable-us-paid-plan-card",
+        label: "Teachable Builder or Growth, US card",
+        shortLabel: "Teachable paid plan",
+        href: "/fees/teachable-fee-calculator/",
+      },
+      {
+        id: "skool-pro",
+        presetId: "skool-us-pro-standard",
+        label: "Skool Pro, charge up to $899",
+        shortLabel: "Skool Pro",
+        href: "/fees/skool-fee-calculator/",
+      },
+      {
+        id: "teachable-starter",
+        presetId: "teachable-us-starter-card",
+        label: "Teachable Starter, US card",
+        shortLabel: "Teachable Starter",
+        href: "/fees/teachable-fee-calculator/",
+      },
+      {
+        id: "skool-hobby",
+        presetId: "skool-us-hobby",
+        label: "Skool Hobby plan",
+        shortLabel: "Skool Hobby",
+        href: "/fees/skool-fee-calculator/",
+      },
+      {
+        id: "patreon",
+        presetId: "patreon-us-standard-web",
+        label: "Patreon, standard plan on the web",
+        shortLabel: "Patreon",
+        href: "/fees/patreon-fee-calculator/",
+      },
+      {
+        id: "substack",
+        presetId: "substack-us-web-domestic-card",
+        label: "Substack, US card on the web",
+        shortLabel: "Substack",
+        href: "/fees/substack-fee-calculator/",
+      },
+    ],
+  },
+  {
+    id: "teachable-vs-podia",
+    caption: "Teachable and Podia fees on the same course sale, US card, USD, no tax",
+    options: [
+      {
+        id: "teachable-starter",
+        presetId: "teachable-us-starter-card",
+        label: "Teachable Starter, $39 a month",
+        shortLabel: "Teachable Starter",
+        href: "/fees/teachable-fee-calculator/",
+      },
+      {
+        id: "teachable-paid",
+        presetId: "teachable-us-paid-plan-card",
+        label: "Teachable Builder or Growth, from $89 a month",
+        shortLabel: "Teachable paid plan",
+        href: "/fees/teachable-fee-calculator/",
+      },
+      {
+        id: "podia-mover",
+        presetId: "podia-us-mover-stripe-card",
+        label: "Podia Mover, $49 a month",
+        shortLabel: "Podia Mover",
+        href: "/fees/podia-fee-calculator/",
+      },
+      {
+        id: "podia-paid",
+        presetId: "podia-us-no-fee-stripe-card",
+        label: "Podia Shaker or Earthquaker, from $99 a month",
+        shortLabel: "Podia paid plan",
+        href: "/fees/podia-fee-calculator/",
       },
     ],
   },
