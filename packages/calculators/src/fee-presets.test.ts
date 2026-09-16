@@ -117,6 +117,12 @@ const expectedFees = new Map([
   ["podia-us-mover-stripe-card", 820n], // 5% = 500, + 290, + 30
   ["podia-us-no-fee-stripe-card", 320n], // 290 + 30
   ["indiegogo-us-contribution", 820n], // 5% = 500, + 3% = 300, + 20
+  ["skool-us-pro-standard", 320n], // 2.9% = 290, + 30
+  ["skool-us-hobby", 1_030n], // 10% = 1000, + 30
+  ["teachable-us-starter-card", 1_070n], // 7.5% = 750, + 290, + 30
+  ["teachable-us-paid-plan-card", 320n], // 290 + 30
+  ["teachable-us-starter-subscription", 1_140n], // 750 + 290 + 30, + 0.7% = 70
+  ["teachable-us-paid-plan-subscription", 390n], // 290 + 30 + 70
   ["whop-us-card", 300n], // 2.7% = 270, + 30
   ["whop-us-international-card", 450n], // 270 + 30 + 1.5% = 150
 ]);
@@ -126,6 +132,7 @@ const expectedFeesAt = new Map([
   ["ebay-us-most-categories-small-order", { grossCents: 1_000n, feeCents: 166n }], // 13.6% of 1,000 = 136, + 30
   ["kickstarter-us-micropledge", { grossCents: 500n, feeCents: 58n }], // 5% of 500 = 25, + 5% = 25, + 8
   ["patreon-us-pro-3-or-less", { grossCents: 300n, feeCents: 49n }], // 8% of 300 = 24, + 5% = 15, + 10
+  ["skool-us-pro-large", { grossCents: 100_000n, feeCents: 3_930n }], // 3.9% of 1,000 = 3,900, + 30
 ]);
 
 for (const preset of feePresets) {
@@ -209,6 +216,17 @@ test("Substack's $150 annual example plus Stripe's 0.7% Billing fee", () => {
   // Substack's example: $150 − 10% ($15.00) − 2.9% + $0.30 ($4.65) = $130.35, before the $1.05 Billing fee.
   assert.equal(result.sellerProceedsCents, 13_035n - 105n);
   assert.equal(result.feeCents, 1_500n + 465n + 105n);
+});
+
+test("Skool's $999 example pays out $959.74", () => {
+  const preset = getFeePreset("skool-us-pro-large");
+
+  assert.ok(preset);
+  const result = calculateFees({ preset, grossCents: 99_900n });
+
+  // 3.9% of $999.00 is $38.961, rounded half up to $38.96, plus $0.30.
+  assert.equal(result.feeCents, 3_926n);
+  assert.equal(result.sellerProceedsCents, 95_974n);
 });
 
 test("Lemon Squeezy matches the worked examples on its own fee and sales tax pages", () => {

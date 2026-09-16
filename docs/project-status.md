@@ -379,6 +379,67 @@ Browser evidence (each value checked against an independent calculation):
 - Regression: the Patreon vs Ko-fi comparison and the Kickstarter calculator's
   range message are unchanged, and no console errors appeared.
 
+### Creator platform hub, Skool, and Teachable (2026-09-16)
+
+On branch `feat/creator-platform-hub`, based on the Podia branch:
+
+- `/fees/creator-platform-fees/` prices the same fan payment across Whop,
+  Ko-fi, Podia, Skool, Teachable, Patreon, and Substack, and adds a monthly
+  table that counts each platform's plan price alongside its per-payment fees,
+  so Ko-fi Gold, Podia's paid plans, Skool Pro, and Teachable's plans are
+  compared on what a month actually costs.
+- Skool: its transaction fee is the whole charge, because Skool processes
+  payments itself and a creator cannot connect their own Stripe account. Pro
+  charges 2.9% + 30¢ up to $899 and 3.9% + 30¢ from $900 to Skool's $100,000
+  limit; Hobby charges 10% + 30¢. Skool's own $999 example paying out $959.74
+  is a test fixture. Charges between $899 and $900 sit outside both bands and
+  are refused rather than guessed.
+- Teachable: one-time sales and subscription payments by US card through
+  Teachable Payments on the Standard bundle, with the Starter plan's 7.5% fee,
+  no plan fee on Builder and Growth, 2.9% + $0.30 processing, and 0.7% more on
+  recurring transactions. International cards are excluded because Teachable's
+  pricing page (3.9% + 30¢) and its fee article (4.4% + $0.30) disagree.
+- The fees hub's small-sale table shows a dash where a default scenario does
+  not cover the amount, which Skool's up-to-$899 band needs.
+
+Local checks on 2026-09-16 (browser work on the preview build at `:4321`, in
+Chrome 153 over the DevTools protocol, plus iOS Safari on the iPhone 17
+simulator through Argent):
+
+| Check                                                      | Observed result                                                                      |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `pnpm run lint`                                            | Passed with 0 findings                                                               |
+| `pnpm run format:check`                                    | Passed                                                                               |
+| `pnpm run check-types`                                     | Passed: 7 of 7 tasks; `astro check` 0 errors                                         |
+| `pnpm run test`                                            | Passed: 140 calculator tests (including Skool's published example) and 110 web tests |
+| Guard build (`REQUIRE_SITE_URL=true`, no site)             | Failed as intended                                                                   |
+| Site build (`PUBLIC_SITE_URL=https://calculators.example`) | Passed; 82 pages; SEO audit 0 problems; 53 sitemap URLs with no embed pages          |
+| Preview build                                              | Passed; 82 pages                                                                     |
+
+Official sources were read again on 2026-09-16 before building: Skool's pricing
+page (monthly and the yearly toggle through the in-app browser) and its
+subscriptions FAQ; Teachable's pricing page and its transaction fees and
+bundles article; Ko-fi's Gold article, to confirm the $12 monthly price the hub
+quotes.
+
+Browser evidence (each value checked against an independent calculation):
+
+- Skool: $49 pays $1.72 on Pro and $5.20 on Hobby; $899 pays $26.37; $999 on
+  the upper band pays out $959.74, matching Skool's own example; $1,000 pays
+  $39.30. $899.50 is refused by both Pro bands with the covered range named,
+  and $100,001 is refused as above Skool's limit. Forty members at $49 on
+  Hobby pay $208.00 a month.
+- Teachable: a $99 sale pays $10.60 on Starter and $3.17 on a paid plan; the
+  same amount as a subscription payment pays $11.29; keeping $100 needs
+  $112.82. The page's plan crossovers read $666.67 a month for Teachable and
+  $1,267.61 for Skool Pro.
+- Creator hub: eleven options price correctly at $100 and $10, and the monthly
+  table matches the oracle at 25, 100, and 500 payments, including each plan
+  price. Tables scroll inside their boxes at 360 px.
+- The fees hub shows a dash for Skool at $1,000, and no console errors
+  appeared anywhere. In iOS Safari the Skool calculator renders with its
+  scenario note and all three bands.
+
 Local checks on 2026-09-16 for the 1099 vs W-2 rate calculator (branch
 `feat/contractor-rate-more-platforms`; browser work on the preview build at
 `:4321`, in Chrome 153 over the DevTools protocol and in iOS Safari on the

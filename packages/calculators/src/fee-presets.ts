@@ -184,6 +184,26 @@ const payhipStripe = {
   title: "Connect Your Stripe Account - Help Center",
 };
 
+const skoolPricing = {
+  url: "https://www.skool.com/pricing",
+  title: "Skool: Pricing",
+};
+
+const skoolFees = {
+  url: "https://help.skool.com/article/86-subscriptions-faq",
+  title: "Subscriptions FAQs",
+};
+
+const teachablePricing = {
+  url: "https://teachable.com/pricing",
+  title: "Pricing | Teachable",
+};
+
+const teachableFees = {
+  url: "https://support.teachable.com/en/articles/15661316-understand-your-transaction-fees-and-bundles",
+  title: "Understand your transaction fees and bundles | Teachable Support",
+};
+
 const indiegogoFees = {
   url: "https://www.indiegogo.com/en/info/fees",
   title: "Fees - Indiegogo",
@@ -2058,6 +2078,249 @@ const officialPresetRecords: FeePreset[] = [
     exclusions: [
       "The $99 monthly plan price, and subscriptions and payment plans, which Payhip bills through Stripe without saying whether Stripe's Billing fee applies.",
       "PayPal and Square payments, international cards, currency conversion, refunds, disputes, and video hosting.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "skool-us-pro-standard",
+    label: "Skool Pro plan, charge up to $899",
+    provider: "skool",
+    taxMode: "zero-only",
+    paymentProduct: "Skool membership or course payment",
+    channel: "online",
+    tierPolicy: "pre-threshold",
+    components: [
+      {
+        id: "skool-transaction",
+        label: "Skool transaction fee",
+        rateBps: 290,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { maxCents: 89_900 },
+    sources: [skoolPricing, skoolFees],
+    assumptions: [
+      "US creator on Skool's Pro plan, which costs $99 a month or $82 a month billed yearly (not included here), with a charge of $899 or less.",
+      "Skool processes the payment itself and the creator cannot use their own Stripe account, so there is no separate processing fee to add.",
+      "Skool's pricing page shows only a 2.9% transaction fee; its subscriptions FAQ adds the 30¢ and a higher band above $900, which this estimate follows.",
+      "The charge carries no sales tax or VAT. Skool adds VAT on top of the price a creator sets.",
+      "The estimator rounds each component to cents; Skool's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "The monthly plan price, and charges between $899 and $900, which Skool's bands leave unassigned.",
+      "Affiliate and Growth Boost commissions, disputes, refunds, and currency conversion.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "skool-us-pro-large",
+    label: "Skool Pro plan, charge of $900 or more",
+    provider: "skool",
+    taxMode: "zero-only",
+    paymentProduct: "Skool membership or course payment",
+    channel: "online",
+    tierPolicy: "post-threshold",
+    components: [
+      {
+        id: "skool-transaction",
+        label: "Skool transaction fee",
+        rateBps: 390,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 90_000, maxCents: 10_000_000 },
+    sources: [skoolPricing, skoolFees],
+    assumptions: [
+      "US creator on Skool's Pro plan with a charge of $900 or more, where Skool's subscriptions FAQ gives 3.9% + 30¢. Skool's own example of a $999 price paying out $959.74 matches this rate.",
+      "Skool processes the payment itself, so there is no separate processing fee to add.",
+      "Skool's transaction limit is $100,000 per charge.",
+      "The charge carries no sales tax or VAT, which Skool adds on top of the price a creator sets.",
+      "The estimator rounds each component to cents; Skool's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "The monthly plan price, and charges between $899 and $900, which Skool's bands leave unassigned.",
+      "Affiliate and Growth Boost commissions, disputes, refunds, and currency conversion.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "skool-us-hobby",
+    label: "Skool Hobby plan",
+    provider: "skool",
+    taxMode: "zero-only",
+    paymentProduct: "Skool membership or course payment",
+    channel: "online",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "skool-transaction",
+        label: "Skool transaction fee",
+        rateBps: 1_000,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { maxCents: 10_000_000 },
+    sources: [skoolPricing, skoolFees],
+    assumptions: [
+      "US creator on Skool's Hobby plan, which costs $9 a month or $7.50 a month billed yearly (not included here) and charges 10% + 30¢ on every transaction.",
+      "Skool processes the payment itself, so there is no separate processing fee to add.",
+      "Skool's transaction limit is $100,000 per charge.",
+      "The charge carries no sales tax or VAT, which Skool adds on top of the price a creator sets.",
+      "The estimator rounds each component to cents; Skool's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "The monthly plan price, affiliate and Growth Boost commissions, disputes, refunds, and currency conversion.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "teachable-us-starter-card",
+    label: "Teachable Starter plan, US card, one-time sale",
+    provider: "teachable",
+    taxMode: "zero-only",
+    paymentProduct: "Teachable one-time sale",
+    channel: "Teachable Payments",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "teachable-plan",
+        label: "Teachable transaction fee",
+        rateBps: 750,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "teachable-processing",
+        label: "Card processing",
+        rateBps: 290,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    sources: [teachablePricing, teachableFees],
+    assumptions: [
+      "US school on Teachable's Starter plan ($39 a month, or $29 billed yearly, not included here), which charges a 7.5% transaction fee on all sales on top of processing.",
+      "The buyer pays with a US card through Teachable Payments on the Standard bundle, whose base rate is 2.9% + $0.30 and which adds no bundle fee.",
+      "A one-time sale with no sales tax assessed. Teachable's Standard bundle adds 0.5% where tax applies and 0.7% on recurring transactions.",
+      "The estimator rounds each component to cents; Teachable's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "International cards, which Teachable's pricing page prices at 3.9% + 30¢ and its fee article at 4.4% + $0.30, and PayPal.",
+      "The Global bundle (+2.8%), a custom payment gateway (+2% for US schools), affiliate and author payouts, refunds, and the $15 chargeback fee.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "teachable-us-paid-plan-card",
+    label: "Teachable Builder or Growth plan, US card, one-time sale",
+    provider: "teachable",
+    taxMode: "zero-only",
+    paymentProduct: "Teachable one-time sale",
+    channel: "Teachable Payments",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "teachable-processing",
+        label: "Card processing",
+        rateBps: 290,
+        fixedCents: 30,
+        base: "gross",
+      },
+    ],
+    sources: [teachablePricing, teachableFees],
+    assumptions: [
+      "US school on Teachable's Builder ($89 a month), Growth ($189), or Advanced plan, none included here, which charge no Teachable transaction fee.",
+      "The buyer pays with a US card through Teachable Payments on the Standard bundle, whose base rate is 2.9% + $0.30.",
+      "A one-time sale with no sales tax assessed. Teachable's Standard bundle adds 0.5% where tax applies and 0.7% on recurring transactions.",
+      "The estimator rounds each component to cents; Teachable's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "International cards, whose rate Teachable's pricing page and fee article state differently, and PayPal.",
+      "The Global bundle (+2.8%), a custom payment gateway (+2% for US schools), affiliate and author payouts, refunds, and the $15 chargeback fee.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "teachable-us-starter-subscription",
+    label: "Teachable Starter plan, US card, subscription payment",
+    provider: "teachable",
+    taxMode: "zero-only",
+    paymentProduct: "Teachable subscription or payment plan",
+    channel: "Teachable Payments",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "teachable-plan",
+        label: "Teachable transaction fee",
+        rateBps: 750,
+        fixedCents: 0,
+        base: "gross",
+      },
+      {
+        id: "teachable-processing",
+        label: "Card processing",
+        rateBps: 290,
+        fixedCents: 30,
+        base: "gross",
+      },
+      {
+        id: "teachable-recurring",
+        label: "Recurring transaction fee",
+        rateBps: 70,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    sources: [teachablePricing, teachableFees],
+    assumptions: [
+      "US school on Teachable's Starter plan, charging a subscription or payment plan instalment to a US card through Teachable Payments on the Standard bundle.",
+      "The Standard bundle adds 0.7% to recurring transactions on top of the 7.5% plan fee and the 2.9% + $0.30 card rate.",
+      "No sales tax is assessed; the Standard bundle adds another 0.5% where it is.",
+      "The estimator rounds each component to cents; Teachable's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "International cards, whose rate two Teachable pages state differently, PayPal, and the Global bundle, which waives the recurring fee for +2.8%.",
+      "Affiliate and author payouts, refunds, and the $15 chargeback fee.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "teachable-us-paid-plan-subscription",
+    label: "Teachable Builder or Growth plan, US card, subscription payment",
+    provider: "teachable",
+    taxMode: "zero-only",
+    paymentProduct: "Teachable subscription or payment plan",
+    channel: "Teachable Payments",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "teachable-processing",
+        label: "Card processing",
+        rateBps: 290,
+        fixedCents: 30,
+        base: "gross",
+      },
+      {
+        id: "teachable-recurring",
+        label: "Recurring transaction fee",
+        rateBps: 70,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    sources: [teachablePricing, teachableFees],
+    assumptions: [
+      "US school on Teachable's Builder, Growth, or Advanced plan, which charge no Teachable transaction fee, billing a subscription or payment plan instalment to a US card through Teachable Payments on the Standard bundle.",
+      "The Standard bundle adds 0.7% to recurring transactions on top of the 2.9% + $0.30 card rate.",
+      "No sales tax is assessed; the Standard bundle adds another 0.5% where it is.",
+      "The estimator rounds each component to cents; Teachable's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "International cards, whose rate two Teachable pages state differently, PayPal, and the Global bundle, which waives the recurring fee for +2.8%.",
+      "Affiliate and author payouts, refunds, and the $15 chargeback fee.",
     ],
     status: "supported",
   }),

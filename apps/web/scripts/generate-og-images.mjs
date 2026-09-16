@@ -230,6 +230,22 @@ const cards = [
     path: "/fees/indiegogo-fee-calculator/",
   },
   {
+    file: "skool",
+    eyebrow: "Payment fees / Skool",
+    accent: palette.navy,
+    title: "Skool fee calculator",
+    description: "Skool's Pro and Hobby fees on a membership payment.",
+    path: "/fees/skool-fee-calculator/",
+  },
+  {
+    file: "teachable",
+    eyebrow: "Payment fees / Teachable",
+    accent: palette.gold,
+    title: "Teachable fee calculator",
+    description: "Teachable's plan fee and card processing on a course sale.",
+    path: "/fees/teachable-fee-calculator/",
+  },
+  {
     file: "kickstarter-vs-indiegogo",
     eyebrow: "Compare / Crowdfunding",
     accent: palette.gold,

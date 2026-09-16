@@ -30,6 +30,8 @@ export type ToolId =
   | "podia-fees"
   | "whop-fees"
   | "indiegogo-fees"
+  | "skool-fees"
+  | "teachable-fees"
   | "kdp-royalties"
   | "gumroad-fees"
   | "lemon-squeezy-fees"
@@ -301,6 +303,27 @@ export const tools: readonly Tool[] = [
       "Indiegogo's 5% platform fee and 3% + 20¢ processing on a contribution and a campaign.",
     searchTerms:
       "indiegogo crowdfunding campaign platform fee payment processing pledge manager late pledge goal funds raised",
+  },
+  {
+    id: "skool-fees",
+    hub: "fees",
+    href: "/fees/skool-fee-calculator/",
+    name: "Skool Fee Calculator",
+    menuLabel: "Skool fees",
+    summary:
+      "Skool's Pro and Hobby transaction fees on a membership payment, including the $900 band.",
+    searchTerms:
+      "skool community membership group pro hobby transaction fee 2.9% 10% payout stripe express",
+  },
+  {
+    id: "teachable-fees",
+    hub: "fees",
+    href: "/fees/teachable-fee-calculator/",
+    name: "Teachable Fee Calculator",
+    menuLabel: "Teachable fees",
+    summary: "Teachable's 7.5% Starter fee or no plan fee, with card processing and subscriptions.",
+    searchTerms:
+      "teachable course school starter builder growth transaction fee processing subscription payment plan",
   },
   {
     id: "kdp-royalties",

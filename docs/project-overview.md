@@ -68,6 +68,8 @@ outside launch scope.
 | `/fees/payhip-fee-calculator/`                  | Payhip plan fees and Stripe processing on a sale            |
 | `/fees/podia-fee-calculator/`                   | Podia plan fees and Stripe processing on a sale             |
 | `/fees/whop-fee-calculator/`                    | Whop's card fee and what a sale leaves you                  |
+| `/fees/skool-fee-calculator/`                   | Skool Pro and Hobby transaction fees on a payment           |
+| `/fees/teachable-fee-calculator/`               | Teachable plan fees and processing on a course sale         |
 | `/fees/indiegogo-fee-calculator/`               | Indiegogo platform and processing fees on a campaign        |
 | `/fees/kdp-royalty-calculator/`                 | Amazon KDP eBook, paperback, and hardcover royalties        |
 | `/fees/gumroad-fee-calculator/`                 | Gumroad direct/Discover take-home                           |

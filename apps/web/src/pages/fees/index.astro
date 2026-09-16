@@ -1,5 +1,5 @@
 ---
-import { calculateFees, getFeePreset } from "@MathMyRate/calculators";
+import { calculateFees, getFeePreset, GrossOutOfRangeError } from "@MathMyRate/calculators";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import DataTable from "../../components/DataTable.astro";
 import { feeCalculators } from "../../data/fee-calculators";
@@ -39,7 +39,16 @@ const smallSaleRows = feeCalculators.map((config) => {
 
   if (!first || !preset) throw new Error(`${config.provider} has no usable fee scenario.`);
 
-  const at = (grossCents: bigint) => formatUsdGrouped(calculateFees({ preset, grossCents }).feeCents);
+  // A scenario that does not cover the amount, such as Skool's band up to $899, shows a dash.
+  const at = (grossCents: bigint) => {
+    try {
+      return formatUsdGrouped(calculateFees({ preset, grossCents }).feeCents);
+    } catch (error) {
+      if (error instanceof GrossOutOfRangeError) return "—";
+
+      throw error;
+    }
+  };
 
   return [`${config.provider}: ${first.label}`, at(2_000n), at(10_000n), at(100_000n)];
 });
@@ -88,7 +97,7 @@ const smallSaleRows = feeCalculators.map((config) => {
       <h2>Why small sales lose a bigger share</h2>
       <p>Most providers add a fixed charge to every payment, so the same fee structure takes a larger share of a $20 sale than of a $1,000 sale. The table shows each calculator's default scenario at three amounts, with no sales tax.</p>
       <DataTable caption="Fee on a $20, $100, and $1,000 sale in each default scenario" headers={["Provider and scenario", "$20 sale", "$100 sale", "$1,000 sale"]} rows={smallSaleRows} />
-      <p>If your average sale is small, the fixed part matters more than the percentage when you compare providers.</p>
+      <p>If your average sale is small, the fixed part matters more than the percentage when you compare providers. A dash means that scenario does not cover that amount.</p>
 
       <h2>How the rates are sourced</h2>
       <p>Every rate comes from the provider's own pricing page, help center, or policy, and each calculator lists its sources and the date they were reviewed. A scenario is included only when its official source documents it clearly. Fees with minimums, caps, or rates that depend on history the calculator cannot know, such as Etsy's Offsite Ads or Square's ACH invoice fee, are listed as unsupported instead of estimated. Changes are recorded in the <a href="/changelog/">changelog</a>, and the full approach is on <a href="/methodology/">how the numbers are made</a>.</p>

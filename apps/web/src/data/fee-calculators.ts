@@ -19,6 +19,8 @@ export type FeeCalculatorId =
   | "podia"
   | "whop"
   | "indiegogo"
+  | "skool"
+  | "teachable"
   | "gumroad"
   | "lemon-squeezy";
 
@@ -654,6 +656,96 @@ export const feeCalculators: readonly FeeCalculatorConfig[] = [
         description: "Indiegogo's 5% platform fee plus 3% + 20¢ processing.",
         note: "Supported scenario: US project in USD that reaches its goal, one collected contribution with no shipping, tax, or tip. A project that misses its goal pays nothing.",
         copyName: "Indiegogo contribution",
+      },
+    ],
+  },
+  {
+    id: "skool",
+    toolId: "skool-fees",
+    provider: "Skool",
+    formHeading: "Payment details",
+    scenarioLegend: "Which plan and charge size?",
+    panelTone: "navy",
+    taxHelp: "",
+    volume: {
+      fieldLabel: "Paying members (optional)",
+      fieldHelp: "Members paying this amount each month. Adds monthly and yearly totals.",
+      unitSingular: "member",
+      unitPlural: "members",
+      perPeriod: "a month",
+      feesLabel: "Fees per month",
+      keepLabel: "You keep per month",
+      yearly: true,
+      shareLabel: "Fees as a share of payments",
+      shareNoun: "payments",
+    },
+    scenarios: [
+      {
+        id: "pro",
+        presetId: "skool-us-pro-standard",
+        label: "Pro plan, charge up to $899",
+        description: "2.9% + 30¢ per transaction. The plan costs $99 a month.",
+        note: "Supported scenario: US creator on Skool's Pro plan with a charge of $899 or less, no tax. The $99 monthly plan price is not included.",
+        copyName: "Skool Pro plan payment",
+      },
+      {
+        id: "pro-large",
+        presetId: "skool-us-pro-large",
+        label: "Pro plan, charge of $900 or more",
+        description: "3.9% + 30¢ per transaction, up to Skool's $100,000 limit.",
+        note: "Supported scenario: US creator on Skool's Pro plan with a charge of $900 or more, no tax. The $99 monthly plan price is not included.",
+        copyName: "Skool Pro plan payment above $900",
+      },
+      {
+        id: "hobby",
+        presetId: "skool-us-hobby",
+        label: "Hobby plan",
+        description: "10% + 30¢ per transaction. The plan costs $9 a month.",
+        note: "Supported scenario: US creator on Skool's Hobby plan, no tax. The $9 monthly plan price is not included.",
+        copyName: "Skool Hobby plan payment",
+      },
+    ],
+  },
+  {
+    id: "teachable",
+    toolId: "teachable-fees",
+    provider: "Teachable",
+    formHeading: "Sale details",
+    scenarioLegend: "Which plan, and is it a subscription?",
+    panelTone: "ink",
+    taxHelp: "",
+    scenarios: [
+      {
+        id: "starter",
+        presetId: "teachable-us-starter-card",
+        label: "Starter plan, one-time sale",
+        description: "7.5% Teachable fee plus 2.9% + 30¢ card processing.",
+        note: "Supported scenario: US school on Teachable's Starter plan, a one-time sale paid by US card through Teachable Payments on the Standard bundle, with no tax assessed. The $39 monthly plan price is not included.",
+        copyName: "Teachable Starter plan sale",
+      },
+      {
+        id: "paid",
+        presetId: "teachable-us-paid-plan-card",
+        label: "Builder or Growth plan, one-time sale",
+        description: "No Teachable fee; 2.9% + 30¢ card processing.",
+        note: "Supported scenario: US school on Teachable's Builder, Growth, or Advanced plan, a one-time sale paid by US card through Teachable Payments on the Standard bundle, with no tax assessed. The monthly plan price is not included.",
+        copyName: "Teachable sale with no plan fee",
+      },
+      {
+        id: "starter-subscription",
+        presetId: "teachable-us-starter-subscription",
+        label: "Starter plan, subscription payment",
+        description: "Adds Teachable's 0.7% recurring transaction fee.",
+        note: "Supported scenario: US school on Teachable's Starter plan, a subscription or payment plan instalment paid by US card through Teachable Payments on the Standard bundle, with no tax assessed.",
+        copyName: "Teachable Starter plan subscription payment",
+      },
+      {
+        id: "paid-subscription",
+        presetId: "teachable-us-paid-plan-subscription",
+        label: "Builder or Growth plan, subscription payment",
+        description: "0.7% recurring fee plus 2.9% + 30¢ card processing.",
+        note: "Supported scenario: US school on Teachable's Builder, Growth, or Advanced plan, a subscription or payment plan instalment paid by US card through Teachable Payments on the Standard bundle, with no tax assessed.",
+        copyName: "Teachable subscription payment",
       },
     ],
   },

@@ -1,0 +1,110 @@
+---
+import { calculateFees, type FeePreset } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("skool-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const pro = requireOfficialPreset("skool-us-pro-standard");
+
+const proLarge = requireOfficialPreset("skool-us-pro-large");
+
+const hobby = requireOfficialPreset("skool-us-hobby");
+
+const fee = (preset: FeePreset, grossCents: bigint): string => formatUsdGrouped(calculateFees({ preset, grossCents }).feeCents);
+
+const keep = (preset: FeePreset, grossCents: bigint): string => formatUsdGrouped(calculateFees({ preset, grossCents }).sellerProceedsCents);
+
+const keepRows = [900n, 2_900n, 4_900n, 9_900n, 19_900n, 49_900n].map((grossCents) => [formatSaleLabel(grossCents), fee(hobby, grossCents), keep(hobby, grossCents), fee(pro, grossCents), keep(pro, grossCents)]);
+
+// Plan prices from Skool's pricing page.
+const hobbyMonthlyCents = 900n;
+
+const proMonthlyCents = 9_900n;
+
+const proRateBps = BigInt(pro.components[0]?.rateBps ?? 0);
+
+const hobbyRateBps = BigInt(hobby.components[0]?.rateBps ?? 0);
+
+const planBreakEvenCents = ((proMonthlyCents - hobbyMonthlyCents) * 10_000n + (hobbyRateBps - proRateBps) - 1n) / (hobbyRateBps - proRateBps);
+
+const officialExampleCents = calculateFees({ preset: proLarge, grossCents: 99_900n }).sellerProceedsCents;
+
+const updatedOn = "2026-09-16";
+
+const guideSources = [
+  { title: "Skool: Pricing", url: "https://www.skool.com/pricing" },
+  { title: "Subscriptions FAQs", url: "https://help.skool.com/article/86-subscriptions-faq" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Skool charge per transaction?", answer: `On the Pro plan, 2.9% + 30¢ for charges up to $899 and 3.9% + 30¢ above $900. On the Hobby plan, 10% + 30¢ on everything. A $49 membership payment pays ${fee(pro, 4_900n)} on Pro and ${fee(hobby, 4_900n)} on Hobby.` },
+  { question: "Does Skool charge processing on top?", answer: "No. Skool processes the payment itself, and you cannot connect your own Stripe account, so the transaction fee is the whole charge. Skool uses a Stripe Express connection to send your payouts." },
+  { question: "When is the Pro plan worth it?", answer: `Pro costs $99 a month against Hobby's $9 and cuts the fee from 10% + 30¢ to 2.9% + 30¢. Counting fees alone, it costs less once your payments pass ${formatSaleLabel(planBreakEvenCents)} a month.` },
+  { question: "What happens between $899 and $900?", answer: "Skool's bands cover charges up to $899 and charges of $900 or more, and leave the amounts in between unassigned. This calculator refuses those amounts rather than guessing which rate applies." },
+  { question: "Does Skool's example match this calculator?", answer: `Yes. Skool's subscriptions FAQ says a $999 price pays out $959.74, and this calculator gives ${formatUsdGrouped(officialExampleCents)} for the same charge on the Pro plan.` },
+  { question: "What does Skool's pricing page say?", answer: "It lists 2.9% for Pro and 10% for Hobby, without the 30¢ or the higher band above $900. The subscriptions FAQ gives the full rates, which this calculator uses." },
+  { question: "Are there other Skool charges?", answer: "The plan price itself, $9 or $99 a month ($7.50 or $82 billed yearly), plus any affiliate or Growth Boost commission you set. VAT is added on top of the price you set. Skool's transaction limit is $100,000 per charge." },
+];
+---
+<Layout title="Skool Fee Calculator: Pro and Hobby Plan Fees | MathMyRate" description="Estimate Skool's transaction fees on a membership payment: 2.9% + 30¢ or 3.9% + 30¢ on Pro, and 10% + 30¢ on Hobby, plus when Pro pays for itself." ogImage="/og/skool.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Skool keeps from a community membership or course payment on the Pro and Hobby plans, and when the Pro plan pays for itself.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={pro.checkedOn} />
+    <FeeCalculator calculatorId="skool" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>Skool takes one fee per transaction and no separate processing charge, because Skool runs the payment itself. On the <strong>Pro</strong> plan a $49 payment pays <strong>{fee(pro, 4_900n)}</strong> and leaves {keep(pro, 4_900n)}; on <strong>Hobby</strong> the same payment pays <strong>{fee(hobby, 4_900n)}</strong> and leaves {keep(hobby, 4_900n)}. The monthly plan price is separate.</p>
+
+      <h2>Skool's rates</h2>
+      <ul>
+        <li><strong>Pro, $99 a month:</strong> 2.9% + 30¢ for charges up to $899, and 3.9% + 30¢ for charges of $900 or more.</li>
+        <li><strong>Hobby, $9 a month:</strong> 10% + 30¢ on every transaction.</li>
+        <li><strong>Billed yearly:</strong> $82 a month for Pro and $7.50 for Hobby, which Skool shows as two months free.</li>
+      </ul>
+      <p>Skool's pricing page shows only "2.9%" and "10%". Its subscriptions FAQ adds the 30¢ and the band above $900, which is what this calculator uses. Amounts between $899 and $900 fall outside both bands, so the calculator refuses them instead of guessing.</p>
+
+      <h2>What you keep at common prices</h2>
+      <DataTable caption="Skool fees and what you keep, by payment" headers={["Payment", "Hobby fee", "Hobby keeps", "Pro fee", "Pro keeps"]} rows={keepRows} />
+
+      <h2>When Pro beats Hobby</h2>
+      <p>Pro costs $90 a month more than Hobby and cuts 7.1% off every transaction, so on fees alone it wins once your payments pass <strong>{formatSaleLabel(planBreakEvenCents)}</strong> a month. Below that, Hobby's $9 plan costs less overall even with its 10% fee.</p>
+
+      <h2>Payments, payouts, and tax</h2>
+      <ul>
+        <li><strong>Payments:</strong> Skool is the merchant for the charge; you cannot use your own Stripe account.</li>
+        <li><strong>Payouts:</strong> sent every Wednesday through a Stripe Express connection.</li>
+        <li><strong>Tax:</strong> Skool adds VAT on top of the price you set, so this calculator prices the amount you charge.</li>
+        <li><strong>Limit:</strong> $100,000 per charge.</li>
+        <li><strong>Not estimated:</strong> the plan price, affiliate and Growth Boost commissions, refunds, disputes, and currency conversion.</li>
+      </ul>
+      <p>Comparing platforms? See <a href="/fees/creator-platform-fees/">creator platform fees compared</a>.</p>
+
+      <FeeRuleDetails calculatorId="skool" />
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId="skool-fees" />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{guideSources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Skool's pages were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Skool. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

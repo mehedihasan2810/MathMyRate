@@ -256,6 +256,8 @@ assumptions, exclusions, and inverse tests:
 
 **Update 2026-09-16** (branch `feat/contractor-rate-more-platforms`). Added the Podia, Whop, and Indiegogo fee calculators and a Kickstarter vs Indiegogo comparison. Indiegogo's own $10,000 example reproduces exactly. Buy Me a Coffee stays unbuilt. Comparison rows now handle a scenario that does not cover the amount, which Kickstarter's under-$10 pledge rate needs.
 
+**Update 2026-09-16** (branch `feat/creator-platform-hub`). Added a creator platform comparison with a monthly-cost table that counts plan prices, and the Skool and Teachable calculators. Skool's $899/$900 band gap and Teachable's conflicting international card rate are both refused rather than guessed. The fees hub table now shows a dash where a default scenario does not cover the amount.
+
 Add tools inside the niche so topical authority compounds. Verify demand in
 Search Console and Keyword Planner before building; do not publish a tool
 without the eight content sections. Candidates, grouped by hub:
@@ -274,7 +276,7 @@ Platform and marketplace fees (all from official pricing pages)
 
 - Etsy fees, eBay fees, Shopify Payments fees, Square fees.
 - Upwork freelancer fee, Fiverr seller fee.
-- Patreon, Ko-fi, Buy Me a Coffee (blocked: fee combination unstated), Substack, Payhip, Podia, Whop: all done 2026-09-16 except Buy Me a Coffee.
+- Patreon, Ko-fi, Buy Me a Coffee (blocked: fee combination unstated), Substack, Payhip, Podia, Whop, Skool, Teachable: all done 2026-09-16 except Buy Me a Coffee.
 - Kickstarter and Indiegogo fees (both done; Indiegogo 2026-09-16).
 - Amazon KDP royalty.
 - Payout estimators where a provider documents them (Lemon Squeezy, Gumroad,

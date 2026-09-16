@@ -33,6 +33,10 @@ const monthlyPlans: readonly (readonly [string, bigint])[] = [
   ["kofi-gold", 1_200n],
   ["podia-mover", 4_900n],
   ["podia-paid", 9_900n],
+  ["skool-hobby", 900n],
+  ["skool-pro", 9_900n],
+  ["teachable-starter", 3_900n],
+  ["teachable-paid", 8_900n],
 ];
 
 const platforms: readonly Platform[] = comparison.options.map((option) => ({
@@ -90,7 +94,7 @@ const reviewedOn = platforms[0]?.preset.checkedOn ?? null;
 const updatedOn = "2026-09-16";
 
 const faq: readonly FaqEntry[] = [
-  { question: "Which creator platform has the lowest fees?", answer: `On a single $10 payment, Whop's ${feeAt("whop", 1_000n)} is lowest, followed by Ko-fi Gold and Podia's paid plans at ${feeAt("kofi-gold", 1_000n)}, which each cost a monthly price. Among platforms with no monthly price, Ko-fi's free plan charges ${feeAt("kofi", 1_000n)} against Patreon's ${feeAt("patreon", 1_000n)} and Substack's ${feeAt("substack", 1_000n)}.` },
+  { question: "Which creator platform has the lowest fees?", answer: `On a single $10 payment, Whop's ${feeAt("whop", 1_000n)} is lowest, followed by Ko-fi Gold and Podia's paid plans at ${feeAt("kofi-gold", 1_000n)}, which each cost a monthly price. Among platforms with no monthly price, Ko-fi's free plan charges ${feeAt("kofi", 1_000n)} against Patreon's ${feeAt("patreon", 1_000n)} and Substack's ${feeAt("substack", 1_000n)}. Skool and Teachable both need a paid plan before their lower rates apply.` },
   { question: "Do the monthly plans change the answer?", answer: `Yes, once you earn enough. Ko-fi Gold costs $12 a month and removes Ko-fi's 5%, so it beats Ko-fi's free plan above ${formatSaleLabel(goldBreakEvenCents)} a month. Podia's Shaker plan costs $50 a month more than Mover and removes the same 5%, so it beats Mover above ${formatSaleLabel(podiaBreakEvenCents)} a month. Whop charges the lowest card rate here, 2.7% + 30¢, with no monthly price.` },
   { question: "Which platforms collect sales tax for me?", answer: "Patreon adds sales tax, VAT, or GST to member payments where the law requires it and sends it on. Whop offers managed tax for 2% per transaction and handles applicable Discover sales itself. Podia collects tax at checkout for jurisdictions you register but does not remit it. Substack collects only if you turn on Stripe Tax, and Ko-fi does not collect tax." },
   { question: "What do iOS app purchases cost?", answer: "On Patreon, Apple takes 30% of an eligible in-app purchase, or 15% after a year, and Patreon's 10% still applies. Substack says Apple's fee is 15-30% without saying which applies, so it is not compared here." },
@@ -98,11 +102,11 @@ const faq: readonly FaqEntry[] = [
   { question: "What is not in these numbers?", answer: "Payouts, refunds, disputes, currency conversion, marketplace commissions, and any sales tax. Each platform's own calculator covers its other scenarios." },
 ];
 ---
-<Layout title="Creator Platform Fees: Patreon, Substack, Ko-fi | MathMyRate" description="Compare Patreon, Substack, Ko-fi, Podia, and Whop fees on the same payment, and see each platform's real monthly cost once plan prices are counted." ogImage="/og/creator-platform-fees.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+<Layout title="Creator Platform Fees: Patreon, Substack, Ko-fi | MathMyRate" description="Compare Patreon, Substack, Ko-fi, Podia, Whop, Skool, and Teachable fees on the same payment, and their real monthly cost once plan prices count." ogImage="/og/creator-platform-fees.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
     <Breadcrumbs items={breadcrumbs} />
     <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
-    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">What Patreon, Substack, Ko-fi, Podia, and Whop each keep from the same payment, and what they cost a month once plan prices are counted.</p>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">What Patreon, Substack, Ko-fi, Podia, Whop, Skool, and Teachable each keep from the same payment, and what they cost a month once plan prices are counted.</p>
     <PageByline updatedOn={updatedOn} reviewedOn={reviewedOn} />
     <FeeComparison comparisonId="creator-platforms" />
     <article class="guide mt-14 border-t border-line pt-4">
@@ -115,7 +119,7 @@ const faq: readonly FaqEntry[] = [
       <DataTable caption="Fee on one payment, by platform" headers={["Payment", ...platforms.map((platform) => platform.short)]} rows={paymentRows} />
 
       <h2>What a month costs</h2>
-      <p>Each row is a month of $10 payments, counting both the per-payment fees and the platform's monthly price: $12 for Ko-fi Gold, $49 for Podia Mover, and $99 for a Podia paid plan.</p>
+      <p>Each row is a month of $10 payments, counting both the per-payment fees and the platform's monthly price: $9 for Skool Hobby, $12 for Ko-fi Gold, $39 for Teachable Starter, $49 for Podia Mover, $89 for a Teachable paid plan, and $99 for Skool Pro or a Podia paid plan.</p>
       <DataTable caption="Monthly cost by platform for a month of $10 payments" headers={["Payments a month", ...platforms.map((platform) => platform.short), "Cheapest"]} rows={monthlyRows} />
 
       <h2>What each platform gives you</h2>
@@ -125,6 +129,8 @@ const faq: readonly FaqEntry[] = [
         <li><strong>Ko-fi:</strong> tips, shop sales, and memberships, paid straight into your own PayPal or Stripe account. 5% on most payments, or nothing with Gold at $12 a month.</li>
         <li><strong>Podia:</strong> courses, downloads, coaching, and community. 5% on Mover, nothing on the paid plans, with your own Stripe or PayPal account.</li>
         <li><strong>Whop:</strong> a marketplace for communities and digital products, at 2.7% + 30¢ with optional add-ons.</li>
+        <li><strong>Skool:</strong> a paid community with courses, where Skool runs the payment itself. 10% + 30¢ on the $9 Hobby plan, or 2.9% + 30¢ on the $99 Pro plan.</li>
+        <li><strong>Teachable:</strong> courses, coaching, and memberships. 7.5% on the $39 Starter plan, nothing on its bigger plans, plus 2.9% + $0.30 card processing.</li>
       </ul>
 
       <h2>What these numbers leave out</h2>
