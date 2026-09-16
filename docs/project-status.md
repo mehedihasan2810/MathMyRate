@@ -319,6 +319,66 @@ branch:
 - Hours fields now accept thousands separators; "1,840" was rejected before,
   which left the new calculator showing no result until a user removed it.
 
+### Podia, Whop, Indiegogo, and crowdfunding comparison (2026-09-16)
+
+On branch `feat/podia-whop-indiegogo`, based on the contractor-rate branch:
+
+- Podia: the Mover plan's 5% transaction fee and the Shaker and Earthquaker
+  plans' no-fee case, each with Stripe's published 2.9% + $0.30 US card rate,
+  which Podia also quotes as the processor's fee. Plan prices are excluded and
+  the page computes the sales level where Shaker beats Mover.
+- Whop: its standard 2.7% + $0.30 per successful card transaction and the 1.5%
+  it adds for international cards. The optional 0.8%, 0.5%, and 2% add-ons,
+  Discover marketplace sales, and payment methods whose rates two Whop pages
+  state differently are out of scope.
+- Indiegogo: a 5% platform fee plus 3% + $0.20 processing on a project that
+  reaches its goal, matching Indiegogo's own $10,000 over 100 transactions
+  example ($500, $320, $9,180). A project that misses its goal pays nothing.
+- `/fees/kickstarter-vs-indiegogo-fees/` compares both platforms, including
+  Kickstarter's under-$10 pledge rate.
+- Comparison rows whose scenario does not cover the amount now show a dash and
+  name the covered amounts, in both the rendered table and the live script,
+  instead of failing the whole table with a wrong message. `describeRange` moved
+  to `apps/web/src/scripts/fee-range.ts` and is shared.
+
+Local checks on 2026-09-16 for these platforms (browser work on the preview
+build at `:4321`, in Chrome 153 over the DevTools protocol, plus iOS Safari on
+the iPhone 17 simulator through Argent):
+
+| Check                                                      | Observed result                                                             |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `pnpm run lint`                                            | Passed with 0 findings                                                      |
+| `pnpm run format:check`                                    | Passed                                                                      |
+| `pnpm run check-types`                                     | Passed: 7 of 7 tasks; `astro check` 0 errors                                |
+| `pnpm run test`                                            | Passed: 132 calculator tests and 110 web tests                              |
+| Guard build (`REQUIRE_SITE_URL=true`, no site)             | Failed as intended                                                          |
+| Site build (`PUBLIC_SITE_URL=https://calculators.example`) | Passed; 77 pages; SEO audit 0 problems; 50 sitemap URLs with no embed pages |
+| Preview build                                              | Passed; 77 pages                                                            |
+
+Official sources were read again on 2026-09-16 before building: Podia's pricing
+page (monthly prices through the in-app browser, since they render client-side)
+and its transaction fee, payments, payouts, refunds, and sales tax articles;
+Whop's pricing page and its fees and taxes docs; Indiegogo's fees page through
+the in-app browser and its help center fee article.
+
+Browser evidence (each value checked against an independent calculation):
+
+- Podia: $100 keeps $91.80 on Mover and $96.80 with no Podia fee; $25 keeps
+  $22.72 and $23.97; keeping $50 charges $51.80. The page's crossovers read
+  $1,000 a month billed monthly and $840 billed yearly.
+- Whop: $100 keeps $97.00, $25 keeps $24.02, and an international card keeps
+  $23.64. A $0.20 sale shows the fees-exceed-payment message.
+- Indiegogo: $50 pays $4.20 and receives $45.80; 200 contributions of $50 pay
+  $840.00 and receive $9,160.00, and the page reproduces Indiegogo's own
+  $9,180 example.
+- Kickstarter vs Indiegogo: at $100 Kickstarter pays $8.30 and Indiegogo
+  $8.20, and the under-$10 row shows a dash with "Kickstarter micropledge
+  covers up to $9.99."; at $5 the main Kickstarter row shows a dash and the
+  micropledge row wins at $0.58 against $0.60; at $9.99 Indiegogo is cheaper.
+  In iOS Safari the table scrolls inside its box and the note reads in full.
+- Regression: the Patreon vs Ko-fi comparison and the Kickstarter calculator's
+  range message are unchanged, and no console errors appeared.
+
 Local checks on 2026-09-16 for the 1099 vs W-2 rate calculator (branch
 `feat/contractor-rate-more-platforms`; browser work on the preview build at
 `:4321`, in Chrome 153 over the DevTools protocol and in iOS Safari on the

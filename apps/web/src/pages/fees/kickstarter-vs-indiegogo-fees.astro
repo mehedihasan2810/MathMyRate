@@ -1,0 +1,100 @@
+---
+import { calculateFees, GrossOutOfRangeError, repeatSale, type FeePreset } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeComparison from "../../components/FeeComparison.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findFeeComparison } from "../../data/fee-comparisons";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("kickstarter-vs-indiegogo");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const comparison = findFeeComparison("kickstarter-vs-indiegogo");
+
+const kickstarter = requireOfficialPreset("kickstarter-us-pledge");
+
+const micro = requireOfficialPreset("kickstarter-us-micropledge");
+
+const indiegogo = requireOfficialPreset("indiegogo-us-contribution");
+
+/** A pledge outside a scenario's range shows a dash instead of a number. */
+function feeText(preset: FeePreset, grossCents: bigint): string {
+  try {
+    return formatUsdGrouped(calculateFees({ preset, grossCents }).feeCents);
+  } catch (error) {
+    if (error instanceof GrossOutOfRangeError) return "—";
+
+    throw error;
+  }
+}
+
+const amounts = [500n, 1_000n, 2_500n, 5_000n, 10_000n, 25_000n];
+
+const amountRows = amounts.map((grossCents) => [formatSaleLabel(grossCents), feeText(kickstarter, grossCents), feeText(micro, grossCents), feeText(indiegogo, grossCents)]);
+
+const kickstarterCampaign = repeatSale(calculateFees({ preset: kickstarter, grossCents: 5_000n }), 500);
+
+const indiegogoCampaign = repeatSale(calculateFees({ preset: indiegogo, grossCents: 5_000n }), 500);
+
+const campaignGapCents = kickstarterCampaign.feeCents - indiegogoCampaign.feeCents;
+
+const sources = [
+  ...new Map(
+    comparison.options
+      .flatMap((option) => requireOfficialPreset(option.presetId).sources)
+      .map((source) => [source.url, source]),
+  ).values(),
+];
+
+const updatedOn = "2026-09-16";
+
+const faq: readonly FaqEntry[] = [
+  { question: "Is Kickstarter or Indiegogo cheaper?", answer: `Both take a 5% platform fee. Processing differs by ten cents a transaction: Kickstarter charges 3% + $0.30 on pledges of $10 or more, and Indiegogo charges 3% + $0.20. On a $50 pledge that is ${feeText(kickstarter, 5_000n)} against ${feeText(indiegogo, 5_000n)}.` },
+  { question: "What happens if the campaign does not reach its goal?", answer: "Neither platform charges you. Kickstarter collects pledges only when a project is funded, and Indiegogo says a project that misses its goal pays nothing, including payment processing." },
+  { question: "What about small pledges?", answer: `Kickstarter prices pledges under $10 differently, at 5% plus 5% + $0.08, so a $5 pledge pays ${feeText(micro, 500n)}. Indiegogo publishes no separate rate for small contributions, so the same 5% plus 3% + $0.20 applies: ${feeText(indiegogo, 500n)}.` },
+  { question: "How much does the difference add up to?", answer: `Across 500 pledges of $50, Kickstarter's fees come to ${formatUsdGrouped(kickstarterCampaign.feeCents)} and Indiegogo's to ${formatUsdGrouped(indiegogoCampaign.feeCents)}, a difference of ${formatUsdGrouped(campaignGapCents)}.` },
+  { question: "What does each platform leave out?", answer: "Neither estimate covers shipping, tax, tips, currency conversion, refunds, or chargebacks. Indiegogo's pledge manager is free and uses the same rates; Kickstarter's Pledge Manager is not estimated, because Kickstarter does not state its fee consistently." },
+];
+---
+<Layout title="Kickstarter vs Indiegogo Fees: Side-by-Side | MathMyRate" description="Compare Kickstarter's and Indiegogo's 5% platform fees and payment processing on the same pledge and across a campaign, from their published rates." ogImage="/og/kickstarter-vs-indiegogo.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">What Kickstarter and Indiegogo each keep from the same pledge on a funded project, from their published fees.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={indiegogo.checkedOn} />
+    <FeeComparison comparisonId="kickstarter-vs-indiegogo" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>The short answer</h2>
+      <p>The platform fee is the same: <strong>5%</strong> on both. The difference is ten cents per transaction in processing, because Kickstarter charges <strong>3% + $0.30</strong> and Indiegogo charges <strong>3% + $0.20</strong>. On a $50 pledge that is {feeText(kickstarter, 5_000n)} against {feeText(indiegogo, 5_000n)}; across 500 such pledges it is {formatUsdGrouped(kickstarterCampaign.feeCents)} against {formatUsdGrouped(indiegogoCampaign.feeCents)}, or {formatUsdGrouped(campaignGapCents)} apart.</p>
+      <p>Small pledges are where they really differ: Kickstarter charges 5% + $0.08 processing on pledges under $10, while Indiegogo publishes one rate for every contribution.</p>
+
+      <h2>Fees by pledge size</h2>
+      <p>A dash means that scenario does not cover that pledge size.</p>
+      <DataTable caption="Fees on one pledge, by platform and pledge size" headers={["Pledge", "Kickstarter", "Kickstarter under $10", "Indiegogo"]} rows={amountRows} />
+
+      <h2>How each platform charges</h2>
+      <ul>
+        <li><strong>Kickstarter:</strong> 5% of funds collected, plus payment processing of 3% + $0.30, or 5% + $0.08 on pledges under $10. Funds are collected only if the project is funded.</li>
+        <li><strong>Indiegogo:</strong> 5% of successfully collected payments, plus 3% + $0.20 per transaction. A project that misses its goal pays nothing, including processing, and pledge management is free.</li>
+      </ul>
+
+      <h2>What neither estimate covers</h2>
+      <p>Shipping, sales tax, and tips, because neither platform says whether fees apply to them; currency conversion; refunds and chargebacks; Kickstarter's Pledge Manager; and Indiegogo's performance marketing, which costs 10% of ad revenue. The <a href="/fees/kickstarter-fee-calculator/">Kickstarter fee calculator</a> and the <a href="/fees/indiegogo-fee-calculator/">Indiegogo fee calculator</a> cover each platform on its own.</p>
+
+      <FaqSection entries={faq} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Rates were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Kickstarter or Indiegogo. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

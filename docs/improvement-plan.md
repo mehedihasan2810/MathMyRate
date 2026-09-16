@@ -254,6 +254,8 @@ assumptions, exclusions, and inverse tests:
 
 **Update 2026-09-16** (branch `feat/contractor-rate-more-platforms`). Added the 1099 vs W-2 rate calculator on a new `payroll.ts` engine module holding the published 2026 Social Security and Medicare figures: the $184,500 wage base, 6.2% and 1.45% on each side, self-employment tax of 15.3% on 92.35% of net earnings from $400, and the 0.9% Additional Medicare Tax thresholds. Income tax is out of scope, which the page states.
 
+**Update 2026-09-16** (branch `feat/contractor-rate-more-platforms`). Added the Podia, Whop, and Indiegogo fee calculators and a Kickstarter vs Indiegogo comparison. Indiegogo's own $10,000 example reproduces exactly. Buy Me a Coffee stays unbuilt. Comparison rows now handle a scenario that does not cover the amount, which Kickstarter's under-$10 pledge rate needs.
+
 Add tools inside the niche so topical authority compounds. Verify demand in
 Search Console and Keyword Planner before building; do not publish a tool
 without the eight content sections. Candidates, grouped by hub:
@@ -272,8 +274,8 @@ Platform and marketplace fees (all from official pricing pages)
 
 - Etsy fees, eBay fees, Shopify Payments fees, Square fees.
 - Upwork freelancer fee, Fiverr seller fee.
-- Patreon, Ko-fi, Buy Me a Coffee (blocked: fee combination unstated), Substack, Payhip, Podia, Whop.
-- Kickstarter and Indiegogo fees.
+- Patreon, Ko-fi, Buy Me a Coffee (blocked: fee combination unstated), Substack, Payhip, Podia, Whop: all done 2026-09-16 except Buy Me a Coffee.
+- Kickstarter and Indiegogo fees (both done; Indiegogo 2026-09-16).
 - Amazon KDP royalty.
 - Payout estimators where a provider documents them (Lemon Squeezy, Gumroad,
   Stripe Instant Payouts).

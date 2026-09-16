@@ -1,5 +1,5 @@
 ---
-import { calculateFees, effectiveFeeRateBps } from "@MathMyRate/calculators";
+import { calculateFees, effectiveFeeRateBps, GrossOutOfRangeError } from "@MathMyRate/calculators";
 import { findFeeComparison, type FeeComparisonId } from "../data/fee-comparisons";
 import { formatCombinedRate } from "../lib/fee-labels";
 import { requireOfficialPreset } from "../lib/fee-tables";
@@ -14,12 +14,21 @@ const config = findFeeComparison(Astro.props.comparisonId);
 
 const rows = config.options.map((option) => {
   const preset = requireOfficialPreset(option.presetId);
-  const result = calculateFees({ preset, grossCents: 10000n });
+  const rate = formatCombinedRate(preset.components);
 
-  return { option, rate: formatCombinedRate(preset.components), result };
+  // A scenario that does not cover the $100 example renders as a dash.
+  try {
+    return { option, rate, result: calculateFees({ preset, grossCents: 10000n }) };
+  } catch (error) {
+    if (error instanceof GrossOutOfRangeError) return { option, rate, result: null };
+
+    throw error;
+  }
 });
 
-const lowestFee = rows.reduce((lowest, row) => (row.result.feeCents < lowest ? row.result.feeCents : lowest), rows[0]?.result.feeCents ?? 0n);
+const fees = rows.flatMap((row) => (row.result ? [row.result.feeCents] : []));
+
+const lowestFee = fees.reduce((lowest, fee) => (fee < lowest ? fee : lowest), fees[0] ?? 0n);
 ---
 
 <div class="print-card mt-8 rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" data-fee-comparison={config.id}>
@@ -36,11 +45,11 @@ const lowestFee = rows.reduce((lowest, row) => (row.result.feeCents < lowest ? r
       <tbody>
         {rows.map(({ option, rate, result }) => (
           <tr>
-            <th scope="row"><a href={option.href} class="underline underline-offset-2 hover:text-navy">{option.label}</a> <span id={`cmp-${option.id}-lowest`} class="lowest-badge" hidden={result.feeCents !== lowestFee}>Lowest fee</span></th>
+            <th scope="row"><a href={option.href} class="underline underline-offset-2 hover:text-navy">{option.label}</a> <span id={`cmp-${option.id}-lowest`} class="lowest-badge" hidden={result === null || result.feeCents !== lowestFee}>Lowest fee</span></th>
             <td class="numeric">{rate}</td>
-            <td class="numeric" id={`cmp-${option.id}-fee`}>{formatUsdGrouped(result.feeCents)}</td>
-            <td class="numeric" id={`cmp-${option.id}-keep`}>{formatUsdGrouped(result.sellerProceedsCents)}</td>
-            <td class="numeric" id={`cmp-${option.id}-share`}>{formatPercentBps(effectiveFeeRateBps(result.feeCents, result.grossCents))}</td>
+            <td class="numeric" id={`cmp-${option.id}-fee`}>{result ? formatUsdGrouped(result.feeCents) : "—"}</td>
+            <td class="numeric" id={`cmp-${option.id}-keep`}>{result ? formatUsdGrouped(result.sellerProceedsCents) : "—"}</td>
+            <td class="numeric" id={`cmp-${option.id}-share`}>{result ? formatPercentBps(effectiveFeeRateBps(result.feeCents, result.grossCents)) : "—"}</td>
           </tr>
         ))}
       </tbody>

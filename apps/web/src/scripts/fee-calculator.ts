@@ -27,6 +27,7 @@ import {
   usdToCents,
   watchCalculatorFields,
 } from "./calculator-form";
+import { describeRange } from "./fee-range";
 import { readSalesPerMonth, renderVolume } from "./fee-volume";
 
 type FeeMode = "received" | "net";
@@ -67,17 +68,6 @@ function renderLineItems(items: ReadonlyArray<{ label: string; feeCents: bigint 
 }
 
 /** Wires the fee calculator rendered by FeeCalculator.astro, if the page has one. */
-/** Names the amounts a scenario covers, such as "$10.00 or more" or "$10.01 to $7,500.00". */
-function describeRange(minCents: bigint | null, maxCents: bigint | null): string {
-  if (minCents !== null && maxCents !== null) {
-    return `${formatUsdGrouped(minCents)} to ${formatUsdGrouped(maxCents)}`;
-  }
-
-  if (minCents !== null) return `${formatUsdGrouped(minCents)} or more`;
-
-  return `up to ${formatUsdGrouped(maxCents ?? 0n)}`;
-}
-
 export function mountFeeCalculator(): void {
   const root = document.querySelector<HTMLElement>("[data-fee-calculator]");
 

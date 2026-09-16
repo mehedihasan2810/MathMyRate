@@ -2,10 +2,12 @@ import {
   calculateFees,
   effectiveFeeRateBps,
   getFeePreset,
+  GrossOutOfRangeError,
   type FeePreset,
 } from "@MathMyRate/calculators";
 
 import { findFeeComparison } from "../data/fee-comparisons";
+import { describeRange } from "./fee-range";
 import {
   type CalculationTrigger,
   focusProblemField,
@@ -61,32 +63,55 @@ export function mountFeeComparison(): void {
     try {
       const amount = usdToCents(requireHtmlInput("amount").value, "amount");
 
-      const results = config.options.map((option) => ({
-        option,
-        result: calculateFees({ preset: requirePreset(option.presetId), grossCents: amount }),
-      }));
+      const results = config.options.map((option) => {
+        const preset = requirePreset(option.presetId);
+
+        try {
+          return { option, result: calculateFees({ preset, grossCents: amount }), outside: null };
+        } catch (error) {
+          if (!(error instanceof GrossOutOfRangeError)) throw error;
+
+          return { option, result: null, outside: describeRange(error.minCents, error.maxCents) };
+        }
+      });
 
       let lowestFee: bigint | null = null;
 
       for (const { result } of results) {
-        if (lowestFee === null || result.feeCents < lowestFee) lowestFee = result.feeCents;
+        if (result && (lowestFee === null || result.feeCents < lowestFee)) {
+          lowestFee = result.feeCents;
+        }
       }
 
       for (const { option, result } of results) {
-        setText(`cmp-${option.id}-fee`, formatUsdGrouped(result.feeCents));
-        setText(`cmp-${option.id}-keep`, formatUsdGrouped(result.sellerProceedsCents));
+        setText(`cmp-${option.id}-fee`, result ? formatUsdGrouped(result.feeCents) : "—");
+        setText(
+          `cmp-${option.id}-keep`,
+          result ? formatUsdGrouped(result.sellerProceedsCents) : "—",
+        );
         setText(
           `cmp-${option.id}-share`,
-          formatPercentBps(effectiveFeeRateBps(result.feeCents, result.grossCents)),
+          result ? formatPercentBps(effectiveFeeRateBps(result.feeCents, result.grossCents)) : "—",
         );
-        requireHtmlElement(`cmp-${option.id}-lowest`).hidden = result.feeCents !== lowestFee;
+        requireHtmlElement(`cmp-${option.id}-lowest`).hidden =
+          result === null || result.feeCents !== lowestFee;
       }
+
+      const outside = results.flatMap(({ option, outside: range }) =>
+        range === null ? [] : [`${option.shortLabel ?? option.label} covers ${range}`],
+      );
+
+      const losing = results.some(
+        ({ result }) => result !== null && result.sellerProceedsCents <= 0n,
+      );
 
       setText(
         "comparison-message",
-        results.some(({ result }) => result.sellerProceedsCents <= 0n)
-          ? "At this amount, the fees on at least one option are as large as the payment or larger."
-          : "",
+        outside.length > 0
+          ? `${outside.join("; ")}.`
+          : losing
+            ? "At this amount, the fees on at least one option are as large as the payment or larger."
+            : "",
       );
       markResultsCurrent(panel, []);
       setFieldState(form);

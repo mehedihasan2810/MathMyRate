@@ -1,0 +1,122 @@
+---
+import { calculateFees, type FeePreset } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("podia-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const mover = requireOfficialPreset("podia-us-mover-stripe-card");
+
+const noFee = requireOfficialPreset("podia-us-no-fee-stripe-card");
+
+function keep(preset: FeePreset, grossCents: bigint): string {
+  return formatUsdGrouped(calculateFees({ preset, grossCents }).sellerProceedsCents);
+}
+
+function fee(preset: FeePreset, grossCents: bigint): string {
+  return formatUsdGrouped(calculateFees({ preset, grossCents }).feeCents);
+}
+
+// Plan prices from Podia's pricing page: monthly, and the monthly equivalent when billed yearly.
+const planMonthlyCents = { mover: 4_900n, shaker: 9_900n, earthquaker: 17_900n };
+
+const planYearlyCents = { mover: 4_200n, shaker: 8_400n, earthquaker: 15_000n };
+
+const moverRateBps = BigInt(mover.components.find((component) => component.id === "podia-transaction")?.rateBps ?? 0);
+
+const ceilDivide = (numerator: bigint, denominator: bigint): bigint => (numerator + denominator - 1n) / denominator;
+
+const shakerOverMoverMonthlyCents = ceilDivide((planMonthlyCents.shaker - planMonthlyCents.mover) * 10_000n, moverRateBps);
+
+const shakerOverMoverYearlyCents = ceilDivide((planYearlyCents.shaker - planYearlyCents.mover) * 10_000n, moverRateBps);
+
+const keepRows = [1_000n, 2_500n, 5_000n, 10_000n, 25_000n, 50_000n].map((grossCents) => [formatSaleLabel(grossCents), fee(mover, grossCents), keep(mover, grossCents), keep(noFee, grossCents)]);
+
+const monthlyCost = (planCents: bigint, bps: bigint, salesCents: bigint): string => formatUsdGrouped(planCents + (salesCents * bps) / 10_000n);
+
+const planCostRows = [50_000n, 100_000n, 200_000n, 300_000n, 500_000n, 1_000_000n].map((salesCents) => [formatSaleLabel(salesCents), monthlyCost(planMonthlyCents.mover, moverRateBps, salesCents), monthlyCost(planMonthlyCents.shaker, 0n, salesCents), monthlyCost(planMonthlyCents.earthquaker, 0n, salesCents)]);
+
+const guideSources = [
+  { title: "Podia Pricing: Plans, Transaction Fees & Free Trial — Podia", url: "https://www.podia.com/pricing" },
+  { title: "Understanding Podia transaction fees | Podia Help Center", url: "https://help.podia.com/en/articles/11371138-understanding-podia-transaction-fees" },
+  { title: "Understanding Podia plan limits | Podia Help Center", url: "https://help.podia.com/en/articles/15350975-understanding-podia-plan-limits" },
+  { title: "Accepting payments in Podia | Podia Help Center", url: "https://help.podia.com/en/articles/11370248-accepting-payments-in-podia" },
+  { title: "How quickly do I get paid? | Podia Help Center", url: "https://help.podia.com/en/articles/11371045-how-quickly-do-i-get-paid" },
+  { title: "Issuing refunds | Podia Help Center", url: "https://help.podia.com/en/articles/11371041-issuing-refunds" },
+  { title: "Collecting sales taxes on Podia | Podia Help Center", url: "https://help.podia.com/en/articles/11370382-collecting-sales-taxes-on-podia" },
+  { title: "Pricing & Fees | Stripe", url: "https://stripe.com/pricing" },
+];
+
+const updatedOn = "2026-09-16";
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Podia take per sale?", answer: `Podia charges a 5% transaction fee on the Mover plan and nothing on the Shaker and Earthquaker plans. Your payment processor charges its own fee on every plan. A $25 sale paid by US card through Stripe pays ${fee(mover, 2_500n)} on Mover and ${fee(noFee, 2_500n)} on the paid plans.` },
+  { question: "Is there a free Podia plan?", answer: "No. Podia offers a 30-day free trial, and after it you choose Mover, Shaker, or Earthquaker. Mover costs $49 a month, or $42 a month billed yearly." },
+  { question: "When is the Shaker plan cheaper than Mover?", answer: `Shaker costs $50 a month more and removes Podia's 5% fee, so it costs less once your sales pass ${formatSaleLabel(shakerOverMoverMonthlyCents)} a month. Billed yearly the gap is $42 a month, so the crossover is ${formatSaleLabel(shakerOverMoverYearlyCents)} a month.` },
+  { question: "Who processes payments on Podia?", answer: "You connect your own Stripe or PayPal account, and buyers pay into it. Podia gives the processor's fee as 2.9% + 30¢ and says it may vary by location. PayPal is available on the Shaker and Earthquaker plans." },
+  { question: "Does Podia handle sales tax?", answer: "Podia does not file or remit sales tax for you. It can calculate and collect tax at checkout for the jurisdictions you register, and its pages do not say whether its own fee applies to tax, so this calculator covers sales without tax." },
+  { question: "What happens to Podia's fee on a refund?", answer: "Podia says its transaction fees are refunded to sellers when a payment is refunded. Stripe and PayPal have their own policies for the processing fee." },
+  { question: "When do I get paid?", answer: "Podia never holds the money: Stripe or PayPal deposit it into your bank account in about five business days, and a first payout can take longer." },
+];
+---
+<Layout title="Podia Fee Calculator: Mover, Shaker & Earthquaker | MathMyRate" description="Estimate Podia's 5% Mover transaction fee or the no-fee paid plans, plus Stripe's 2.9% + 30¢ card processing, and see which plan costs least." ogImage="/og/podia.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Podia's transaction fee and card processing take from a course, download, coaching, or community sale, and which plan costs least for your sales.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={mover.checkedOn} />
+    <FeeCalculator calculatorId="podia" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>Podia's fee depends only on your plan. On a <strong>$25</strong> sale paid by US card through Stripe, the Mover plan pays <strong>{fee(mover, 2_500n)}</strong> in fees and leaves {keep(mover, 2_500n)}; on Shaker or Earthquaker the same sale pays {fee(noFee, 2_500n)} and leaves <strong>{keep(noFee, 2_500n)}</strong>. The monthly plan price is separate and is not taken from each sale.</p>
+
+      <h2>Podia's plans</h2>
+      <ul>
+        <li><strong>Mover:</strong> $49 a month, or $42 a month billed yearly, with a 5% transaction fee.</li>
+        <li><strong>Shaker:</strong> $99 a month, or $84 billed yearly, with no transaction fee.</li>
+        <li><strong>Earthquaker:</strong> $179 a month, or $150 billed yearly, with no transaction fee.</li>
+      </ul>
+      <p>There is no free plan; Podia offers a 30-day trial. Each plan includes a number of email subscribers, and the paid plans add PayPal, upsells, and affiliate marketing.</p>
+
+      <h2>What you keep at common prices</h2>
+      <p>Card sales through Stripe, with no tax collected.</p>
+      <DataTable caption="Podia fees and what you keep, by sale price" headers={["Sale", "Fees on Mover", "You keep on Mover", "You keep with no Podia fee"]} rows={keepRows} />
+
+      <h2>When a bigger plan costs less</h2>
+      <p>Shaker removes the 5% fee for $50 a month more than Mover, so it costs less once your sales pass <strong>{formatSaleLabel(shakerOverMoverMonthlyCents)}</strong> a month. Billed yearly, the crossover is {formatSaleLabel(shakerOverMoverYearlyCents)} a month. Stripe's fee is the same on every plan, so it does not change which plan wins.</p>
+      <DataTable caption="Podia's own monthly cost by plan: the plan price plus its fee on that month's sales" headers={["Sales per month", "Mover", "Shaker", "Earthquaker"]} rows={planCostRows} />
+
+      <h2>Payments, tax, and refunds</h2>
+      <ul>
+        <li><strong>Payments:</strong> buyers pay through your own Stripe or PayPal account. Podia gives the processor's rate as 2.9% + 30¢ and says it can vary by location.</li>
+        <li><strong>Payouts:</strong> Podia does not hold your money; Stripe or PayPal deposit it in about five business days.</li>
+        <li><strong>Sales tax:</strong> Podia does not file or remit tax. It can collect tax at checkout for jurisdictions you register.</li>
+        <li><strong>Refunds:</strong> Podia refunds its own transaction fee when you refund a payment; the processor's fee follows the processor's policy.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="podia" />
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId="podia-fees" />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{guideSources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Podia's and Stripe's pages were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Podia or Stripe. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>
