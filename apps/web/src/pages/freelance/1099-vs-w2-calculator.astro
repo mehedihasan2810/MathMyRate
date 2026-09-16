@@ -1,0 +1,87 @@
+---
+import { compareContractorWithEmployee, payrollTax2026 } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import ContractorRateCalculator from "../../components/ContractorRateCalculator.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatReadableDate } from "../../lib/dates";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatPercentBps, formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("contractor-rate");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const billableMinutesPerYear = 110_400;
+
+function match(salaryCents: bigint, benefitsCents: bigint, businessExpensesCents: bigint) {
+  return compareContractorWithEmployee({ salaryCents, benefitsCents, businessExpensesCents, filingStatus: "single", billableMinutesPerYear });
+}
+
+const example = match(10_000_000n, 1_200_000n, 300_000n);
+
+const bare = match(10_000_000n, 0n, 0n);
+
+const salaryRows = [6_000_000n, 8_000_000n, 10_000_000n, 12_000_000n, 15_000_000n, 20_000_000n].map((salaryCents) => {
+  const result = match(salaryCents, 0n, 0n);
+
+  return [formatUsdGrouped(salaryCents), formatUsdGrouped(result.contractorRevenueCents), formatUsdGrouped(result.hourlyRateCents ?? 0n), formatPercentBps(result.revenueOverSalaryBps ?? 0n)];
+});
+
+const updatedOn = "2026-09-16";
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much more should a contractor charge than a salary?", answer: `Enough to cover both halves of Social Security and Medicare, plus anything the employer used to pay for. Matching a $100,000 salary takes ${formatUsdGrouped(bare.contractorRevenueCents)} of contractor income on tax alone, and ${formatUsdGrouped(example.contractorRevenueCents)} once $12,000 of benefits and $3,000 of expenses are counted.` },
+  { question: "Why do contractors pay more payroll tax?", answer: "An employee and their employer each pay 6.2% Social Security up to the wage base and 1.45% Medicare. A contractor pays both halves as self-employment tax: 15.3% on 92.35% of net earnings, with Social Security stopping at the same wage base." },
+  { question: "What is the Social Security wage base for 2026?", answer: `$${(Number(payrollTax2026.socialSecurityWageBaseCents) / 100).toLocaleString("en-US")}. Social Security stops at that amount of wages or net earnings; Medicare has no cap, and an extra 0.9% Additional Medicare Tax applies above $200,000 for a single filer, $250,000 filing jointly, or $125,000 filing separately.` },
+  { question: "Does this include income tax?", answer: "No. It compares Social Security and Medicare only, before income tax. A contractor can deduct half of the self-employment tax when figuring adjusted gross income, and may qualify for other deductions, which this calculator does not model." },
+  { question: "What about paid time off and benefits?", answer: "Billable hours cover time off: 1,840 hours is 40 a week for 46 weeks, so six weeks are unpaid. Benefits are the value of what the employer provides, such as insurance premiums and a retirement match." },
+  { question: "Is this tax advice?", answer: "No. It is a planning estimate from published IRS and SSA rates for 2026, and it assumes no other household wages. Ask a tax professional about your own situation." },
+];
+---
+<Layout title="1099 vs W-2 Calculator: Contractor Rate Equivalent | MathMyRate" description="See the contractor income that matches a W-2 salary after Social Security and Medicare tax, with benefits, business expenses, and an hourly rate for 2026." ogImage="/og/contractor-rate.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Work out the contractor income and hourly rate that match a salary after Social Security and Medicare tax, counting benefits and business expenses.</p>
+    <PageByline updatedOn={updatedOn} />
+    <ContractorRateCalculator />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>Going from a W-2 job to 1099 contract work moves the employer's half of payroll tax onto you. A <strong>$100,000</strong> salary leaves {formatUsdGrouped(bare.employee.afterTaxCents)} after Social Security and Medicare. To keep that much, a contractor needs <strong>{formatUsdGrouped(bare.contractorRevenueCents)}</strong> of net earnings, which is {formatPercentBps(bare.revenueOverSalaryBps ?? 0n)} of the salary. Add $12,000 of benefits and $3,000 of expenses and the target becomes <strong>{formatUsdGrouped(example.contractorRevenueCents)}</strong>, or {formatUsdGrouped(example.hourlyRateCents ?? 0n)} an hour over 1,840 billable hours.</p>
+
+      <h2>Why the two are taxed differently</h2>
+      <ul>
+        <li><strong>As an employee:</strong> you pay 6.2% Social Security on wages up to ${(Number(payrollTax2026.socialSecurityWageBaseCents) / 100).toLocaleString("en-US")} and 1.45% Medicare on all wages. Your employer pays the same again.</li>
+        <li><strong>As a contractor:</strong> you pay self-employment tax of 15.3% (12.4% Social Security and 2.9% Medicare) on 92.35% of your net earnings after business expenses, with Social Security stopping at the same wage base.</li>
+        <li><strong>Above the threshold:</strong> an extra 0.9% Additional Medicare Tax applies to wages or self-employment income over $200,000 for a single filer, $250,000 filing jointly, and $125,000 filing separately. Employers do not pay that part.</li>
+      </ul>
+
+      <h2>Matching income at common salaries</h2>
+      <p>Single filer, no benefits or expenses counted, over 1,840 billable hours a year.</p>
+      <DataTable caption="Contractor income and hourly rate that match a salary after Social Security and Medicare" headers={["Salary", "Contractor income", "Hourly rate", "Share of salary"]} rows={salaryRows} />
+
+      <h2>What this leaves out</h2>
+      <ul>
+        <li><strong>Income tax</strong>, federal and state, and the deduction for half of the self-employment tax.</li>
+        <li><strong>Unemployment insurance and workers' compensation</strong>, which an employer pays and a contractor usually does not have.</li>
+        <li><strong>Other household wages</strong>, which change when the Additional Medicare Tax starts.</li>
+        <li><strong>Anything you do not enter</strong>: equipment, software, insurance, retirement saving, and unpaid time all belong in the benefits and expenses fields.</li>
+      </ul>
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId={tool.id} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{payrollTax2026.sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">The {payrollTax2026.year} rates were checked on {formatReadableDate(payrollTax2026.checkedOn)}. Planning estimate only; not tax, accounting, or legal advice. See <a href="/methodology/">how the numbers are made</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

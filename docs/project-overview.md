@@ -52,6 +52,7 @@ outside launch scope.
 | `/freelance/salary-to-hourly-calculator/`       | Pay converted across hours, days, weeks, months, and years  |
 | `/freelance/early-payment-discount-calculator/` | Early payment discount terms and their annualized cost      |
 | `/freelance/rate-increase-calculator/`          | A rate change's effect on monthly and yearly revenue        |
+| `/freelance/1099-vs-w2-calculator/`             | Contractor income matching a salary after payroll tax       |
 | `/fees/`                                        | Supported platform-fee hub                                  |
 | `/fees/stripe-fee-calculator/`                  | Stripe gross/net calculation                                |
 | `/fees/paypal-fee-calculator/`                  | Product-specific PayPal calculation                         |

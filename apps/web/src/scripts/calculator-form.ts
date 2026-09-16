@@ -11,7 +11,7 @@ const PERCENT_NOISE = /[,\s%]/gu;
 
 const COUNT_NOISE = /[\s,]/gu;
 
-const HOURS_NOISE = /\s/gu;
+const HOURS_NOISE = /[\s,]/gu;
 
 export class InputProblem extends Error {
   constructor(

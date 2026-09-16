@@ -16,7 +16,8 @@ export type StandaloneEmbedId =
   | "fiverr-fees"
   | "kdp-royalties"
   | "early-payment-discount"
-  | "rate-increase";
+  | "rate-increase"
+  | "contractor-rate";
 
 export type EmbeddableTool =
   | {
@@ -54,6 +55,7 @@ const standaloneEmbedIds: readonly StandaloneEmbedId[] = [
   "kdp-royalties",
   "early-payment-discount",
   "rate-increase",
+  "contractor-rate",
 ];
 
 const standaloneHeights: Readonly<Record<StandaloneEmbedId, number>> = {
@@ -67,6 +69,7 @@ const standaloneHeights: Readonly<Record<StandaloneEmbedId, number>> = {
   "kdp-royalties": 1_650,
   "early-payment-discount": 1_400,
   "rate-increase": 1_750,
+  "contractor-rate": 2_000,
 };
 
 export const embeddableTools: readonly EmbeddableTool[] = [

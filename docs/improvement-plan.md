@@ -252,6 +252,8 @@ assumptions, exclusions, and inverse tests:
 
 **Update 2026-09-16** (branch `feat/creator-comparisons-freelance-tools`). Added the Early Payment Discount and Rate Increase calculators, which need no provider rates, and Substack vs Patreon and Payhip vs Gumroad comparisons built from the existing sourced presets. Payhip joins the digital product platform comparison. The About, Methodology, Privacy, and Terms pages have longer, more descriptive titles.
 
+**Update 2026-09-16** (branch `feat/contractor-rate-more-platforms`). Added the 1099 vs W-2 rate calculator on a new `payroll.ts` engine module holding the published 2026 Social Security and Medicare figures: the $184,500 wage base, 6.2% and 1.45% on each side, self-employment tax of 15.3% on 92.35% of net earnings from $400, and the 0.9% Additional Medicare Tax thresholds. Income tax is out of scope, which the page states.
+
 Add tools inside the niche so topical authority compounds. Verify demand in
 Search Console and Keyword Planner before building; do not publish a tool
 without the eight content sections. Candidates, grouped by hub:
@@ -259,7 +261,7 @@ without the eight content sections. Candidates, grouped by hub:
 Freelance pricing
 
 - Day rate to annual salary (and salary to hourly for contractors).
-- Contractor versus employee rate (the "1099 vs W-2" conversion).
+- Contractor versus employee rate (the "1099 vs W-2" conversion) (done 2026-09-16).
 - Retainer calculator (hours, rollover, discount).
 - Markup and margin calculator.
 - Discount and late-fee calculator for invoices (early payment discount done 2026-09-16; late fees not built, because limits depend on local law).
