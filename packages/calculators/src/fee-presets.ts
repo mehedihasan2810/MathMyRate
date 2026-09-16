@@ -164,6 +164,21 @@ const substackCost = {
   title: "How much does Substack cost?",
 };
 
+const stripeInstantPayouts = {
+  url: "https://docs.stripe.com/payouts/instant-payouts",
+  title: "Instant Payouts for Stripe Dashboard users | Stripe Documentation",
+};
+
+const stripeInstantPayoutsFaq = {
+  url: "https://support.stripe.com/questions/what-are-instant-payouts-and-who-is-eligible",
+  title: "What are Instant Payouts and who is eligible? : Stripe: Help & Support",
+};
+
+const stripePayouts = {
+  url: "https://docs.stripe.com/payouts",
+  title: "Receive payouts | Stripe Documentation",
+};
+
 const stripeBillingPricing = {
   url: "https://stripe.com/billing/pricing",
   title: "Stripe Billing | Pricing",
@@ -182,6 +197,11 @@ const payhipBilling = {
 const payhipStripe = {
   url: "https://help.payhip.com/article/65-connecting-your-stripe-account",
   title: "Connect Your Stripe Account - Help Center",
+};
+
+const gumroadPayouts = {
+  url: "https://gumroad.com/help/article/13-getting-paid",
+  title: "Getting paid",
 };
 
 const skoolPricing = {
@@ -2078,6 +2098,324 @@ const officialPresetRecords: FeePreset[] = [
     exclusions: [
       "The $99 monthly plan price, and subscriptions and payment plans, which Payhip bills through Stripe without saying whether Stripe's Billing fee applies.",
       "PayPal and Square payments, international cards, currency conversion, refunds, disputes, and video hosting.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "gumroad-us-instant-payout",
+    label: "Gumroad instant payout",
+    provider: "gumroad",
+    taxMode: "zero-only",
+    paymentProduct: "Gumroad payout",
+    channel: "instant",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "gumroad-payout",
+        label: "Instant payout fee",
+        rateBps: 300,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 100, maxCents: 1_000_000 },
+    checkedOn: "2026-09-16",
+    sources: [gumroadPayouts],
+    assumptions: [
+      "US creator taking an instant Gumroad payout, which Gumroad says pays within minutes for amounts up to $10K and a 3% fee.",
+      "Instant payouts are open to US creators who have completed at least one payout, whose Stripe account has processed with Gumroad for at least 60 days, and who have an eligible debit card. There is no $100 minimum: any settled amount of $1 or more can be paid out.",
+      "Instant payouts do not wait out the seven-day balance hold; they pay what Stripe has already settled.",
+      "This prices the payout only; Gumroad's sale fees were already deducted before the balance existed.",
+      "The estimator rounds the fee to cents; Gumroad's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Payouts under $1 or above $10,000, which instant payouts do not cover, and standard bank payouts, for which Gumroad publishes no fee.",
+      "PayPal payouts, which Gumroad offers only in countries without bank deposits, at a 2% fee.",
+      "Currency conversion, refunds and chargebacks taken from the balance, and holds or reserves.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "patreon-us-direct-deposit-payout",
+    label: "Patreon direct deposit payout",
+    provider: "patreon",
+    taxMode: "zero-only",
+    paymentProduct: "Patreon payout",
+    channel: "direct deposit",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "patreon-payout",
+        label: "Direct deposit payout fee",
+        rateBps: 0,
+        fixedCents: 25,
+        base: "gross",
+      },
+    ],
+    checkedOn: "2026-09-16",
+    sources: [patreonFees],
+    assumptions: [
+      "US creator paid in USD withdrawing a Patreon balance by direct deposit, which Stripe processes for $0.25 per payout.",
+      "Patreon publishes no minimum payout for direct deposit.",
+      "The fee is taken from the payout amount, and Patreon's balance already reflects its platform, processing, and currency conversion fees.",
+      "The estimator rounds the fee to cents; Patreon's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Creators in US territories other than Puerto Rico, which Patreon's direct deposit partner does not support.",
+      "Non-USD payout currencies and other payout methods.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "patreon-us-paypal-payout-minimum",
+    label: "Patreon PayPal payout from $10 to $25",
+    provider: "patreon",
+    taxMode: "zero-only",
+    paymentProduct: "Patreon payout",
+    channel: "PayPal",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "patreon-payout",
+        label: "PayPal payout fee",
+        rateBps: 0,
+        fixedCents: 25,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 1_000, maxCents: 2_500 },
+    checkedOn: "2026-09-16",
+    sources: [patreonFees],
+    assumptions: [
+      "US creator paid in USD withdrawing a Patreon balance to PayPal, which Patreon prices at 1% with a minimum of $0.25 and a cap of $20, and a $10 minimum payout.",
+      "The payout is between $10 and $25, where 1% is at most $0.25, so the $0.25 minimum is the fee.",
+      "The fee is taken from the payout amount, and Patreon's balance already reflects its platform, processing, and currency conversion fees.",
+      "The estimator rounds the fee to cents; Patreon's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Payouts above $25, which are separate scenarios.",
+      "Fees PayPal may charge to move the money on to a bank, non-USD payout currencies, and other payout methods.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "patreon-us-paypal-payout",
+    label: "Patreon PayPal payout from $25 to $2,000",
+    provider: "patreon",
+    taxMode: "zero-only",
+    paymentProduct: "Patreon payout",
+    channel: "PayPal",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "patreon-payout",
+        label: "PayPal payout fee",
+        rateBps: 100,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 2_500, maxCents: 200_000 },
+    checkedOn: "2026-09-16",
+    sources: [patreonFees],
+    assumptions: [
+      "US creator paid in USD withdrawing a Patreon balance to PayPal, which Patreon prices at 1% with a minimum of $0.25 and a cap of $20, and a $10 minimum payout.",
+      "The payout is between $25 and $2,000, where 1% is between the $0.25 minimum and the $20 cap.",
+      "The fee is taken from the payout amount, and Patreon's balance already reflects its platform, processing, and currency conversion fees.",
+      "The estimator rounds the fee to cents; Patreon's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Payouts below $25 or above $2,000, which are separate scenarios.",
+      "Fees PayPal may charge to move the money on to a bank, non-USD payout currencies, and other payout methods.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "patreon-us-paypal-payout-cap",
+    label: "Patreon PayPal payout of $2,000 or more",
+    provider: "patreon",
+    taxMode: "zero-only",
+    paymentProduct: "Patreon payout",
+    channel: "PayPal",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "patreon-payout",
+        label: "PayPal payout fee",
+        rateBps: 0,
+        fixedCents: 2000,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 200_000 },
+    checkedOn: "2026-09-16",
+    sources: [patreonFees],
+    assumptions: [
+      "US creator paid in USD withdrawing a Patreon balance to PayPal, which Patreon prices at 1% with a minimum of $0.25 and a cap of $20, and a $10 minimum payout.",
+      "The payout is $2,000 or more, where 1% is at least $20, so the $20 cap is the fee.",
+      "The fee is taken from the payout amount, and Patreon's balance already reflects its platform, processing, and currency conversion fees.",
+      "The estimator rounds the fee to cents; Patreon's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Payouts below $2,000, which are separate scenarios.",
+      "Fees PayPal may charge to move the money on to a bank, non-USD payout currencies, and other payout methods.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "lemon-squeezy-us-bank-payout",
+    label: "Lemon Squeezy bank payout",
+    provider: "lemon-squeezy",
+    taxMode: "zero-only",
+    paymentProduct: "Lemon Squeezy payout",
+    channel: "bank",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "lemon-squeezy-payout",
+        label: "Bank payout fee",
+        rateBps: 0,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 5_000 },
+    checkedOn: "2026-09-16",
+    sources: [lemonFees, lemonGettingPaid],
+    assumptions: [
+      "Seller with a US bank account paid in USD through Stripe, which Lemon Squeezy lists as free.",
+      "The payout is at or above Lemon Squeezy's $50 minimum payout threshold; a smaller payout stays pending and rolls over. Lemon Squeezy does not say whether the threshold is checked before or after the payout fee.",
+      "This prices the payout only. Lemon Squeezy's platform fee, sales tax, refunds, and chargebacks were already taken before the payout.",
+    ],
+    exclusions: [
+      "Fees a bank may charge to receive the payout.",
+      "Payouts outside the US, which cost 1% by bank or 3% capped at $30 by PayPal, and currency conversion.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "lemon-squeezy-us-paypal-payout",
+    label: "Lemon Squeezy PayPal payout",
+    provider: "lemon-squeezy",
+    taxMode: "zero-only",
+    paymentProduct: "Lemon Squeezy payout",
+    channel: "PayPal",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "lemon-squeezy-payout",
+        label: "PayPal payout fee",
+        rateBps: 0,
+        fixedCents: 50,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 5_000 },
+    checkedOn: "2026-09-16",
+    sources: [lemonFees, lemonGettingPaid],
+    assumptions: [
+      "Seller with a verified US PayPal account, paid in USD for a flat $0.50 per payout.",
+      "The payout is at or above Lemon Squeezy's $50 minimum payout threshold; a smaller payout stays pending and rolls over. Lemon Squeezy does not say whether the threshold is checked before or after the payout fee.",
+      "This prices the payout only. Lemon Squeezy's platform fee, sales tax, refunds, and chargebacks were already taken before the payout.",
+    ],
+    exclusions: [
+      "Fees PayPal may charge to convert or withdraw the money afterwards.",
+      "Payouts outside the US, which cost 1% by bank or 3% capped at $30 by PayPal, and currency conversion.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "stripe-us-standard-payout",
+    label: "Stripe standard payout",
+    provider: "stripe",
+    taxMode: "zero-only",
+    paymentProduct: "Stripe payout",
+    channel: "standard",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "stripe-payout",
+        label: "Standard payout fee",
+        rateBps: 0,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    checkedOn: "2026-09-16",
+    sources: [stripePayouts, stripeInstantPayoutsFaq],
+    assumptions: [
+      "US Stripe account paying out USD to its bank account on the standard schedule, automatic or manual, for which Stripe says it does not charge a fee.",
+      "This prices the payout only. Stripe's processing fees were already taken before the balance was available.",
+    ],
+    exclusions: [
+      "Instant Payouts, a separate scenario, and multi-currency settlement, which Stripe charges for when funds settle.",
+      "Payouts that Connect platforms send to connected accounts, which the platform manages.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "stripe-us-instant-payout-minimum",
+    label: "Stripe Instant Payout from $0.50 to $33.34",
+    provider: "stripe",
+    taxMode: "zero-only",
+    paymentProduct: "Stripe payout",
+    channel: "instant",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "stripe-payout",
+        label: "Instant Payout minimum fee",
+        rateBps: 0,
+        fixedCents: 50,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 50, maxCents: 3_334 },
+    checkedOn: "2026-09-16",
+    sources: [stripePricing, stripeInstantPayouts, stripeInstantPayoutsFaq],
+    assumptions: [
+      "US Stripe Dashboard user taking an Instant Payout in USD, which Stripe prices at 1.5% of the payout amount with a minimum fee of 50¢, for payouts of 0.50 USD to 9,999 USD.",
+      "The payout is between $0.50 and $33.34, where 1.5% is at most 50¢, so the 50¢ minimum is the fee.",
+      "The amount is what reaches the debit card or bank account. Stripe asks for the amount you want to receive and shows an instant balance with the fee already deducted, so the fee comes out of the balance on top of the payout.",
+      "The account is eligible for Instant Payouts and within its daily volume limit and its limit of 10 Instant Payouts a day.",
+      "The estimator rounds the fee to cents; Stripe's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Instant Payouts outside the US, which cost 1% or 1.5% depending on the country, and currency conversion.",
+      "Instant Payouts that Connect platforms offer to connected accounts, where the platform can add its own fee.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "stripe-us-instant-payout",
+    label: "Stripe Instant Payout from $33.34 to $9,999",
+    provider: "stripe",
+    taxMode: "zero-only",
+    paymentProduct: "Stripe payout",
+    channel: "instant",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "stripe-payout",
+        label: "Instant Payout fee",
+        rateBps: 150,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 3_334, maxCents: 999_900 },
+    checkedOn: "2026-09-16",
+    sources: [stripePricing, stripeInstantPayouts, stripeInstantPayoutsFaq],
+    assumptions: [
+      "US Stripe Dashboard user taking an Instant Payout in USD, which Stripe prices at 1.5% of the payout amount with a minimum fee of 50¢, for payouts of 0.50 USD to 9,999 USD.",
+      "The payout is between $33.34 and $9,999, where 1.5% is at least 50¢.",
+      "The amount is what reaches the debit card or bank account. Stripe asks for the amount you want to receive and shows an instant balance with the fee already deducted, so the fee comes out of the balance on top of the payout.",
+      "The account is eligible for Instant Payouts and within its daily volume limit and its limit of 10 Instant Payouts a day.",
+      "The estimator rounds the fee to cents; Stripe's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Instant Payouts outside the US, which cost 1% or 1.5% depending on the country, and currency conversion.",
+      "Instant Payouts that Connect platforms offer to connected accounts, where the platform can add its own fee.",
     ],
     status: "supported",
   }),

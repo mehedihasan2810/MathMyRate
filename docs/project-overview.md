@@ -74,6 +74,7 @@ outside launch scope.
 | `/fees/kdp-royalty-calculator/`                 | Amazon KDP eBook, paperback, and hardcover royalties        |
 | `/fees/gumroad-fee-calculator/`                 | Gumroad direct/Discover take-home                           |
 | `/fees/lemon-squeezy-fee-calculator/`           | Order fees and separate payout estimate                     |
+| `/fees/payout-fee-calculator/`                  | Payout fees on Stripe, Gumroad, Patreon, and Lemon Squeezy  |
 | `/fees/stripe-vs-paypal-fees/`                  | Stripe and PayPal fees on the same sale                     |
 | `/fees/gumroad-vs-lemon-squeezy-fees/`          | Gumroad and Lemon Squeezy fees on the same sale             |
 | `/fees/digital-product-platform-fees/`          | Digital product platform fees compared on one sale          |

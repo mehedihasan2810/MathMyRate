@@ -60,7 +60,7 @@ const faq: readonly FaqEntry[] = [
   { question: "How does the $20,000 monthly threshold work?", answer: `Once your paid sales in a calendar month reach $20,000, new direct sales that month cost 5% + $0.50 instead of 10% + $0.50. It applies automatically, resets on the 1st, and a refund can take you back under the threshold. Discover sales stay at 30%. A $100 direct sale after the threshold pays ${formatUsdGrouped(highVolumeSale.feeCents)} including card processing.` },
   { question: "Does Gumroad add sales tax on top of my price?", answer: "Yes. Gumroad has been the merchant of record for all sales since January 1, 2025, and collects and remits sales tax, VAT, and GST. Its terms say prices are exclusive of indirect tax, so tax is added at checkout. This calculator covers orders with no tax collected." },
   { question: "Does Gumroad return its fee when I refund a customer?", answer: "For a normal Gumroad sale, Gumroad returns its own fee on the refunded portion and keeps only the payment-processing portion. Sales through a connected Stripe or PayPal account are handled differently." },
-  { question: "When does Gumroad pay out, and what does it cost?", answer: "You need a balance of at least $100 for a payout. Creators are typically paid weekly, after a 7-day holding period, and can choose daily, monthly, or quarterly payouts instead. PayPal payouts have a 2% processing fee, and US instant payouts cost 3%." },
+  { question: "When does Gumroad pay out, and what does it cost?", answer: "You need a balance of at least $100 for a payout. Creators are typically paid weekly, after a 7-day holding period, and can choose daily, monthly, or quarterly payouts instead. Gumroad publishes no fee for bank payouts. Eligible US creators can take an instant payout of $1 to $10,000 for 3%, and PayPal payouts, which Gumroad uses in countries without bank deposits, have a 2% fee." },
   { question: "What does Gumroad charge on PayPal sales?", answer: "Gumroad lists PayPal fees separately from its own fee but does not publish the PayPal rate on its fee page, so this calculator does not estimate PayPal sales." },
 ];
 ---
@@ -105,7 +105,7 @@ const faq: readonly FaqEntry[] = [
       <ul>
         <li><strong>Sales tax:</strong> Gumroad has been the merchant of record since January 1, 2025. It collects and remits sales tax, VAT, and GST, and adds tax on top of your price.</li>
         <li><strong>Refunds:</strong> Gumroad returns its own fee on the refunded portion of a sale and keeps the payment-processing portion.</li>
-        <li><strong>Payouts:</strong> a $100 minimum balance, usually paid weekly after a 7-day holding period. PayPal payouts have a 2% fee, and US instant payouts cost 3%.</li>
+        <li><strong>Payouts:</strong> a $100 minimum balance, usually paid weekly after a 7-day holding period, with no published fee for bank payouts. US instant payouts cost 3%, and PayPal payouts, used in countries without bank deposits, cost 2%. The <a href="/fees/payout-fee-calculator/">payout fee calculator</a> prices them.</li>
         <li><strong>Chargebacks:</strong> Gumroad's chargeback help says you cover the refunded amount and payment-processing fees and Gumroad returns its platform fee. Other Gumroad pages describe chargeback costs differently, and no dispute fee amount is published.</li>
         <li><strong>Affiliates:</strong> fees on an affiliate sale are split between you and the affiliate in proportion to the affiliate's commission.</li>
       </ul>

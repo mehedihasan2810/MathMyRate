@@ -117,6 +117,13 @@ const expectedFees = new Map([
   ["podia-us-mover-stripe-card", 820n], // 5% = 500, + 290, + 30
   ["podia-us-no-fee-stripe-card", 320n], // 290 + 30
   ["indiegogo-us-contribution", 820n], // 5% = 500, + 3% = 300, + 20
+  ["gumroad-us-instant-payout", 300n], // 3% of 10,000
+  ["patreon-us-direct-deposit-payout", 25n], // flat 25
+  ["patreon-us-paypal-payout", 100n], // 1% of 10,000
+  ["lemon-squeezy-us-bank-payout", 0n], // free in the US
+  ["lemon-squeezy-us-paypal-payout", 50n], // flat 50
+  ["stripe-us-standard-payout", 0n], // free
+  ["stripe-us-instant-payout", 150n], // 1.5% of 10,000
   ["skool-us-pro-standard", 320n], // 2.9% = 290, + 30
   ["skool-us-hobby", 1_030n], // 10% = 1000, + 30
   ["teachable-us-starter-card", 1_070n], // 7.5% = 750, + 290, + 30
@@ -133,6 +140,9 @@ const expectedFeesAt = new Map([
   ["kickstarter-us-micropledge", { grossCents: 500n, feeCents: 58n }], // 5% of 500 = 25, + 5% = 25, + 8
   ["patreon-us-pro-3-or-less", { grossCents: 300n, feeCents: 49n }], // 8% of 300 = 24, + 5% = 15, + 10
   ["skool-us-pro-large", { grossCents: 100_000n, feeCents: 3_930n }], // 3.9% of 1,000 = 3,900, + 30
+  ["patreon-us-paypal-payout-minimum", { grossCents: 2_000n, feeCents: 25n }], // 1% of 2,000 is 20, below the 25 minimum
+  ["patreon-us-paypal-payout-cap", { grossCents: 300_000n, feeCents: 2_000n }], // 1% of 300,000 is 3,000, above the 2,000 cap
+  ["stripe-us-instant-payout-minimum", { grossCents: 2_000n, feeCents: 50n }], // 1.5% of 2,000 is 30, below the 50 minimum
 ]);
 
 for (const preset of feePresets) {
@@ -372,4 +382,52 @@ test("Patreon matches its own web and iOS worked examples", () => {
 
   // $10 in the iOS app with the creator absorbing Apple's fee: $3.00 and $1.00, so $6.00.
   assert.equal(calculateFees({ preset: ios, grossCents: 1_000n }).sellerProceedsCents, 600n);
+});
+
+test("Patreon's PayPal payout bands meet at $25 and $2,000 with the same fee", () => {
+  const minimum = getFeePreset("patreon-us-paypal-payout-minimum");
+  const percent = getFeePreset("patreon-us-paypal-payout");
+  const cap = getFeePreset("patreon-us-paypal-payout-cap");
+
+  assert.ok(minimum && percent && cap);
+
+  // 1% with a $0.25 minimum and a $20 cap, checked independently on both sides of each boundary.
+  const fee = (grossCents: bigint) =>
+    [minimum, percent, cap].flatMap((preset) => {
+      try {
+        return [calculateFees({ preset, grossCents }).feeCents];
+      } catch (error) {
+        if (error instanceof GrossOutOfRangeError) return [];
+
+        throw error;
+      }
+    });
+
+  const oracle = (grossCents: bigint) => {
+    const onePercent = (grossCents + 50n) / 100n;
+
+    return onePercent < 25n ? 25n : onePercent > 2_000n ? 2_000n : onePercent;
+  };
+
+  for (const grossCents of [
+    1_000n,
+    2_449n,
+    2_450n,
+    2_499n,
+    2_500n,
+    2_501n,
+    199_949n,
+    199_950n,
+    200_000n,
+    200_001n,
+    500_000n,
+  ]) {
+    const fees = fee(grossCents);
+
+    assert.ok(fees.length > 0, `${grossCents} is covered`);
+
+    for (const value of fees) assert.equal(value, oracle(grossCents), `${grossCents}`);
+  }
+
+  assert.deepEqual(fee(999n), []);
 });

@@ -35,6 +35,7 @@ export type ToolId =
   | "kdp-royalties"
   | "gumroad-fees"
   | "lemon-squeezy-fees"
+  | "payout-fees"
   | "stripe-vs-paypal"
   | "gumroad-vs-lemon-squeezy"
   | "digital-product-fees"
@@ -355,6 +356,17 @@ export const tools: readonly Tool[] = [
     summary:
       "Order fees for US, international, PayPal, and subscription orders, and what you keep.",
     searchTerms: "lemon squeezy digital products order fee merchant of record",
+  },
+  {
+    id: "payout-fees",
+    hub: "fees",
+    href: "/fees/payout-fee-calculator/",
+    name: "Payout Fee Calculator",
+    menuLabel: "Payout fees",
+    summary:
+      "What Gumroad, Patreon, and Lemon Squeezy charge to move your balance to your bank or PayPal.",
+    searchTerms:
+      "payout fee withdraw withdrawal cash out transfer balance bank paypal direct deposit instant payout gumroad patreon lemon squeezy creator",
   },
   {
     id: "stripe-vs-paypal",

@@ -17,7 +17,8 @@ export type StandaloneEmbedId =
   | "kdp-royalties"
   | "early-payment-discount"
   | "rate-increase"
-  | "contractor-rate";
+  | "contractor-rate"
+  | "payout-fees";
 
 export type EmbeddableTool =
   | {
@@ -61,6 +62,7 @@ const standaloneEmbedIds: readonly StandaloneEmbedId[] = [
   "early-payment-discount",
   "rate-increase",
   "contractor-rate",
+  "payout-fees",
 ];
 
 const standaloneHeights: Readonly<Record<StandaloneEmbedId, number>> = {
@@ -75,6 +77,7 @@ const standaloneHeights: Readonly<Record<StandaloneEmbedId, number>> = {
   "early-payment-discount": 1_400,
   "rate-increase": 1_750,
   "contractor-rate": 2_000,
+  "payout-fees": 2_100,
 };
 
 export const embeddableTools: readonly EmbeddableTool[] = [
