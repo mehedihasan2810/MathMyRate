@@ -5,6 +5,7 @@ import FeeCalculator from "../../components/FeeCalculator.astro";
 import HourlyRateCalculator from "../../components/HourlyRateCalculator.astro";
 import KdpRoyaltyCalculator from "../../components/KdpRoyaltyCalculator.astro";
 import MarkupMarginCalculator from "../../components/MarkupMarginCalculator.astro";
+import PayoutFeeCalculator from "../../components/PayoutFeeCalculator.astro";
 import ProjectRateCalculator from "../../components/ProjectRateCalculator.astro";
 import RateIncreaseCalculator from "../../components/RateIncreaseCalculator.astro";
 import RetainerCalculator from "../../components/RetainerCalculator.astro";
@@ -43,4 +44,5 @@ const tool = findTool(embed.toolId);
   {embed.toolId === "early-payment-discount" ? <EarlyPaymentDiscountCalculator embedded /> : null}
   {embed.toolId === "rate-increase" ? <RateIncreaseCalculator embedded /> : null}
   {embed.toolId === "contractor-rate" ? <ContractorRateCalculator embedded /> : null}
+  {embed.toolId === "payout-fees" ? <PayoutFeeCalculator embedded /> : null}
 </EmbedLayout>

@@ -501,6 +501,68 @@ search over the same published rates):
   result until the comma was removed. Hours now accept separators like every
   other field.
 
+### Payout fees and guides (2026-09-16)
+
+Branch `feat/payouts-and-guides`, stacked on `feat/creator-platform-hub`:
+
+- `/guides/1099-vs-w2-pay/` and `/guides/how-to-raise-your-rates/` hand
+  readers to the 1099 vs W-2 and rate increase calculators.
+- `/fees/payout-fee-calculator/` prices taking money out of a platform, from
+  official pages checked on 2026-09-16:
+  - Stripe: standard payouts are free; US Instant Payouts cost 1.5% with a 50¢
+    minimum fee, for $0.50 to $9,999. Stripe asks for the amount to receive,
+    so the fee is added on top and the result shows what leaves the balance.
+  - Gumroad: instant payouts cost 3% for $1 to $10,000. Bank payouts have no
+    published fee, and PayPal payouts (2%) are only for countries without bank
+    deposits, so neither is estimated for US creators. A Gumroad PayPal payout
+    preset added earlier on this branch was removed for that reason.
+  - Patreon: $0.25 per direct deposit; PayPal at 1% with a $0.25 minimum, a
+    $20 cap, and a $10 minimum payout.
+  - Lemon Squeezy: free US bank payouts and $0.50 PayPal payouts, with a $50
+    minimum payout.
+- Minimum fees and caps are exact bands of linear presets that meet where the
+  percentage reaches the limit; a web test checks that each method's bands
+  chain and agree at every boundary. A flat fee on a very large payout shows
+  "under 0.01%" instead of 0.00%.
+- The Stripe, Gumroad, Patreon, and Lemon Squeezy fee pages link to it.
+
+Local checks on 2026-09-16 (preview build at `:4321`; in-app browser, Chrome
+153 over the DevTools protocol, and iOS Safari on the iPhone 17 simulator
+through Argent):
+
+| Check                                                      | Observed result                                                             |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `pnpm run lint`                                            | Passed with 0 findings                                                      |
+| `pnpm run format:check`                                    | Passed                                                                      |
+| `pnpm run check-types`                                     | Passed: 7 of 7 tasks; `astro check` 0 errors                                |
+| `pnpm run test`                                            | Passed: 151 calculator tests and 116 web tests                              |
+| Guard build (`REQUIRE_SITE_URL=true`, no site)             | Failed as intended                                                          |
+| Site build (`PUBLIC_SITE_URL=https://calculators.example`) | Passed; 87 pages; SEO audit 0 problems; 57 sitemap URLs with no embed pages |
+| Preview build                                              | Passed                                                                      |
+
+Browser evidence:
+
+- 203 amount and method combinations matched an independent calculation of
+  the fee, what reaches you, what leaves the balance, the fee share, and the
+  monthly and yearly totals, including both sides of every band boundary
+  ($24.49/$24.50/$25, $1,999.49/$1,999.50/$2,000, $33.33/$33.34/$33.67) and
+  every minimum and maximum.
+- Errors: empty, zero, negative, non-numeric, three decimals, `1e3`, amounts
+  outside a method's range (the message names the range), and payouts a month
+  of 0, 1.5, 1,001, and text. Each clears the results and disables copy;
+  typing defers errors until the field is committed.
+- Keyboard: arrow keys move through all seven methods and wrap, the amount
+  label switches to "Amount to receive" for Stripe Instant Payouts, and Enter
+  updates or focuses the problem field. Copy (with a real clipboard
+  permission), a refused clipboard, reset, print styles, the sticky bar, no
+  sideways scrolling at 360 px, and no console errors.
+- The embed is 1,934 px tall at 360 px wide and 2,082 px with an error
+  showing, so its suggested height is 2,100 px; it calculates inside a
+  cross-origin iframe.
+- iOS Safari: method taps, the decimal keypad, the sticky bar, a $33.33
+  Stripe Instant Payout ($0.50 fee, $33.83 from the balance), and the
+  $10,000 range error.
+
 ### Infrastructure and deployment
 
 Alchemy remains the infrastructure owner for the existing Cloudflare Workers,

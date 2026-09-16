@@ -438,6 +438,14 @@ const cards = [
     path: "/freelance/1099-vs-w2-calculator/",
   },
   {
+    file: "payout-fees",
+    eyebrow: "Payment fees / Payouts",
+    accent: palette.gold,
+    title: "Payout fee calculator",
+    description: "What it costs to move your balance to PayPal or your bank.",
+    path: "/fees/payout-fee-calculator/",
+  },
+  {
     file: "kdp-royalties-explained",
     eyebrow: "Guide / Self-publishing",
     accent: palette.navy,

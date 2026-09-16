@@ -1,0 +1,226 @@
+---
+import { amountCopy, payoutBreakdown, payoutFeeShare, payoutMethods } from "../data/payout-methods";
+import { formatUsdGrouped } from "../scripts/calculator-form";
+import NumberField from "./NumberField.astro";
+import ResultRow from "./ResultRow.astro";
+import StickyResult from "./StickyResult.astro";
+
+interface Props {
+  /** Embedded copies leave out the pinned result bar. */
+  embedded?: boolean;
+}
+
+const { embedded = false } = Astro.props;
+
+const [defaultMethod] = payoutMethods;
+
+if (!defaultMethod) throw new Error("No payout methods are configured.");
+
+// Methods are grouped under their platform, in the order the platforms first appear.
+const providers = [...new Set(payoutMethods.map((method) => method.provider))];
+
+const example = payoutBreakdown(defaultMethod, 100_000n);
+
+const radioCard = "flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium";
+---
+
+<div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]" data-payout-calculator>
+  <form id="payout-form" data-calculator-form class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate>
+    <div class="flex items-baseline justify-between gap-3"><h2 class="display text-2xl font-bold">Your payout</h2><span class="shrink-0 text-xs text-ink/50">USD</span></div>
+    <p id="payout-note" class="mt-3 text-sm leading-relaxed text-ink/65">{defaultMethod.note}</p>
+    <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
+    <fieldset class="mt-6">
+      <legend class="text-sm font-semibold">How are you taking the money out?</legend>
+      {providers.map((provider) => (
+        <div class="mt-3 grid gap-2">
+          <p class="mt-1 text-xs font-semibold uppercase tracking-wide text-ink/55" aria-hidden="true">{provider}</p>
+          {payoutMethods.filter((method) => method.provider === provider).map((method) => (
+            <label class={radioCard}><input type="radio" name="payoutMethod" value={method.id} class="mt-1" checked={method.id === defaultMethod.id} /><span>{method.label}<span class="mt-1 block text-xs font-normal text-ink/55">{method.description}</span></span></label>
+          ))}
+        </div>
+      ))}
+    </fieldset>
+    <div class="mt-6 grid gap-5 sm:grid-cols-2">
+      <NumberField id="payoutAmount" label={amountCopy[defaultMethod.feeCharged].label} labelTextId="payoutAmount-label" value="1,000.00" unit="usd" required help={amountCopy[defaultMethod.feeCharged].help} />
+      <NumberField id="payoutsPerMonth" label="Payouts a month (optional)" inputMode="numeric" placeholder="e.g. 4" help="Same-size payouts. Adds monthly and yearly totals." />
+    </div>
+    <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="payout-update">Update payout</button><button id="payout-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
+  </form>
+  <aside id="payout-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-navy p-7 text-paper shadow-[0_16px_45px_rgba(19,31,51,.16)] md:p-9">
+    <p class="eyebrow !text-[#c3d2ea]" data-primary-label>Reaches you</p>
+    <p id="payout-received-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.receivedCents)}</p>
+    <p id="payout-received-note" class="mt-1 text-paper/70">{amountCopy[defaultMethod.feeCharged].resultNote}</p>
+    <div class="my-7 border-t border-paper/25"></div>
+    <div class="[&>:first-child]:mt-0">
+      <ResultRow label="Payout fee" valueId="payout-fee-result" value={formatUsdGrouped(example.feeCents)} />
+      <ResultRow label="Taken from your balance" valueId="payout-balance-result" value={formatUsdGrouped(example.balanceUsedCents)} />
+      <ResultRow label="Fee share of the payout" valueId="payout-share-result" value={payoutFeeShare(example.feeCents, example.payoutCents)} />
+      <ResultRow label="Payout fees a month" valueId="payout-month-result" value="—" rowId="payout-month-row" hidden />
+      <ResultRow label="Payout fees a year" valueId="payout-year-result" value="—" rowId="payout-year-row" hidden />
+    </div>
+    <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-payout" type="button" class="rounded-full bg-paper px-4 py-2.5 text-sm font-bold text-ink">Copy result</button><button type="button" data-print class="rounded-full border border-paper/35 px-4 py-2.5 text-sm font-bold">Print</button></div>
+    <p id="payout-message" class="mt-4 text-sm text-[#ccd8ec]" aria-live="polite"></p>
+  </aside>
+</div>
+{embedded ? null : <StickyResult />}
+<noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The example shows a $1,000.00 payout by the first method listed.</p></noscript>
+
+<script>
+  import { GrossOutOfRangeError, repeatSale } from "@MathMyRate/calculators";
+  import { amountCopy, findPayoutMethod, payoutBreakdown, payoutFeeShare, type PayoutMethod } from "../data/payout-methods";
+  import {
+    type CalculationTrigger,
+    focusProblemField,
+    formatUsdGrouped,
+    InputProblem,
+    markResultsCurrent,
+    markResultsStale,
+    requireHtmlButton,
+    requireHtmlElement,
+    requireHtmlForm,
+    requireHtmlInput,
+    setFieldState,
+    shouldDeferProblem,
+    usdToCents,
+    watchCalculatorFields,
+    wholeNumber,
+  } from "../scripts/calculator-form";
+  import { describeRange } from "../scripts/fee-range";
+
+  if (document.querySelector("[data-payout-calculator]")) {
+    const form = requireHtmlForm("payout-form");
+    const panel = requireHtmlElement("payout-panel");
+    const copyButton = requireHtmlButton("copy-payout");
+    let latestCopy: string | null = null;
+
+    const setText = (id: string, text: string): void => {
+      requireHtmlElement(id).textContent = text;
+    };
+
+    const currentMethod = (): PayoutMethod =>
+      findPayoutMethod(form.querySelector<HTMLInputElement>('input[name="payoutMethod"]:checked')?.value ?? "");
+
+    const readCount = (): number | null => {
+      const value = requireHtmlInput("payoutsPerMonth").value.trim();
+
+      return value.length === 0 ? null : wholeNumber(value, "payoutsPerMonth", 1, 1_000);
+    };
+
+    const clear = (): void => {
+      for (const id of ["payout-received-result", "payout-fee-result", "payout-balance-result", "payout-share-result", "payout-month-result", "payout-year-result"]) {
+        setText(id, "—");
+      }
+
+      requireHtmlElement("payout-month-row").hidden = true;
+      requireHtmlElement("payout-year-row").hidden = true;
+      latestCopy = null;
+      markResultsCurrent(panel, []);
+      copyButton.disabled = true;
+    };
+
+    const calculate = (trigger: CalculationTrigger): void => {
+      const method = currentMethod();
+
+      const copy = amountCopy[method.feeCharged];
+
+      setText("payout-note", method.note);
+      setText("payoutAmount-label", copy.label);
+      setText("payoutAmount-help", copy.help);
+      setText("payout-received-note", copy.resultNote);
+
+      try {
+        const amount = usdToCents(requireHtmlInput("payoutAmount").value, "payoutAmount");
+
+        if (amount === 0n) throw new InputProblem("payoutAmount", "Enter an amount above zero.");
+
+        const count = readCount();
+        const payout = payoutBreakdown(method, amount);
+        const { result } = payout;
+
+        setText("payout-received-result", formatUsdGrouped(payout.receivedCents));
+        setText("payout-fee-result", formatUsdGrouped(payout.feeCents));
+        setText("payout-balance-result", formatUsdGrouped(payout.balanceUsedCents));
+        setText("payout-share-result", payoutFeeShare(payout.feeCents, payout.payoutCents));
+        requireHtmlElement("payout-month-row").hidden = count === null;
+        requireHtmlElement("payout-year-row").hidden = count === null;
+
+        let totals = "";
+
+        if (count !== null) {
+          const month = repeatSale(result, count);
+
+          setText("payout-month-result", formatUsdGrouped(month.feeCents));
+          setText("payout-year-result", formatUsdGrouped(month.feeCents * 12n));
+          totals = ` ${count} such payouts a month cost ${formatUsdGrouped(month.feeCents)} a month and ${formatUsdGrouped(month.feeCents * 12n)} a year.`;
+        }
+
+        latestCopy = `${method.copyName}: ${formatUsdGrouped(payout.feeCents)} fee, ${formatUsdGrouped(payout.receivedCents)} reaches you, ${formatUsdGrouped(payout.balanceUsedCents)} taken from your balance.${totals} Estimate; source reviewed ${result.checkedOn ?? "date not recorded"}.`;
+        markResultsCurrent(panel, [copyButton]);
+        setText(
+          "payout-message",
+          payout.receivedCents > 0n
+            ? ""
+            : payout.receivedCents === 0n
+              ? "The payout fee takes this whole payout, so nothing reaches you."
+              : "The payout fee is more than this payout.",
+        );
+        setFieldState(form);
+      } catch (error) {
+        const outside = error instanceof GrossOutOfRangeError ? error : null;
+
+        const problem =
+          error instanceof InputProblem
+            ? error
+            : new InputProblem(
+                "payoutAmount",
+                outside
+                  ? `This payout method covers amounts of ${describeRange(outside.minCents, outside.maxCents)}. Choose another method for this amount.`
+                  : "Check your inputs.",
+              );
+
+        if (shouldDeferProblem(form, trigger)) {
+          markResultsStale(panel, [copyButton]);
+
+          return;
+        }
+
+        clear();
+        setFieldState(form, problem);
+
+        if (trigger === "submit") focusProblemField(form, problem);
+        setText("payout-message", "");
+      }
+    };
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      calculate("submit");
+    });
+
+    requireHtmlButton("payout-update").addEventListener("click", () => calculate("submit"));
+
+    form.querySelectorAll('input[name="payoutMethod"]').forEach((element) => {
+      element.addEventListener("change", () => calculate("commit"));
+    });
+
+    watchCalculatorFields(form, calculate);
+
+    requireHtmlButton("payout-reset").addEventListener("click", () => {
+      form.reset();
+      calculate("commit");
+    });
+
+    copyButton.addEventListener("click", async () => {
+      if (latestCopy === null) return;
+
+      try {
+        await navigator.clipboard.writeText(latestCopy);
+        setText("payout-message", "Result copied.");
+      } catch {
+        setText("payout-message", "Copy was unavailable. Select the result to copy it manually.");
+      }
+    });
+
+    calculate("commit");
+  }
+</script>

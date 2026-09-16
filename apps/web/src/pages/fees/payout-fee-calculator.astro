@@ -1,0 +1,163 @@
+---
+import { GrossOutOfRangeError, repeatSale } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import PageByline from "../../components/PageByline.astro";
+import PayoutFeeCalculator from "../../components/PayoutFeeCalculator.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { calculatePayout, findPayoutMethod, payoutBreakdown, payoutMethods, payoutPresets } from "../../data/payout-methods";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatSaleLabel } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("payout-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const instant = findPayoutMethod("gumroad-instant");
+
+const directDeposit = findPayoutMethod("patreon-direct-deposit");
+
+const patreonPaypal = findPayoutMethod("patreon-paypal");
+
+const lemonPaypal = findPayoutMethod("lemon-squeezy-paypal");
+
+const stripeInstant = findPayoutMethod("stripe-instant");
+
+const stripeExample = payoutBreakdown(stripeInstant, 50_000n);
+
+const fee = (method: typeof instant, cents: bigint): bigint => calculatePayout(method, cents).feeCents;
+
+// A method that does not cover the amount, such as a payout under a minimum, shows a dash.
+const feeCell = (method: typeof instant, cents: bigint): string => {
+  try {
+    return formatUsdGrouped(calculatePayout(method, cents).feeCents);
+  } catch (error) {
+    if (error instanceof GrossOutOfRangeError) return "—";
+
+    throw error;
+  }
+};
+
+const payoutAmounts: readonly bigint[] = [1_000n, 5_000n, 10_000n, 100_000n, 250_000n, 1_000_000n];
+
+const amountRows = payoutMethods.map((method) => [method.label, ...payoutAmounts.map((cents) => feeCell(method, cents))]);
+
+// The oldest review date across every payout rule on the page.
+const [reviewedOn = null] = payoutMethods
+  .flatMap((method) => payoutPresets(method).flatMap((preset) => (preset.checkedOn ? [preset.checkedOn] : [])))
+  .toSorted();
+
+const fourPaypalPayouts = repeatSale(calculatePayout(patreonPaypal, 1_500n), 4);
+
+const onePaypalPayout = calculatePayout(patreonPaypal, 6_000n);
+
+const fourDeposits = repeatSale(calculatePayout(directDeposit, 25_000n), 4);
+
+const updatedOn = "2026-09-16";
+
+const description = "Estimate payout fees on Stripe, Gumroad, Patreon, and Lemon Squeezy: what it costs to move your balance to your bank, card, or PayPal.";
+
+const sources = [
+  { title: "Getting paid by Gumroad - Gumroad Help Center", url: "https://gumroad.com/help/article/13-getting-paid" },
+  { title: "Filling out payout settings - Gumroad Help Center", url: "https://gumroad.com/help/article/260-your-payout-settings-page" },
+  { title: "Creator fees overview - Patreon Help Center", url: "https://support.patreon.com/hc/en-us/articles/11111747095181-Creator-fees-overview" },
+  { title: "How payouts work - Patreon Help Center", url: "https://support.patreon.com/hc/en-us/articles/208656246-How-payouts-work" },
+  { title: "Docs: Fees • Lemon Squeezy", url: "https://docs.lemonsqueezy.com/help/getting-started/fees" },
+  { title: "Docs: Getting Paid • Lemon Squeezy", url: "https://docs.lemonsqueezy.com/help/getting-started/getting-paid" },
+  { title: "Instant Payouts for Stripe Dashboard users | Stripe Documentation", url: "https://docs.stripe.com/payouts/instant-payouts" },
+  { title: "What are Instant Payouts and who is eligible? | Stripe Support", url: "https://support.stripe.com/questions/what-are-instant-payouts-and-who-is-eligible" },
+  { title: "Receive payouts | Stripe Documentation", url: "https://docs.stripe.com/payouts" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "What is a payout fee?", answer: "It is what a platform charges to move money out of your balance to your bank, debit card, or PayPal. It comes on top of the sale fees, which were already taken before the money reached your balance." },
+  { question: "How much does Gumroad charge to pay out?", answer: `Gumroad publishes no fee for its standard bank payouts, which need a balance of at least $100. Eligible US creators can take an instant payout of $1 to $10,000 for 3%, so $500 costs ${formatUsdGrouped(fee(instant, 50_000n))}. PayPal payouts cost 2%, but Gumroad uses them only in countries without bank deposits, and its settings help says you cannot switch from bank to PayPal payouts.` },
+  { question: "Who can use Gumroad instant payouts?", answer: "Gumroad offers them only to US creators who have completed at least one payout and whose Stripe account has processed with Gumroad for at least 60 days, with an eligible debit card. They skip the 7-day holding period and pay whatever balance Stripe has already settled." },
+  { question: "How much does Patreon charge to pay out?", answer: `For a US creator paid in USD, direct deposit costs $0.25 per payout. PayPal costs 1% of the payout, at least $0.25 and at most $20, with a $10 minimum payout, so a $100 payout pays ${formatUsdGrouped(fee(patreonPaypal, 10_000n))} and any payout of $2,000 or more pays $20.` },
+  { question: "How much does Lemon Squeezy charge to pay out?", answer: `Bank payouts through Stripe are free for US bank accounts, and PayPal payouts cost a flat $0.50 for US accounts, so a $1,000 PayPal payout pays ${formatUsdGrouped(fee(lemonPaypal, 100_000n))}. The minimum payout is $50; a smaller balance stays pending and rolls over. Outside the US, bank payouts cost 1% and PayPal payouts 3% capped at $30.` },
+  { question: "How much does a Stripe Instant Payout cost?", answer: `In the US, 1.5% of the payout amount with a 50¢ minimum fee, for payouts of $0.50 to $9,999. You enter the amount you want to receive, and the fee comes out of your balance on top: receiving $500 costs ${formatUsdGrouped(stripeExample.feeCents)}, so ${formatUsdGrouped(stripeExample.balanceUsedCents)} leaves your balance. Standard payouts on your automatic or manual schedule are free.` },
+  { question: "Is it cheaper to take fewer, larger payouts?", answer: `With a flat or minimum fee, yes. Four $15 Patreon payouts to PayPal pay the $0.25 minimum each, ${formatUsdGrouped(fourPaypalPayouts.feeCents)} in all, while one $60 payout pays ${formatUsdGrouped(onePaypalPayout.feeCents)}. A percentage fee such as Gumroad's 3% instant fee costs the same share however you split it, until a cap applies.` },
+  { question: "Does the payout fee show in my earnings?", answer: "Patreon says its payout fee is not listed in the fee breakdown in your earnings dashboard; you see the fee and the net amount when you enter a withdrawal. PayPal and your bank may also charge their own fees afterwards, which this calculator does not include." },
+  { question: "Is my information saved or sent anywhere?", answer: "No. Everything is calculated in your browser, and nothing is stored." },
+];
+---
+<Layout title="Payout Fee Calculator: Stripe, Gumroad, Patreon & More | MathMyRate" description={description} ogImage="/og/payout-fees.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">What it costs to take your balance out of Stripe, Gumroad, Patreon, or Lemon Squeezy, and what reaches your bank, card, or PayPal.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={reviewedOn} />
+    <PayoutFeeCalculator />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>The payout fee calculator prices the last step between a sale and your bank: moving your platform balance out. Standard payouts from Stripe and to a US bank from Lemon Squeezy are free. Patreon charges a flat $0.25 for direct deposit and Lemon Squeezy $0.50 for PayPal. Percentages apply to faster or PayPal payouts: 1% for Patreon to PayPal, 1.5% with a 50¢ minimum for a Stripe Instant Payout, and 3% for a Gumroad instant payout. On a $1,000 payout, those are <strong>{formatUsdGrouped(fee(patreonPaypal, 100_000n))}</strong>, <strong>{formatUsdGrouped(fee(stripeInstant, 100_000n))}</strong>, and <strong>{formatUsdGrouped(fee(instant, 100_000n))}</strong>.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Choose how you are taking the money out.</li>
+        <li>Enter the balance you are paying out, or for a Stripe Instant Payout, the amount you want to receive. The sale fees were already taken before the money reached your balance, so do not subtract them again.</li>
+        <li>To see monthly and yearly totals, enter how many same-size payouts you take a month.</li>
+      </ol>
+
+      <h2>How the fee is worked out</h2>
+      <p>Each method prices a payout in one of three ways, rounded to the cent:</p>
+      <ul>
+        <li><strong>A percentage:</strong> the payout times the rate, such as 3% for a Gumroad instant payout.</li>
+        <li><strong>A flat fee:</strong> the same amount on every payout, such as $0.25 for a Patreon direct deposit.</li>
+        <li><strong>A percentage with limits:</strong> the percentage, raised to a minimum fee or lowered to a cap, such as Patreon's 1% to PayPal between $0.25 and $20.</li>
+      </ul>
+      <p>The calculator opens with a $1,000.00 Gumroad instant payout: 3% of $1,000.00 is <strong>{formatUsdGrouped(fee(instant, 100_000n))}</strong>, so <strong>{formatUsdGrouped(payoutBreakdown(instant, 100_000n).receivedCents)}</strong> reaches you. A Stripe Instant Payout works the other way round: the fee is added to the amount you receive and taken from your balance, so receiving $500.00 uses {formatUsdGrouped(stripeExample.balanceUsedCents)}.</p>
+
+      <h2>Payout fees at common amounts</h2>
+      <p>A dash means the method does not cover that amount, such as a Lemon Squeezy payout under the $50 minimum. For a Stripe Instant Payout the amount is what you receive, and the fee comes out of your balance on top.</p>
+      <DataTable caption="Payout fee by payout method and payout amount" headers={["Method", ...payoutAmounts.map(formatSaleLabel)]} rows={amountRows} />
+
+      <h2>Gumroad payouts</h2>
+      <ul>
+        <li><strong>Bank payouts:</strong> the standard way US creators are paid, usually weekly after a 7-day holding period, with a $100 minimum balance. Gumroad publishes no fee for them, so this calculator does not price them.</li>
+        <li><strong>Instant payouts:</strong> 3% for $1 to $10,000, paid within minutes to an eligible debit card. They are open to US creators who have completed at least one payout and whose Stripe account has processed with Gumroad for at least 60 days.</li>
+        <li><strong>PayPal payouts:</strong> 2%, in USD. Gumroad uses PayPal only in countries where it cannot pay to a bank, and its settings help says you cannot switch from bank to PayPal payouts, so this calculator leaves them out.</li>
+      </ul>
+
+      <h2>Patreon payouts</h2>
+      <ul>
+        <li><strong>Direct deposit:</strong> $0.25 per payout for US creators paid in USD, processed by Stripe. Creators in US territories other than Puerto Rico cannot use it.</li>
+        <li><strong>PayPal:</strong> 1% of the payout, at least $0.25 and at most $20, with a $10 minimum payout. The minimum sets the fee up to $25, and the cap from $2,000.</li>
+        <li><strong>Outside the US:</strong> Payoneer bank transfers and wallets and non-USD payout currencies have their own fees, which this calculator does not estimate.</li>
+      </ul>
+
+      <h2>Lemon Squeezy payouts</h2>
+      <ul>
+        <li><strong>Bank payouts:</strong> free for US bank accounts, sent through Stripe. Payouts are created on the 1st and 15th and paid on the 14th and 28th, and can take 1 to 5 more days to arrive.</li>
+        <li><strong>PayPal:</strong> a flat $0.50 per payout for a verified US PayPal account, always in USD.</li>
+        <li><strong>Minimum:</strong> $50. A smaller balance stays pending and rolls over to the next payout. Lemon Squeezy does not say whether the fee counts toward it.</li>
+        <li><strong>Outside the US:</strong> 1% per bank payout and 3% capped at $30 per PayPal payout, which this calculator does not estimate.</li>
+      </ul>
+
+      <h2>Stripe payouts</h2>
+      <ul>
+        <li><strong>Standard payouts:</strong> free, whether Stripe pays out automatically every business day, weekly, or monthly, or you pay out manually. Stripe describes the US standard schedule as 2 business days.</li>
+        <li><strong>Instant Payouts:</strong> 1.5% of the payout with a 50¢ minimum fee for US Stripe Dashboard users, for $0.50 to $9,999 per payout, to an eligible debit card or bank account within about 30 minutes. You enter the amount you want to receive, and the fee comes out of your balance on top.</li>
+        <li><strong>Limits:</strong> new accounts are not eligible straight away, and each account has a daily Instant Payout limit and a maximum of 10 Instant Payouts a day.</li>
+        <li><strong>Not covered:</strong> Instant Payouts outside the US, which cost 1% or 1.5% depending on the country, and Instant Payouts offered through a platform built on Stripe Connect, which can add its own fee.</li>
+      </ul>
+
+      <h2>How often to pay out</h2>
+      <p>A flat fee costs the same on every payout, so small, frequent payouts cost more in total. Taking four $250 Patreon direct deposits in a month costs {formatUsdGrouped(fourDeposits.feeCents)}, against $0.25 for a single $1,000 payout. A percentage fee grows with the payout instead, so splitting it changes little until a minimum or a cap applies. If waiting is not a problem, fewer payouts usually cost less.</p>
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId={tool.id} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Payout fees from each platform's help center and documentation, reviewed on the date shown at the top of this page. Fees charged afterwards by PayPal or your bank are not included. MathMyRate is not affiliated with any of these platforms. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

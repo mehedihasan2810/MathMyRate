@@ -13,6 +13,41 @@ export interface ChangelogEntry {
 export const changelog: readonly ChangelogEntry[] = [
   {
     date: "2026-09-16",
+    title: "Payout fee calculator added",
+    changes: [
+      "Stripe: standard payouts are free, and US Instant Payouts cost 1.5% of the payout with a 50¢ minimum fee, for payouts of $0.50 to $9,999. Stripe asks for the amount you want to receive, so the fee is added to that amount and taken from the balance.",
+      "Gumroad: instant payouts cost 3% for $1 to $10,000 and are open to eligible US creators. Gumroad publishes no fee for bank payouts, which are not estimated. PayPal payouts cost 2% but are only for countries without bank deposits, so they are not estimated for US creators either.",
+      "Patreon: for US creators paid in USD, direct deposit costs $0.25 per payout, and PayPal costs 1% with a $0.25 minimum and a $20 cap, with a $10 minimum payout.",
+      "Lemon Squeezy: payouts to a US bank account are free and PayPal payouts cost a flat $0.50 for US accounts, with a $50 minimum payout. Payouts outside the US are not estimated.",
+      "A fee with a minimum or a cap is priced in bands that meet at the amount where the percentage reaches the limit, so each band is an exact linear fee.",
+    ],
+    sources: [
+      { title: "Pricing & Fees | Stripe", url: "https://stripe.com/pricing" },
+      {
+        title: "Instant Payouts for Stripe Dashboard users | Stripe Documentation",
+        url: "https://docs.stripe.com/payouts/instant-payouts",
+      },
+      { title: "Receive payouts | Stripe Documentation", url: "https://docs.stripe.com/payouts" },
+      {
+        title: "Getting paid by Gumroad - Gumroad Help Center",
+        url: "https://gumroad.com/help/article/13-getting-paid",
+      },
+      {
+        title: "Creator fees overview - Patreon Help Center",
+        url: "https://support.patreon.com/hc/en-us/articles/11111747095181-Creator-fees-overview",
+      },
+      {
+        title: "Docs: Fees • Lemon Squeezy",
+        url: "https://docs.lemonsqueezy.com/help/getting-started/fees",
+      },
+      {
+        title: "Docs: Getting Paid • Lemon Squeezy",
+        url: "https://docs.lemonsqueezy.com/help/getting-started/getting-paid",
+      },
+    ],
+  },
+  {
+    date: "2026-09-16",
     title: "Skool and Teachable calculators added",
     changes: [
       "Skool: added its transaction fees, which are the whole charge because Skool processes payments itself and a creator cannot use their own Stripe account. The Pro plan charges 2.9% + 30¢ up to $899 and 3.9% + 30¢ from $900, up to Skool's $100,000 limit; the Hobby plan charges 10% + 30¢. Results match Skool's own example of a $999 price paying out $959.74. Skool's pricing page shows only 2.9% and 10%, without the 30¢ or the higher band. Charges between $899 and $900 fall outside both bands and are refused.",

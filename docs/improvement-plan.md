@@ -258,6 +258,8 @@ assumptions, exclusions, and inverse tests:
 
 **Update 2026-09-16** (branch `feat/creator-platform-hub`). Added a creator platform comparison with a monthly-cost table that counts plan prices, and the Skool and Teachable calculators. Skool's $899/$900 band gap and Teachable's conflicting international card rate are both refused rather than guessed. The fees hub table now shows a dash where a default scenario does not cover the amount.
 
+**Update 2026-09-16** (branch `feat/payouts-and-guides`). Added a payout fee calculator for Stripe, Gumroad, Patreon, and Lemon Squeezy, plus guides to 1099 vs W-2 pay and raising rates. Minimum fees and caps (Patreon's PayPal payouts, Stripe's 50¢ Instant Payout minimum) are priced as exact bands. Stripe's Instant Payout fee is added on top of the amount received, as Stripe's Dashboard asks for the amount to receive. Gumroad's bank payouts have no published fee, and its PayPal payouts apply only in countries without bank deposits, so neither is estimated for US creators.
+
 Add tools inside the niche so topical authority compounds. Verify demand in
 Search Console and Keyword Planner before building; do not publish a tool
 without the eight content sections. Candidates, grouped by hub:
@@ -280,7 +282,7 @@ Platform and marketplace fees (all from official pricing pages)
 - Kickstarter and Indiegogo fees (both done; Indiegogo 2026-09-16).
 - Amazon KDP royalty.
 - Payout estimators where a provider documents them (Lemon Squeezy, Gumroad,
-  Stripe Instant Payouts).
+  Stripe Instant Payouts) (done 2026-09-16, with Patreon).
 
 Comparisons and hubs
 
