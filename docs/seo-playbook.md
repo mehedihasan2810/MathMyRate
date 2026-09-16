@@ -172,23 +172,46 @@ ads ship. Ad slots have fixed reserved heights.
 
 ## Keyword map for existing pages
 
-Volumes are not recorded here; check them in Search Console and Keyword
-Planner before prioritizing. Primary first, then secondary phrases to cover
-in headings and FAQ.
+From [keyword research](keyword-research.md) on 2026-09-16: free autocomplete
+and page-one checks, without search volumes. Confirm volumes in Keyword
+Planner and Search Console before large changes. Primary first, then
+secondary phrases to cover in the title, headings, and FAQ. Competition: E
+easier, M medium, H hard.
 
-| Page                    | Primary                           | Secondary                                                                                                                |
-| ----------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Stripe fee calculator   | stripe fee calculator             | stripe fees, stripe processing fee, how much does stripe charge, stripe fee 2.9 + 30, stripe international fee           |
-| PayPal fee calculator   | paypal fee calculator             | paypal fees, paypal goods and services fee, paypal invoice fee, paypal international fee, paypal fee for receiving money |
-| Gumroad fee calculator  | gumroad fee calculator            | gumroad fees, gumroad discover fee, gumroad 10%, gumroad payout                                                          |
-| Lemon Squeezy fee calc. | lemon squeezy fee calculator      | lemon squeezy fees, lemon squeezy pricing, lemon squeezy vs gumroad, merchant of record fees                             |
-| Hourly rate calculator  | freelance hourly rate calculator  | freelance rate calculator, contractor hourly rate calculator, how much to charge per hour freelance, day rate calculator |
-| Project rate calculator | project rate calculator           | freelance project quote calculator, fixed price quote calculator, project cost estimate with contingency                 |
-| Fees hub                | payment processing fee calculator | platform fee calculator, digital product fees compared                                                                   |
-| Freelance hub           | freelance pricing calculator      | freelance rate tools, what to charge as a freelancer                                                                     |
+| Page                       | Primary                            | Secondary                                                                                             | Comp. |
+| -------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------- | ----- |
+| Stripe fee calculator      | stripe fee calculator              | stripe fees, how much does stripe charge, stripe fees per transaction, does stripe charge for payouts | H     |
+| PayPal fee calculator      | paypal fee calculator              | paypal fees, how are paypal fees calculated, paypal fees for receiving money                          | M     |
+| Square fee calculator      | square fees                        | square fee calculator, how much are square fees, square fees per transaction, manual entry            | M     |
+| Etsy fee calculator        | etsy fee calculator                | etsy fees, etsy fees explained, etsy fees per transaction, for digital products                       | H     |
+| eBay fee calculator        | ebay fee calculator                | ebay fees, how much fees ebay take, ebay fees for selling                                             | H     |
+| Upwork fee calculator      | upwork fee calculator              | what fees does upwork charge, what percentage does upwork take, upwork fees for clients               | M     |
+| Fiverr fee calculator      | fiverr fees                        | fiverr fee calculator, fiverr fees for sellers, fiverr fee for buyers                                 | E     |
+| Kickstarter fee calculator | kickstarter fees                   | kickstarter fee calculator, how much does kickstarter charge, kickstarter processing fee              | E     |
+| Indiegogo fee calculator   | indiegogo fees                     | what percentage does indiegogo take, indiegogo fee calculator                                         | E     |
+| Patreon fee calculator     | patreon fees                       | patreon fees explained, patreon service fee, patreon fees for creators                                | E     |
+| Ko-fi fee calculator       | ko-fi fees                         | ko-fi fee calculator, does ko-fi take fees                                                            | E     |
+| Substack fee calculator    | substack fees                      | how much does substack charge, how much does substack cost                                            | E     |
+| Payhip fee calculator      | payhip fees                        | how much does payhip charge, payhip fees calculator, payhip transaction fees                          | E     |
+| Podia fee calculator       | podia pricing                      | how much does podia cost, podia fees                                                                  | M     |
+| Whop fee calculator        | whop fees                          | whop fees calculator, whop fees vs stripe, whop processing fees, whop payout fees                     | E     |
+| Skool fee calculator       | skool fees                         | how much does skool charge, how much does skool cost                                                  | E     |
+| Teachable fee calculator   | teachable fees                     | teachable transaction fees, teachable processing fees                                                 | M     |
+| Gumroad fee calculator     | gumroad fees                       | gumroad pricing, gumroad transaction fee, gumroad fee calculator                                      | E     |
+| Lemon Squeezy fee calc.    | lemon squeezy fees                 | lemon squeezy pricing, lemon squeezy fee calculator                                                   | E     |
+| KDP royalty calculator     | kdp royalty calculator             | kdp royalty rate, kdp royalties explained, kdp royalty calculator paperback                           | M     |
+| Payout fee calculator      | payout fee calculator              | does stripe charge for payouts, stripe instant payout fee, whop payout fees                           | E     |
+| Hourly rate calculator     | freelance hourly rate calculator   | freelance rate calculator, how to calculate freelance rate, day rate calculator                       | M     |
+| Project rate calculator    | freelance project rate calculator  | project cost calculator, project quote calculator                                                     | M     |
+| Retainer calculator        | retainer fee calculator            | how much to charge for a retainer, retainer fee, monthly retainer calculator                          | E     |
+| Markup and margin          | markup and margin calculator       | markup vs margin, markup vs margin example                                                            | H     |
+| Salary to hourly           | salary to hourly calculator        | how to convert salary to hourly, hourly to salary calculator                                          | H     |
+| Early payment discount     | early payment discount calculator  | 2/10 net 30, 2/10 net 30 formula, what is an early payment discount                                   | M     |
+| Rate increase              | freelance rate increase calculator | how to raise your rates, hourly rate increase calculator                                              | H     |
+| 1099 vs W-2                | 1099 vs w2 calculator              | 1099 vs w2 pay difference calculator, independent contractor rate calculator                          | M     |
+| Comparisons                | "X vs Y fees"                      | See the comparison table in keyword research                                                          | E–H   |
 
-Comparison pages to add: "stripe vs paypal fees", "gumroad vs lemon
-squeezy", "cheapest platform to sell digital products".
+Pages to add are ranked in keyword research, section 3.
 
 ## Ads and consent readiness
 
