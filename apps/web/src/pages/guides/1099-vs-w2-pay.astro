@@ -1,0 +1,65 @@
+---
+import { compareContractorWithEmployee, payrollTax2026 } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import GuideTools from "../../components/GuideTools.astro";
+import PageByline from "../../components/PageByline.astro";
+import { findGuide, guideBreadcrumbs } from "../../data/guides";
+import Layout from "../../layouts/Layout.astro";
+import { formatPercentBps, formatUsdGrouped } from "../../scripts/calculator-form";
+
+const guide = findGuide("contractor-vs-employee-pay");
+
+const breadcrumbs = guideBreadcrumbs(guide.id);
+
+const billableMinutesPerYear = 110_400;
+
+function match(salaryCents: bigint, benefitsCents: bigint, businessExpensesCents: bigint) {
+  return compareContractorWithEmployee({ salaryCents, benefitsCents, businessExpensesCents, filingStatus: "single", billableMinutesPerYear });
+}
+
+const taxOnly = match(10_000_000n, 0n, 0n);
+
+const withBenefits = match(10_000_000n, 1_200_000n, 300_000n);
+
+const salaryRows = [6_000_000n, 8_000_000n, 10_000_000n, 15_000_000n, 20_000_000n].map((salaryCents) => {
+  const bare = match(salaryCents, 0n, 0n);
+  const loaded = match(salaryCents, (salaryCents * 12n) / 100n, 300_000n);
+
+  return [formatUsdGrouped(salaryCents), formatUsdGrouped(bare.contractorRevenueCents), formatUsdGrouped(loaded.contractorRevenueCents), formatUsdGrouped(loaded.hourlyRateCents ?? 0n)];
+});
+---
+<Layout title="1099 vs W-2 Pay: What a Contract Has to Cover | MathMyRate" description={guide.description} ogImage="/og/contractor-vs-employee-pay.png" breadcrumbs={breadcrumbs} article={{ headline: guide.title, publishedOn: guide.publishedOn, updatedOn: guide.updatedOn }}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 max-w-3xl text-3xl font-bold md:text-4xl">{guide.title}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">The same dollar figure is worth less on a 1099. Here is what changes, and how much a contract has to pay to leave you where a salary did.</p>
+    <PageByline updatedOn={guide.updatedOn} />
+    <article class="guide mt-10 max-w-3xl">
+      <h2>The short version</h2>
+      <p>A $100,000 salary and a $100,000 contract are not the same deal. As an employee you pay half of Social Security and Medicare and your employer pays the other half. As a contractor you pay both halves as self-employment tax. Matching that $100,000 salary on payroll tax alone takes <strong>{formatUsdGrouped(taxOnly.contractorRevenueCents)}</strong> of contract income, which is {formatPercentBps(taxOnly.revenueOverSalaryBps ?? 0n)} of the salary. Add $12,000 of benefits you now buy yourself and $3,000 of business costs, and the target becomes <strong>{formatUsdGrouped(withBenefits.contractorRevenueCents)}</strong>, or {formatUsdGrouped(withBenefits.hourlyRateCents ?? 0n)} an hour over 1,840 billable hours.</p>
+
+      <h2>What actually changes</h2>
+      <ul>
+        <li><strong>Payroll tax doubles for you.</strong> An employee pays 6.2% Social Security up to ${(Number(payrollTax2026.socialSecurityWageBaseCents) / 100).toLocaleString("en-US")} of wages and 1.45% Medicare, and the employer matches it. A contractor pays 15.3% on 92.35% of net earnings, with Social Security stopping at the same wage base.</li>
+        <li><strong>Benefits become a cost.</strong> Health insurance premiums, a retirement match, and paid leave were part of the job's value. On a contract you buy them, or go without.</li>
+        <li><strong>Unbilled hours multiply.</strong> Employment pays for holidays, sick days, training, and the hours between projects. A contract pays only for hours you invoice.</li>
+        <li><strong>Costs are yours.</strong> Equipment, software, insurance, and an accountant come out of the rate.</li>
+      </ul>
+
+      <h2>What a contract has to pay</h2>
+      <p>Each row starts from a salary and shows the contract income that matches it: first on payroll tax alone, then counting benefits worth 12% of the salary and $3,000 of business costs. The hourly rate assumes 1,840 billable hours a year, which is 40 a week for 46 weeks.</p>
+      <DataTable caption="Contract income and hourly rate that match a salary" headers={["Salary", "Matching income, tax only", "With benefits and costs", "Hourly rate"]} rows={salaryRows} />
+
+      <h2>The one number people forget</h2>
+      <p>Billable hours. A salary pays for roughly 2,080 hours a year whether or not every one is productive. Few contractors bill 2,080 hours: 1,840 is already an optimistic year, and a realistic one after sales, admin, and gaps is lower still. Dividing by a smaller number is what turns a modest income target into a rate that looks high.</p>
+
+      <h2>Work out your own numbers</h2>
+      <p>The <a href="/freelance/1099-vs-w2-calculator/">1099 vs W-2 calculator</a> does the tax comparison with your salary, benefits, filing status, and billable hours. If you are setting a rate from scratch rather than matching an offer, the <a href="/freelance/hourly-rate-calculator/">hourly rate calculator</a> starts from what you need to take home and your working year. To turn a contract rate back into a comparable salary figure, use the <a href="/freelance/salary-to-hourly-calculator/">salary to hourly calculator</a>.</p>
+
+      <h2>What this does not cover</h2>
+      <p>Income tax, which depends on where you live and how you file; the deduction for half of the self-employment tax; unemployment insurance and workers' compensation, which an employer carries; and the value of job security. Rates come from published IRS and Social Security figures for {payrollTax2026.year}; this is a planning estimate, not tax advice.</p>
+    </article>
+    <GuideTools guide={guide.id} />
+  </main>
+</Layout>

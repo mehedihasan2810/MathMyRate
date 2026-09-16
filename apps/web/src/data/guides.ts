@@ -13,7 +13,9 @@ export type GuideId =
   | "stripe-fees-explained"
   | "gumroad-threshold"
   | "kdp-royalties-explained"
-  | "kickstarter-reward-pricing";
+  | "kickstarter-reward-pricing"
+  | "contractor-vs-employee-pay"
+  | "raising-your-rates";
 
 export interface Guide {
   readonly id: GuideId;
@@ -32,6 +34,30 @@ export interface Guide {
 export const guidesIndex: Crumb = { name: "Guides", href: "/guides/" };
 
 export const guides: readonly Guide[] = [
+  {
+    id: "contractor-vs-employee-pay",
+    href: "/guides/1099-vs-w2-pay/",
+    title: "1099 vs W-2: What Contract Work Has to Pay",
+    summary:
+      "Why the same money is worth less as a contractor, and how much a contract has to pay to match a salary.",
+    description:
+      "What a contractor must charge to match a salary: both halves of Social Security and Medicare, the benefits you now buy, and the hours you cannot bill.",
+    publishedOn: "2026-09-16",
+    updatedOn: "2026-09-16",
+    tools: ["contractor-rate", "hourly-rate", "salary-to-hourly"],
+  },
+  {
+    id: "raising-your-rates",
+    href: "/guides/how-to-raise-your-rates/",
+    title: "How to Raise Your Rates Without Earning Less",
+    summary:
+      "What a raise adds over a year, how much work you could lose and still break even, and how to stage an increase.",
+    description:
+      "How to raise your freelance rates: what a raise adds each month, how many billable hours you could lose and still earn the same, and how to stage it.",
+    publishedOn: "2026-09-16",
+    updatedOn: "2026-09-16",
+    tools: ["rate-increase", "hourly-rate", "project-rate"],
+  },
   {
     id: "markup-vs-margin",
     href: "/guides/markup-vs-margin/",

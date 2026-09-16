@@ -270,6 +270,22 @@ const cards = [
     path: "/fees/teachable-vs-podia-fees/",
   },
   {
+    file: "contractor-vs-employee-pay",
+    eyebrow: "Guide / Contract work",
+    accent: palette.navy,
+    title: "1099 vs W-2: what contract work has to pay",
+    description: "Payroll tax, benefits, and the hours you cannot bill.",
+    path: "/guides/1099-vs-w2-pay/",
+  },
+  {
+    file: "raising-your-rates",
+    eyebrow: "Guide / Freelance pricing",
+    accent: palette.gold,
+    title: "How to raise your rates without earning less",
+    description: "What a raise adds, and how much work you could lose.",
+    path: "/guides/how-to-raise-your-rates/",
+  },
+  {
     file: "kdp-royalties",
     eyebrow: "Royalties / Amazon KDP",
     accent: palette.navy,

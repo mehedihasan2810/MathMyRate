@@ -1,0 +1,65 @@
+---
+import { raiseRateByPercent } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import GuideTools from "../../components/GuideTools.astro";
+import PageByline from "../../components/PageByline.astro";
+import { findGuide, guideBreadcrumbs } from "../../data/guides";
+import Layout from "../../layouts/Layout.astro";
+import { formatPercentBps, formatUsdGrouped } from "../../scripts/calculator-form";
+
+const guide = findGuide("raising-your-rates");
+
+const breadcrumbs = guideBreadcrumbs(guide.id);
+
+const billableMinutesPerMonth = 6_000;
+
+const ten = raiseRateByPercent({ currentRateCents: 8_000n, increaseBps: 1_000, billableMinutesPerMonth });
+
+const twentyFive = raiseRateByPercent({ currentRateCents: 8_000n, increaseBps: 2_500, billableMinutesPerMonth });
+
+function share(bps: bigint | null): string {
+  return bps === null ? "None" : formatPercentBps(bps);
+}
+
+const raiseRows = [500, 1_000, 1_500, 2_000, 2_500, 5_000].map((increaseBps) => {
+  const result = raiseRateByPercent({ currentRateCents: 8_000n, increaseBps, billableMinutesPerMonth });
+
+  return [`${increaseBps / 100}%`, formatUsdGrouped(result.newRateCents), formatUsdGrouped(result.yearlyChangeCents), share(result.hoursLossShareBps)];
+});
+---
+<Layout title="How to Raise Your Freelance Rates | MathMyRate" description={guide.description} ogImage="/og/raising-your-rates.png" breadcrumbs={breadcrumbs} article={{ headline: guide.title, publishedOn: guide.publishedOn, updatedOn: guide.updatedOn }}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 max-w-3xl text-3xl font-bold md:text-4xl">{guide.title}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">A raise is easier to justify once you know two numbers: what it adds over a year, and how much work you could lose before you are worse off.</p>
+    <PageByline updatedOn={guide.updatedOn} />
+    <article class="guide mt-10 max-w-3xl">
+      <h2>The arithmetic that makes it easier</h2>
+      <p>Raising $80 an hour by 10% gives <strong>{formatUsdGrouped(ten.newRateCents)}</strong>. Over 100 billable hours a month that is {formatUsdGrouped(ten.monthlyChangeCents)} more a month and <strong>{formatUsdGrouped(ten.yearlyChangeCents)}</strong> more a year. The part people miss: you could lose <strong>{share(ten.hoursLossShareBps)}</strong> of those hours and still earn exactly what you earn now.</p>
+      <p>That share is always smaller than the raise, because it is measured against the new rate. A 25% raise, for example, covers losing {share(twentyFive.hoursLossShareBps)} of your hours, not 25%.</p>
+
+      <h2>What each raise is worth</h2>
+      <p>From $80 an hour over 100 billable hours a month.</p>
+      <DataTable caption="New rate, yearly change, and the share of hours you could lose" headers={["Raise", "New rate", "Added per year", "Hours you could lose"]} rows={raiseRows} />
+
+      <h2>Check the floor first</h2>
+      <p>A raise is only meaningful against the rate your year actually needs. Work out the floor from your target income, costs, and the share of your time you can bill; if your current rate is below that floor, the question is not whether to raise it but by how much. The <a href="/freelance/hourly-rate-calculator/">hourly rate calculator</a> does that calculation.</p>
+
+      <h2>How to stage an increase</h2>
+      <ol>
+        <li><strong>New clients first.</strong> Quote the new rate on the next proposal. Nothing has to be renegotiated, and you learn quickly whether the market accepts it.</li>
+        <li><strong>Then the clients you would replace.</strong> If losing a client would not hurt, that client is where the new rate should go next.</li>
+        <li><strong>Give notice on ongoing work.</strong> Retainers and long projects usually move at a renewal or a milestone, with the new rate stated in writing before it applies.</li>
+        <li><strong>Change the package, not just the price.</strong> A different scope, faster turnaround, or a clearer deliverable gives a raise something to attach to.</li>
+      </ol>
+
+      <h2>Watch the fixed costs</h2>
+      <p>Payment fees and unpaid time do not shrink when your rate goes up, so more of a higher invoice reaches you. Quote fixed-price work from the new rate as well: the <a href="/freelance/project-rate-calculator/">project rate calculator</a> turns an hourly rate, hours, and contingency into a quote, so a raise flows through to projects instead of only to hourly work.</p>
+
+      <h2>Run your own numbers</h2>
+      <p>The <a href="/freelance/rate-increase-calculator/">rate increase calculator</a> takes your current rate, the raise or a target rate, and your billable hours, and shows the monthly and yearly change plus the hours you could lose. It also works in reverse, if a client asks for a discount and you want to know what agreeing costs you.</p>
+    </article>
+    <GuideTools guide={guide.id} />
+  </main>
+</Layout>
