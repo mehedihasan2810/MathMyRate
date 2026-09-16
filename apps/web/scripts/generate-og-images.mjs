@@ -350,6 +350,14 @@ const cards = [
     path: "/freelance/rate-increase-calculator/",
   },
   {
+    file: "contractor-rate",
+    eyebrow: "Freelance / 1099 vs W-2",
+    accent: palette.navy,
+    title: "1099 vs W-2 rate calculator",
+    description: "The contractor income that matches a salary after payroll tax.",
+    path: "/freelance/1099-vs-w2-calculator/",
+  },
+  {
     file: "kdp-royalties-explained",
     eyebrow: "Guide / Self-publishing",
     accent: palette.navy,

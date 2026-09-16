@@ -299,6 +299,64 @@ On branch `feat/creator-comparisons-freelance-tools`, based on `0e45b05`:
   the sourced presets; Payhip joins `/fees/digital-product-platform-fees/`.
 - About, Methodology, Privacy, and Terms have descriptive titles.
 
+### Contractor versus employee rates (2026-09-16)
+
+On branch `feat/contractor-rate-more-platforms`, based on the comparisons
+branch:
+
+- `packages/calculators/src/payroll.ts` holds one year of published US payroll
+  figures with their IRS and SSA sources: the 2026 Social Security wage base of
+  $184,500, 6.2% Social Security and 1.45% Medicare for the employee and again
+  for the employer, self-employment tax of 15.3% (12.4% and 2.9%) on 92.35% of
+  net earnings once that share reaches $400, and the 0.9% Additional Medicare
+  Tax above $200,000, $250,000, and $125,000 by filing status.
+- `compareContractorWithEmployee` finds the least contractor net earnings whose
+  after-tax amount matches a salary's after-tax amount plus the value of
+  employer benefits, then adds business expenses for the income to invoice and
+  divides by billable hours for an hourly rate.
+- Income tax, the deduction for half of the self-employment tax, unemployment
+  insurance, and workers' compensation are out of scope, and the page says so.
+- Hours fields now accept thousands separators; "1,840" was rejected before,
+  which left the new calculator showing no result until a user removed it.
+
+Local checks on 2026-09-16 for the 1099 vs W-2 rate calculator (branch
+`feat/contractor-rate-more-platforms`; browser work on the preview build at
+`:4321`, in Chrome 153 over the DevTools protocol and in iOS Safari on the
+iPhone 17 simulator through Argent):
+
+| Check                                                      | Observed result                                                                                                                                                |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run lint`                                            | Passed with 0 findings                                                                                                                                         |
+| `pnpm run format:check`                                    | Passed                                                                                                                                                         |
+| `pnpm run check-types`                                     | Passed: 7 of 7 tasks; `astro check` 0 errors                                                                                                                   |
+| `pnpm run test`                                            | Passed: 127 calculator tests (11 for payroll: published rates, the wage base, filing-status thresholds, the $400 floor, and matching income) and 110 web tests |
+| Guard build (`REQUIRE_SITE_URL=true`, no site)             | Failed as intended                                                                                                                                             |
+| Site build (`PUBLIC_SITE_URL=https://calculators.example`) | Passed; 70 pages; SEO audit 0 problems; 46 sitemap URLs with no embed pages                                                                                    |
+| Preview build                                              | Passed; 70 pages                                                                                                                                               |
+
+Browser evidence (every figure checked against an independent brute-force
+search over the same published rates):
+
+- A $100,000 salary with $12,000 of benefits and $3,000 of expenses needs
+  $124,520.26 of contractor income, or $67.68 an hour over 1,840 billable
+  hours; the salary leaves $92,350.00 after $7,650.00 of payroll tax, the
+  contractor pays $17,170.26 of self-employment tax, and the employer spends
+  $119,650.00. Without benefits or expenses an $80,000 salary needs
+  $86,036.58, which is 107.55% of the salary.
+- Filing status changes only the Additional Medicare Tax: at $300,000 a single
+  filer's payroll tax is $16,689.00, married filing jointly $16,239.00, and
+  married filing separately $17,364.00, and the page says the threshold
+  assumes no other household wages.
+- Errors: a zero, empty, or non-numeric salary; zero, 0.01, and 83,334
+  billable hours. Each clears the results and disables copy.
+- Copy, reset, the sticky bar, no sideways scrolling at 360 px, and no console
+  errors. In iOS Safari the filing-status picker opens and selects, and the
+  sticky bar keeps the result.
+- A bug this pass found: hours fields rejected thousands separators, so the
+  calculator's own default of "1,840" billable hours showed an error and no
+  result until the comma was removed. Hours now accept separators like every
+  other field.
+
 ### Infrastructure and deployment
 
 Alchemy remains the infrastructure owner for the existing Cloudflare Workers,

@@ -1,4 +1,5 @@
 ---
+import ContractorRateCalculator from "../../components/ContractorRateCalculator.astro";
 import EarlyPaymentDiscountCalculator from "../../components/EarlyPaymentDiscountCalculator.astro";
 import FeeCalculator from "../../components/FeeCalculator.astro";
 import HourlyRateCalculator from "../../components/HourlyRateCalculator.astro";
@@ -41,4 +42,5 @@ const tool = findTool(embed.toolId);
   {embed.toolId === "kdp-royalties" ? <KdpRoyaltyCalculator embedded /> : null}
   {embed.toolId === "early-payment-discount" ? <EarlyPaymentDiscountCalculator embedded /> : null}
   {embed.toolId === "rate-increase" ? <RateIncreaseCalculator embedded /> : null}
+  {embed.toolId === "contractor-rate" ? <ContractorRateCalculator embedded /> : null}
 </EmbedLayout>

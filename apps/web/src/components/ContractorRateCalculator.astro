@@ -1,0 +1,215 @@
+---
+import { compareContractorWithEmployee } from "@MathMyRate/calculators";
+import { formatPercentBps, formatUsdGrouped } from "../scripts/calculator-form";
+import NumberField from "./NumberField.astro";
+import ResultRow from "./ResultRow.astro";
+import StickyResult from "./StickyResult.astro";
+
+interface Props {
+  /** Embedded copies leave out the pinned result bar. */
+  embedded?: boolean;
+}
+
+const { embedded = false } = Astro.props;
+
+const rowLabel = "text-[#f3f5fa]/80";
+
+const example = compareContractorWithEmployee({ salaryCents: 10_000_000n, benefitsCents: 1_200_000n, businessExpensesCents: 300_000n, filingStatus: "single", billableMinutesPerYear: 110_400 });
+---
+
+<div class="mt-8 grid gap-8 lg:grid-cols-[1fr_.85fr]">
+  <form id="contractor-form" data-calculator-form class="print-card rounded-[1.5rem] border border-line bg-[#fafbfd] p-6 shadow-[0_16px_45px_rgba(19,31,51,.08)] md:p-8" novalidate>
+    <div class="flex items-baseline justify-between gap-3"><h2 class="display text-2xl font-bold">The job offer</h2><span class="shrink-0 text-xs text-ink/50">USD, {example.year} rates</span></div>
+    <div data-error-summary role="alert" hidden class="mt-5 rounded-lg border border-[#d99c89] bg-[#fff0e9] p-3 text-sm text-[#8f3c2d]"></div>
+    <div class="mt-7 grid gap-5 sm:grid-cols-2">
+      <NumberField id="salary" label="W-2 salary" value="100,000.00" unit="usd" required help="The yearly salary before tax." />
+      <NumberField id="benefits" label="Benefits value a year" value="12,000.00" unit="usd" required help="What the employer's insurance, retirement match, and other benefits are worth to you." />
+      <NumberField id="expenses" label="Business expenses a year" value="3,000.00" unit="usd" required help="What you would spend to do the same work as a contractor." />
+      <div class="text-sm">
+        <label for="filingStatus" class="font-semibold">Filing status<span class="text-[#a44631]" aria-hidden="true"> *</span></label>
+        <select id="filingStatus" data-field="filingStatus" class="mt-2 w-full rounded-lg border border-line bg-paper px-3 py-3 text-base font-medium">
+          <option value="single" selected>Single</option>
+          <option value="married-jointly">Married filing jointly</option>
+          <option value="married-separately">Married filing separately</option>
+          <option value="head-of-household">Head of household</option>
+        </select>
+        <p id="filingStatus-help" class="mt-1 text-xs text-ink/55">Sets the Additional Medicare Tax threshold.</p>
+        <span id="filingStatus-error" class="field-error" role="alert"></span>
+      </div>
+      <NumberField id="billableHours" label="Billable hours a year" value="1,840" required help="Hours you would invoice. 1,840 is 40 a week for 46 weeks." />
+    </div>
+    <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="contractor-update">Update comparison</button><button id="contractor-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
+  </form>
+  <aside id="contractor-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
+    <p class="eyebrow !text-[#f2e3bd]" data-primary-label>Contractor income to match</p><p id="contractor-revenue-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.contractorRevenueCents)}</p><p class="mt-1 text-[#f3f5fa]/80">a year, before income tax</p>
+    <div class="my-7 border-t border-[#f3f5fa]/30"></div>
+    <div class="[&>:first-child]:mt-0">
+      <ResultRow label="Hourly rate to invoice" valueId="contractor-hourly-result" value={formatUsdGrouped(example.hourlyRateCents ?? 0n)} labelClass={rowLabel} />
+      <ResultRow label="Salary after Social Security and Medicare" valueId="employee-after-result" value={formatUsdGrouped(example.employee.afterTaxCents)} labelClass={rowLabel} />
+      <ResultRow label="Package to match, with benefits" valueId="package-result" value={formatUsdGrouped(example.employeePackageCents)} labelClass={rowLabel} />
+      <ResultRow label="Your payroll tax as an employee" valueId="employee-tax-result" value={formatUsdGrouped(example.employee.employeeTaxCents)} labelClass={rowLabel} />
+      <ResultRow label="Self-employment tax as a contractor" valueId="se-tax-result" value={formatUsdGrouped(example.contractor.selfEmploymentTaxCents)} labelClass={rowLabel} />
+      <ResultRow label="Net earnings after expenses" valueId="net-earnings-result" value={formatUsdGrouped(example.contractor.netEarningsCents)} labelClass={rowLabel} />
+      <ResultRow label="Contractor income vs the salary" valueId="over-salary-result" value={formatPercentBps(example.revenueOverSalaryBps ?? 0n)} labelClass={rowLabel} />
+      <ResultRow label="What the employer spends on you" valueId="employer-cost-result" value={formatUsdGrouped(example.employerCostCents)} labelClass={rowLabel} />
+    </div>
+    <div class="calculator-actions mt-8 flex flex-wrap gap-2"><button id="copy-contractor" type="button" class="rounded-full bg-[#f3f5fa] px-4 py-2.5 text-sm font-bold text-ink">Copy result</button><button type="button" data-print class="rounded-full border border-[#f3f5fa]/45 px-4 py-2.5 text-sm font-bold">Print</button></div><p id="contractor-message" class="mt-4 text-sm text-[#f2e3bd]" aria-live="polite"></p>
+  </aside>
+</div>
+{embedded ? null : <StickyResult />}
+<noscript><p class="mt-5 rounded-lg border border-line bg-mist p-4 text-sm">JavaScript is required to update this calculator. The example compares a $100,000.00 salary with $12,000.00 of benefits against contractor income over 1,840 billable hours.</p></noscript>
+
+<script>
+  import { compareContractorWithEmployee, type ContractorComparisonResult, type FilingStatus } from "@MathMyRate/calculators";
+  import {
+    type CalculationTrigger,
+    focusProblemField,
+    formatPercentBps,
+    formatUsdGrouped,
+    hoursToMinutes,
+    InputProblem,
+    markResultsCurrent,
+    markResultsStale,
+    requireHtmlButton,
+    requireHtmlElement,
+    requireHtmlForm,
+    requireHtmlInput,
+    requireHtmlSelect,
+    setFieldState,
+    shouldDeferProblem,
+    usdToCents,
+    watchCalculatorFields,
+  } from "../scripts/calculator-form";
+
+  const form = requireHtmlForm("contractor-form");
+
+  const panel = requireHtmlElement("contractor-panel");
+
+  const copyButton = requireHtmlButton("copy-contractor");
+
+  const statusSelect = requireHtmlSelect("filingStatus");
+
+  let latest: { readonly minutes: number; readonly result: ContractorComparisonResult } | null = null;
+
+  function setText(id: string, text: string): void {
+    requireHtmlElement(id).textContent = text;
+  }
+
+  function currentStatus(): FilingStatus {
+    const value = statusSelect.value;
+
+    if (value === "married-jointly" || value === "married-separately" || value === "head-of-household") return value;
+
+    return "single";
+  }
+
+  /** Minutes as hours with up to two decimals, rounded down so a rate is never understated. */
+  function hoursText(minutes: number): string {
+    return (Math.floor((minutes * 100) / 60) / 100).toLocaleString("en-US", { maximumFractionDigits: 2 });
+  }
+
+  function readMinutes(): number {
+    const minutes = hoursToMinutes(requireHtmlInput("billableHours").value, "billableHours");
+
+    if (minutes < 1) throw new InputProblem("billableHours", "Enter billable hours above zero.");
+
+    if (minutes > 5_000_000) throw new InputProblem("billableHours", "Enter no more than 83,333 hours a year.");
+
+    return minutes;
+  }
+
+  function clear(): void {
+    for (const id of ["contractor-revenue-result", "contractor-hourly-result", "employee-after-result", "package-result", "employee-tax-result", "se-tax-result", "net-earnings-result", "over-salary-result", "employer-cost-result"]) {
+      setText(id, "—");
+    }
+
+    latest = null;
+    markResultsCurrent(panel, []);
+    copyButton.disabled = true;
+  }
+
+  function calculate(trigger: CalculationTrigger): void {
+    try {
+      const salaryCents = usdToCents(requireHtmlInput("salary").value, "salary");
+
+      if (salaryCents === 0n) throw new InputProblem("salary", "Enter a salary above zero.");
+
+      const billableMinutesPerYear = readMinutes();
+
+      const result = compareContractorWithEmployee({
+        salaryCents,
+        benefitsCents: usdToCents(requireHtmlInput("benefits").value, "benefits"),
+        businessExpensesCents: usdToCents(requireHtmlInput("expenses").value, "expenses"),
+        filingStatus: currentStatus(),
+        billableMinutesPerYear,
+      });
+
+      setText("contractor-revenue-result", formatUsdGrouped(result.contractorRevenueCents));
+      setText("contractor-hourly-result", formatUsdGrouped(result.hourlyRateCents ?? 0n));
+      setText("employee-after-result", formatUsdGrouped(result.employee.afterTaxCents));
+      setText("package-result", formatUsdGrouped(result.employeePackageCents));
+      setText("employee-tax-result", formatUsdGrouped(result.employee.employeeTaxCents));
+      setText("se-tax-result", formatUsdGrouped(result.contractor.selfEmploymentTaxCents));
+      setText("net-earnings-result", formatUsdGrouped(result.contractor.netEarningsCents));
+      setText("over-salary-result", result.revenueOverSalaryBps === null ? "Not defined" : formatPercentBps(result.revenueOverSalaryBps));
+      setText("employer-cost-result", formatUsdGrouped(result.employerCostCents));
+      latest = { minutes: billableMinutesPerYear, result };
+      markResultsCurrent(panel, [copyButton]);
+
+      setText(
+        "contractor-message",
+        result.contractor.additionalMedicareCents > 0n || result.employee.additionalMedicareCents > 0n
+          ? "This income crosses the Additional Medicare Tax threshold for your filing status, which assumes no other household wages."
+          : "",
+      );
+      setFieldState(form);
+    } catch (error) {
+      const problem = error instanceof InputProblem ? error : new InputProblem("salary", "Check your inputs.");
+
+      if (shouldDeferProblem(form, trigger)) {
+        markResultsStale(panel, [copyButton]);
+
+        return;
+      }
+
+      clear();
+      setFieldState(form, problem);
+
+      if (trigger === "submit") focusProblemField(form, problem);
+      setText("contractor-message", "");
+    }
+  }
+
+  function copyText(minutes: number, result: ContractorComparisonResult): string {
+    return `A ${formatUsdGrouped(result.employee.wagesCents)} salary with ${formatUsdGrouped(result.benefitsCents)} of benefits matches ${formatUsdGrouped(result.contractorRevenueCents)} a year of contractor income, or ${formatUsdGrouped(result.hourlyRateCents ?? 0n)} an hour over ${hoursText(minutes)} billable hours. ${result.year} Social Security and Medicare rates, before income tax.`;
+  }
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    calculate("submit");
+  });
+
+  requireHtmlButton("contractor-update").addEventListener("click", () => calculate("submit"));
+
+  statusSelect.addEventListener("change", () => calculate("commit"));
+
+  watchCalculatorFields(form, calculate);
+
+  requireHtmlButton("contractor-reset").addEventListener("click", () => {
+    form.reset();
+    calculate("commit");
+  });
+
+  copyButton.addEventListener("click", async () => {
+    if (latest === null) return;
+
+    try {
+      await navigator.clipboard.writeText(copyText(latest.minutes, latest.result));
+      setText("contractor-message", "Result copied.");
+    } catch {
+      setText("contractor-message", "Copy was unavailable. Select the result to copy it manually.");
+    }
+  });
+
+  calculate("commit");
+</script>

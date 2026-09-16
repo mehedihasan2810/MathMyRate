@@ -14,6 +14,7 @@ export type ToolId =
   | "salary-to-hourly"
   | "early-payment-discount"
   | "rate-increase"
+  | "contractor-rate"
   | "stripe-fees"
   | "paypal-fees"
   | "square-fees"
@@ -133,6 +134,17 @@ export const tools: readonly Tool[] = [
       "What a higher hourly rate adds each month and year, and how many hours you could lose.",
     searchTerms:
       "raise rates rate increase hourly rate price increase percentage freelancer clients revenue",
+  },
+  {
+    id: "contractor-rate",
+    hub: "freelance",
+    href: "/freelance/1099-vs-w2-calculator/",
+    name: "1099 vs W-2 Rate Calculator",
+    menuLabel: "1099 vs W-2",
+    summary:
+      "The contractor income and hourly rate that match a salary after Social Security and Medicare tax.",
+    searchTerms:
+      "1099 vs w2 contractor employee salary equivalent self employment tax fica payroll tax hourly rate convert",
   },
   {
     id: "stripe-fees",
