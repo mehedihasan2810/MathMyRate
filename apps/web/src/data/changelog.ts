@@ -13,6 +13,34 @@ export interface ChangelogEntry {
 export const changelog: readonly ChangelogEntry[] = [
   {
     date: "2026-09-17",
+    title: "Cash App and Venmo fee calculators added",
+    changes: [
+      "Cash App: added business payments from a customer's Cash App account (2.6% + $0.15) and business Tap to Pay payments (3%), with the fee deducted before the balance; and credit card payments you send, which cost the sender 3% on top of the payment. Receiving personal payments, sending from a balance, bank, or debit card, and the Earn in P2P service are free under Cash App's current terms.",
+      "Cash App instant transfers are listed as unsupported: Cash App discloses a per-transaction range of 0.5% to 2.5% with a minimum of 25¢ to $1 and a $75 maximum, shows the specific fee before you confirm, and publishes no single rate to estimate.",
+      "Venmo: added goods and services payments the receiver pays a 2.99% seller fee on; business profile payments (1.9% + $0.10, or 2.29% + $0.09 through Tap to Pay); and credit card payments you send, which cost the sender 3% on top. Venmo keeps the seller fee when you refund a transaction, as its user agreement states.",
+      "Venmo Instant Transfer joined the payout fee calculator: 1.75% of the transfer with a $0.25 minimum fee and a $25 maximum fee, deducted from the transfer amount, priced in three bands that meet where the percentage reaches each limit. Standard bank transfers are free.",
+      "A sender-paid scenario now answers with what the payment costs and what the recipient gets, instead of a seller's fee and proceeds, because the sender pays these fees.",
+    ],
+    sources: [
+      { title: "US | Terms of Service | Cash App", url: "https://cash.app/legal/us/en-us/tos" },
+      {
+        title: "Cash App Business Fees",
+        url: "https://cash.app/help/us/en-us/6521-cash-for-business-fees",
+      },
+      {
+        title: "Withdrawal Transfer Speed Options",
+        url: "https://cash.app/help/us/en-us/3073-cash-out-speed-options",
+      },
+      { title: "About Venmo Fees | Venmo", url: "https://venmo.com/about/fees/" },
+      { title: "User Agreement | Venmo", url: "https://venmo.com/legal/us-user-agreement/" },
+      {
+        title: "Instant Bank Transfer FAQ | Venmo",
+        url: "https://help.venmo.com/cs/articles/instant-bank-transfer-faq-vhel302",
+      },
+    ],
+  },
+  {
+    date: "2026-09-17",
     title: "Depop, Poshmark, Mercari, and Facebook Marketplace calculators added",
     changes: [
       "Depop: US sellers pay no selling fee, which Depop removed on July 15, 2024. The only Depop fee on a sale is payment processing of 3.3% + $0.45, charged on the item price, shipping, and sales tax. The buyer's Marketplace fee and optional boosting fees are not included.",

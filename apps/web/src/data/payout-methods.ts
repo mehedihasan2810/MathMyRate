@@ -121,6 +121,20 @@ export const payoutMethods: readonly PayoutMethod[] = [
     copyName: "Stripe Instant Payout",
     feeCharged: "on-top",
   },
+  {
+    id: "venmo-instant",
+    presetIds: [
+      "venmo-us-instant-transfer-minimum",
+      "venmo-us-instant-transfer",
+      "venmo-us-instant-transfer-cap",
+    ],
+    provider: "Venmo",
+    label: "Venmo Instant Transfer",
+    description: "1.75% of the transfer, at least 25¢ and at most $25.",
+    note: "Supported scenario: US profile transferring USD instantly to an eligible linked debit card or bank account.",
+    copyName: "Venmo Instant Transfer",
+    feeCharged: "from-payout",
+  },
 ];
 
 /**

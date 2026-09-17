@@ -209,6 +209,36 @@ const facebookSellerPolicy = {
   title: "Facebook Marketplace Seller Protection Policy | Facebook",
 };
 
+const cashAppTos = {
+  url: "https://cash.app/legal/us/en-us/tos",
+  title: "US | Terms of Service | Cash App",
+};
+
+const cashAppBusinessFees = {
+  url: "https://cash.app/help/us/en-us/6521-cash-for-business-fees",
+  title: "Cash App Business Fees",
+};
+
+const cashAppSpeedOptions = {
+  url: "https://cash.app/help/us/en-us/3073-cash-out-speed-options",
+  title: "Withdrawal Transfer Speed Options",
+};
+
+const venmoFees = {
+  url: "https://venmo.com/about/fees/",
+  title: "About Venmo Fees | Venmo",
+};
+
+const venmoUserAgreement = {
+  url: "https://venmo.com/legal/us-user-agreement/",
+  title: "User Agreement | Venmo",
+};
+
+const venmoInstantFaq = {
+  url: "https://help.venmo.com/cs/articles/instant-bank-transfer-faq-vhel302",
+  title: "Instant Bank Transfer FAQ | Venmo",
+};
+
 const stripeBillingPricing = {
   url: "https://stripe.com/billing/pricing",
   title: "Stripe Billing | Pricing",
@@ -2448,6 +2478,342 @@ const officialPresetRecords: FeePreset[] = [
       "Instant Payouts that Connect platforms offer to connected accounts, where the platform can add its own fee.",
     ],
     status: "supported",
+  }),
+  official({
+    id: "cash-app-us-business-payment",
+    label: "Cash App for Business payment from a customer's Cash App account",
+    provider: "cash-app",
+    taxMode: "zero-only",
+    paymentProduct: "Cash App for Business payment",
+    channel: "Cash App account to Cash App Business account",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "cash-app-business",
+        label: "Cash App for Business processing fee",
+        rateBps: 260,
+        fixedCents: 15,
+        base: "gross",
+      },
+    ],
+    checkedOn: "2026-09-17",
+    sources: [cashAppBusinessFees, cashAppTos],
+    assumptions: [
+      "US Cash App for Business account receiving a USD payment. Cash App's business fees page lists a 2.6% + $0.15 processing fee on each payment received from a customer's Cash App account.",
+      "The amount is the payment the customer sent. Cash App deducts the fee before the rest lands in the business balance.",
+      "No sales tax is collected on the payment. Cash App's business fees page does not state a tax treatment, so the estimate covers the payment amount alone.",
+      "The estimator rounds the fee to cents, half up; Cash App's published pages do not establish a rounding policy for the business fee.",
+    ],
+    exclusions: [
+      "Payments accepted through Tap to Pay (a separate scenario), and payments funded by a customer's card or bank account, whose fees Cash App's business fees page does not list.",
+      "Instant deposits (a 0.5% to 2.5% fee with a minimum of 25¢ to $1 and a $75 maximum, disclosed per transaction), ATM withdrawals, paper money deposits, bitcoin and stock transactions, cross-border payments, refunds, and disputes.",
+      "The Earn in P2P service, for which Cash App says it does not currently charge fees on goods-and-services payments received in a personal account.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "cash-app-us-business-tap-to-pay",
+    label: "Cash App for Business payment via Tap to Pay",
+    provider: "cash-app",
+    taxMode: "zero-only",
+    paymentProduct: "Cash App for Business payment",
+    channel: "Tap to Pay",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "cash-app-business-tap",
+        label: "Cash App for Business Tap to Pay fee",
+        rateBps: 300,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    checkedOn: "2026-09-17",
+    sources: [cashAppBusinessFees],
+    assumptions: [
+      "US Cash App for Business account accepting a USD payment through Tap to Pay, which Cash App's business fees page prices at a 3% processing fee with no fixed fee.",
+      "The amount is the payment the customer sent. Cash App deducts the fee before the rest lands in the business balance.",
+      "No sales tax is collected on the payment. Cash App's business fees page does not state a tax treatment, so the estimate covers the payment amount alone.",
+      "The estimator rounds the fee to cents, half up; Cash App's published pages do not establish a rounding policy for the business fee.",
+    ],
+    exclusions: [
+      "Payments from a customer's Cash App account (a separate scenario), and payments funded by a customer's card or bank account, whose fees Cash App's business fees page does not list.",
+      "Instant deposits (a 0.5% to 2.5% fee with a minimum of 25¢ to $1 and a $75 maximum, disclosed per transaction), ATM withdrawals, paper money deposits, bitcoin and stock transactions, cross-border payments, refunds, and disputes.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "cash-app-us-credit-card-send",
+    label: "Cash App payment sent with a credit card",
+    provider: "cash-app",
+    taxMode: "zero-only",
+    paymentProduct: "Cash App Peer-to-Peer payment",
+    channel: "credit card",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "cash-app-credit-card",
+        label: "Credit card sending fee",
+        rateBps: 300,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    checkedOn: "2026-09-17",
+    sources: [cashAppTos],
+    assumptions: [
+      "US personal account sending a USD payment to another Cash App customer with a credit card. Cash App's terms list 'Send from credit card: 3%' and say P2P sending is otherwise free.",
+      "The amount is what the recipient gets. Cash App's fee table does not state what the 3% applies to, so this estimate charges 3% of the amount sent and shows what you pay on top; the app shows its exact total before you confirm the payment.",
+      "Cash App's terms say this fee uses banker's rounding, which rounds half a cent to the nearest even cent. This estimator rounds half up, so a fee that lands exactly on half a cent can differ by one cent.",
+      "No sales tax applies to a personal payment.",
+    ],
+    exclusions: [
+      "Sending from a balance, bank account, or debit card, which Cash App's terms say is free, and adding money to a balance from a credit card, a separate 3% fee this calculator does not model.",
+      "Instant transfers (a 0.5% to 2.5% fee with a minimum of 25¢ to $1 and a $75 maximum, disclosed per transaction), ATM withdrawals, paper money deposits, bitcoin and stock transactions, foreign transaction fees, and disputes.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "venmo-us-goods-and-services",
+    label: "Venmo goods and services payment in a personal profile",
+    provider: "venmo",
+    taxMode: "zero-only",
+    paymentProduct: "Venmo goods and services payment",
+    channel: "personal profile, tagged goods and services",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "venmo-gs",
+        label: "Goods and services seller fee",
+        rateBps: 299,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    checkedOn: "2026-09-17",
+    sources: [venmoFees, venmoUserAgreement],
+    assumptions: [
+      "US personal profile receiving a USD payment that the sender identified as for goods and services. Venmo's fees page lists a 2.99% seller transaction fee for these payments.",
+      "The amount is the payment the sender sent. The fee comes out of the money that lands in the Venmo account.",
+      "No sales tax is collected through the payment. Venmo's fees page does not state a tax treatment, so the estimate covers the payment amount alone.",
+      "The estimator rounds the fee to cents; Venmo's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Business profile and Tap to Pay payments (separate scenarios), charity profiles at 1.9% + $0.10, and sending money, which is free from a balance, debit card, or bank account.",
+      "Purchase Protection, chargeback fees, refunds (Venmo keeps the seller fee when a payment is refunded), currency conversion, and payments to non-U.S. PayPal accounts.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "venmo-us-business-profile",
+    label: "Venmo business profile payment",
+    provider: "venmo",
+    taxMode: "zero-only",
+    paymentProduct: "Venmo business profile payment",
+    channel: "business profile",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "venmo-business",
+        label: "Business profile transaction fee",
+        rateBps: 190,
+        fixedCents: 10,
+        base: "gross",
+      },
+    ],
+    checkedOn: "2026-09-17",
+    sources: [venmoFees, venmoUserAgreement],
+    assumptions: [
+      "US business profile receiving a USD payment other than through Tap to Pay, which Venmo's fees page prices at 1.9% + $0.10.",
+      "The amount is the payment the sender sent. The fee comes out of the money that lands in the business profile.",
+      "No sales tax is collected through the payment. Venmo's fees page does not state a tax treatment, so the estimate covers the payment amount alone.",
+      "The estimator rounds each component to cents; Venmo's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Tap to Pay payments (a separate scenario) and charity profiles at 1.9% + $0.10.",
+      "Purchase Protection, chargeback fees, refunds (Venmo keeps the seller fee when a payment is refunded), currency conversion, and payments to non-U.S. PayPal accounts.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "venmo-us-business-tap-to-pay",
+    label: "Venmo business profile Tap to Pay payment",
+    provider: "venmo",
+    taxMode: "zero-only",
+    paymentProduct: "Venmo business profile payment",
+    channel: "business profile, Tap to Pay",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "venmo-business-tap",
+        label: "Tap to Pay transaction fee",
+        rateBps: 229,
+        fixedCents: 9,
+        base: "gross",
+      },
+    ],
+    checkedOn: "2026-09-17",
+    sources: [venmoFees],
+    assumptions: [
+      "US business profile accepting a USD payment through Tap to Pay, which Venmo's fees page prices at 2.29% + $0.09.",
+      "The amount is the payment the sender sent. The fee comes out of the money that lands in the business profile.",
+      "No sales tax is collected through the payment. Venmo's fees page does not state a tax treatment, so the estimate covers the payment amount alone.",
+      "The estimator rounds each component to cents; Venmo's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Other business profile payments (a separate scenario) and charity profiles at 1.9% + $0.10.",
+      "Purchase Protection, chargeback fees (Venmo keeps Tap to Pay fees on reversed transactions), refunds, and currency conversion.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "venmo-us-credit-card-send",
+    label: "Venmo payment sent with a credit card",
+    provider: "venmo",
+    taxMode: "zero-only",
+    paymentProduct: "Venmo payment",
+    channel: "credit card",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "venmo-credit-card",
+        label: "Credit card sending fee",
+        rateBps: 300,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    checkedOn: "2026-09-17",
+    sources: [venmoFees, venmoUserAgreement],
+    assumptions: [
+      "US personal account sending a USD payment to a Venmo account or U.S. PayPal account with a credit card, which Venmo's fees page prices at 3.00%.",
+      "The amount is what the recipient gets. Venmo's user agreement authorizes charging the sender's payment method 'for the payment amount and any applicable fees', so this estimate charges 3% of the amount sent and shows what you pay on top.",
+      "The estimator rounds the fee to cents; Venmo's published pages do not establish a rounding policy.",
+      "No sales tax applies to a personal payment.",
+    ],
+    exclusions: [
+      "Sending from a balance, debit card, or bank account, which is free, and payments to a non-U.S. PayPal account, which cost 5% (minimum $0.99, maximum $4.99) plus the credit card fee and are cross-border.",
+      "Instant transfers (a separate payout scenario), currency conversion, purchase protection, and disputes.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "venmo-us-instant-transfer-minimum",
+    label: "Venmo Instant Transfer up to $14.28",
+    provider: "venmo",
+    taxMode: "zero-only",
+    paymentProduct: "Venmo payout",
+    channel: "Instant Transfer",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "venmo-instant",
+        label: "Instant Transfer minimum fee",
+        rateBps: 0,
+        fixedCents: 25,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { maxCents: 1_428 },
+    checkedOn: "2026-09-17",
+    sources: [venmoFees, venmoInstantFaq],
+    assumptions: [
+      "Venmo prices an Instant Transfer to an eligible linked debit card or bank account at 1.75% of the transfer, with a minimum fee of $0.25 and a maximum fee of $25, deducted from the transfer amount.",
+      "The transfer is under $14.29, where 1.75% is less than 25¢ once rounded, so the $0.25 minimum is the fee.",
+      "What arrives is the transfer less the fee. The standard transfer is free and typically takes 1-3 business days to a bank.",
+      "The estimator rounds the fee to cents; Venmo's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Transfers of $14.29 or more, which are separate scenarios.",
+      "Venmo's account limits on transfers, eligibility of the card or bank for instant transfer services, fees a bank may charge, and currency conversion.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "venmo-us-instant-transfer",
+    label: "Venmo Instant Transfer from $14.28 to $1,428.58",
+    provider: "venmo",
+    taxMode: "zero-only",
+    paymentProduct: "Venmo payout",
+    channel: "Instant Transfer",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "venmo-instant",
+        label: "Instant Transfer fee",
+        rateBps: 175,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 1_428, maxCents: 142_858 },
+    checkedOn: "2026-09-17",
+    sources: [venmoFees, venmoInstantFaq],
+    assumptions: [
+      "Venmo prices an Instant Transfer to an eligible linked debit card or bank account at 1.75% of the transfer, with a minimum fee of $0.25 and a maximum fee of $25, deducted from the transfer amount.",
+      "The transfer is between $14.28 and $1,428.58, where 1.75% lands between the $0.25 minimum and the $25 maximum fee.",
+      "What arrives is the transfer less the fee. The standard transfer is free and typically takes 1-3 business days to a bank.",
+      "The estimator rounds the fee to cents; Venmo's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Transfers under $14.28 or over $1,428.58, which are separate scenarios.",
+      "Venmo's account limits on transfers, eligibility of the card or bank for instant transfer services, fees a bank may charge, and currency conversion.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "venmo-us-instant-transfer-cap",
+    label: "Venmo Instant Transfer of $1,428.58 or more",
+    provider: "venmo",
+    taxMode: "zero-only",
+    paymentProduct: "Venmo payout",
+    channel: "Instant Transfer",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "venmo-instant",
+        label: "Instant Transfer maximum fee",
+        rateBps: 0,
+        fixedCents: 2_500,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 142_858 },
+    checkedOn: "2026-09-17",
+    sources: [venmoFees, venmoInstantFaq],
+    assumptions: [
+      "Venmo prices an Instant Transfer to an eligible linked debit card or bank account at 1.75% of the transfer, with a minimum fee of $0.25 and a maximum fee of $25, deducted from the transfer amount.",
+      "The transfer is $1,428.58 or more, where 1.75% is at least $25, so the $25 maximum is the fee.",
+      "What arrives is the transfer less the fee. The standard transfer is free and typically takes 1-3 business days to a bank.",
+      "The estimator rounds the fee to cents; Venmo's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Transfers under $1,428.58, which are separate scenarios.",
+      "Venmo's account limits on transfers, eligibility of the card or bank for instant transfer services, fees a bank may charge, and currency conversion.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "cash-app-us-instant-transfer",
+    label: "Cash App instant transfer to a debit card or bank account",
+    provider: "cash-app",
+    taxMode: "zero-only",
+    paymentProduct: "Cash App instant transfer",
+    channel: "instant",
+    tierPolicy: "explicitly-excluded",
+    components: [],
+    checkedOn: "2026-09-17",
+    sources: [cashAppTos, cashAppSpeedOptions],
+    assumptions: [
+      "Cash App prices instant transfers at 0.5% to 2.5% of the transfer, with a minimum of $0.25 to $1 and a maximum of $75, and shows the specific fee before you complete the transaction.",
+      "Standard transfers from the balance to a linked account are free and typically take 1-3 business days.",
+    ],
+    exclusions: [
+      "No linear estimate is given, because Cash App publishes a per-transaction fee range instead of one rate.",
+    ],
+    status: "blocked",
+    blockedReason:
+      "Cash App prices instant transfers at 0.5% to 2.5% of the transfer, with a minimum of $0.25 to $1 and a maximum of $75, and shows the specific fee before you complete the transaction. No single rate is published, so no estimate is given. Standard transfers to a linked account are free.",
   }),
   official({
     id: "depop-us-sale",

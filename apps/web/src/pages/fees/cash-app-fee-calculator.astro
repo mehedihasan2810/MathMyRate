@@ -1,0 +1,124 @@
+---
+import { calculateFees, effectiveFeeRateBps } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatPercentBps, formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("cash-app-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const business = requireOfficialPreset("cash-app-us-business-payment");
+
+const card = requireOfficialPreset("cash-app-us-credit-card-send");
+
+const businessAt = (cents: bigint) => calculateFees({ preset: business, grossCents: cents });
+
+const cardAt = (cents: bigint) => calculateFees({ preset: card, grossCents: cents });
+
+const hundred = businessAt(10_000n);
+
+const cardHundred = cardAt(10_000n);
+
+const cardThousand = cardAt(100_000n);
+
+const businessThousand = businessAt(100_000n);
+
+const amountRows = [1_000n, 2_500n, 5_000n, 10_000n, 25_000n, 50_000n, 100_000n, 500_000n].map((cents) => {
+  const businessRow = businessAt(cents);
+  const cardRow = cardAt(cents);
+
+  return [
+    formatSaleLabel(cents),
+    formatUsdGrouped(businessRow.feeCents),
+    formatUsdGrouped(businessRow.sellerProceedsCents),
+    formatUsdGrouped(cardRow.feeCents),
+    formatUsdGrouped(cardRow.grossCents + cardRow.feeCents),
+  ];
+});
+
+const shareOnTen = formatPercentBps(effectiveFeeRateBps(businessAt(1_000n).feeCents, 1_000n));
+
+const shareOnHundred = formatPercentBps(effectiveFeeRateBps(hundred.feeCents, 10_000n));
+
+const updatedOn = "2026-09-17";
+
+const description = "Cash App fees for 2026: 2.6% + 15¢ on business payments, 3% to send with a credit card, and free personal payments. See the fee and what you keep.";
+
+const sources = [
+  { title: "US | Terms of Service | Cash App", url: "https://cash.app/legal/us/en-us/tos" },
+  { title: "Cash App Business Fees", url: "https://cash.app/help/us/en-us/6521-cash-for-business-fees" },
+  { title: "Withdrawal Transfer Speed Options", url: "https://cash.app/help/us/en-us/3073-cash-out-speed-options" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "What is Cash App's fee for $1,000?", answer: `It depends how the money moves. A $1,000 payment to your Cash App for Business account from a customer's Cash App account pays ${formatUsdGrouped(businessThousand.feeCents)} and leaves ${formatUsdGrouped(businessThousand.sellerProceedsCents)}. Sending $1,000 from a personal account is free from your balance, bank, or debit card, and a credit card send costs 3% (${formatUsdGrouped(cardThousand.feeCents)}), so it costs you ${formatUsdGrouped(cardThousand.grossCents + cardThousand.feeCents)}.` },
+  { question: "How much does Cash App charge to send money?", answer: "Sending money to another Cash App customer from your balance, a linked bank account, or a debit card is free. Paying for a personal payment with a credit card costs 3%, which you pay on top of the amount you send. Cash App's terms say the credit card fee is displayed at the time of the transaction." },
+  { question: "What is Cash App's instant transfer fee?", answer: "Instant transfers from your balance to a linked debit card or bank account cost between 0.5% and 2.5%, with a minimum of 25¢ to $1 and a maximum of $75. Cash App shows the specific fee before you complete the transaction and publishes no single rate, so this calculator does not estimate it. Standard transfers are free and usually take 1-3 business days." },
+  { question: "Does Cash App charge to receive money?", answer: "Receiving a personal payment is free. Payments to a Cash App for Business account pay a processing fee: 2.6% + $0.15 when a customer pays from their Cash App account, and 3% through Tap to Pay." },
+  { question: "Is receiving money for goods and services in a personal account free?", answer: "Eligible sole proprietors can take goods-and-services payments in a personal account through the Earn in P2P service, and Cash App's terms say it does not currently charge fees on those payments. Cash App reserves the right to add fees with notice, so check its terms before relying on this." },
+  { question: "Does the Cash App fee come out of my balance?", answer: "Business fees come out of the payment before it lands in your balance, so what you receive has already had the fee deducted. The credit card fee works the other way: the sender pays it on top of the payment, so the recipient still gets the full amount." },
+  { question: "Does Cash App round the fee in my favor?", answer: "For the credit card fee and instant transfers, Cash App says it uses banker's rounding, which sends half a cent to the nearest even cent. This estimator rounds half up, so a fee that lands exactly on half a cent can differ by one cent." },
+  { question: "What does Cash App charge for that this calculator leaves out?", answer: "ATM withdrawals ($2.50), paper money deposits ($1), bitcoin and stock transactions, foreign transaction fees (3%), instant transfers, and disputed payments are outside this calculator. Cross-border payments are not part of these scenarios either." },
+];
+---
+<Layout title="Cash App Fees 2026: 2.6% + 15¢ for Business | MathMyRate" description={description} ogImage="/og/cash-app.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Cash App fees, worked out: what a business payment leaves in your balance, and what a credit card payment costs to send.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={business.checkedOn} />
+    <FeeCalculator calculatorId="cash-app" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>Personal payments between Cash App customers are free to send from a balance, bank account, or debit card, and free to receive. Cash App's fees start in two places: <strong>business accounts</strong> pay a processing fee on payments received (2.6% + $0.15 from a customer's Cash App account, or 3% through Tap to Pay), and a personal <strong>credit card payment</strong> costs the sender 3%. Pick a scenario, enter the amount, and the calculator shows the fee and what lands where. For taking money out of a platform afterwards, the <a href="/fees/payout-fee-calculator/">payout fee calculator</a> covers instant transfers and withdrawals. Its hub lists every tool on the <a href="/fees/">payment fees</a> page.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Pick the scenario: a business payment you received, a business Tap to Pay payment, or a payment you are sending with a credit card.</li>
+        <li>For a business payment, enter the amount the customer paid. For a credit card payment, enter what the recipient gets.</li>
+        <li>To see monthly totals, enter how many same-size payments you receive a month. The monthly view applies to the business scenarios, so it is hidden while a credit card send is selected.</li>
+        <li>Read the fee, what you keep or what it costs, and the share the fee takes.</li>
+      </ol>
+
+      <h2>How the fee is built</h2>
+      <p>A business payment of $100.00 from a customer's Cash App account pays 2.6% of $100.00 ($2.60) plus $0.15: <strong>{formatUsdGrouped(hundred.feeCents)}</strong>. Cash App deducts the fee before the rest lands in your balance, so you keep <strong>{formatUsdGrouped(hundred.sellerProceedsCents)}</strong>.</p>
+      <p>A credit card payment works the other way. Send $100.00 with a credit card and Cash App charges you 3% of it ($3.00) on top, so it costs <strong>{formatUsdGrouped(cardHundred.grossCents + cardHundred.feeCents)}</strong> and the recipient still gets $100.00. The fee is yours to pay, which is why the calculator asks what you are sending and answers with what it costs you.</p>
+      <p>Because of the 15¢ fixed part, small business payments lose a bigger share: {shareOnTen} of a $10 payment, against {shareOnHundred} of a $100 payment.</p>
+
+      <h2>Cash App fees at common amounts</h2>
+      <p>The business columns use a payment from a customer's Cash App account. The credit card columns show what the sender pays on top of the amount sent.</p>
+      <DataTable caption="Cash App fee and what you keep or pay, by amount, for a business payment and a credit card send" headers={["Amount", "Business fee", "You keep", "Card send fee", "It costs you"]} rows={amountRows} />
+
+      <h2>Other Cash App costs and rules</h2>
+      <ul>
+        <li><strong>Instant transfers:</strong> 0.5% to 2.5% of the transfer, with a minimum of 25¢ to $1 and a $75 maximum. Cash App shows the specific fee before you confirm and publishes no single rate, so this calculator does not estimate it.</li>
+        <li><strong>Standard transfers:</strong> free, typically within 1-3 business days.</li>
+        <li><strong>Earn in P2P:</strong> eligible sole proprietors can take goods-and-services payments in a personal account, and Cash App says it does not currently charge fees on those payments.</li>
+        <li><strong>Refunds:</strong> Cash App's reviewed pages do not state whether the business fee is returned when a payment is refunded, so this calculator makes no claim about it.</li>
+        <li><strong>Out of scope:</strong> ATM withdrawals ($2.50), paper money deposits ($1), bitcoin and stock transactions, the 3% foreign transaction fee, and disputes.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="cash-app" blockedPresetIds={["cash-app-us-instant-transfer"]} />
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId={tool.id} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Cash App's pages were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Cash App or Block. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

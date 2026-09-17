@@ -136,6 +136,13 @@ const expectedFees = new Map([
   ["teachable-us-paid-plan-subscription", 390n], // 290 + 30 + 70
   ["whop-us-card", 300n], // 2.7% = 270, + 30
   ["whop-us-international-card", 450n], // 270 + 30 + 1.5% = 150
+  ["cash-app-us-business-payment", 275n], // 2.6% = 260, + 15
+  ["cash-app-us-business-tap-to-pay", 300n], // 3%
+  ["cash-app-us-credit-card-send", 300n], // 3%
+  ["venmo-us-goods-and-services", 299n], // 2.99%
+  ["venmo-us-business-profile", 200n], // 1.9% = 190, + 10
+  ["venmo-us-business-tap-to-pay", 238n], // 2.29% = 229, + 9
+  ["venmo-us-credit-card-send", 300n], // 3%
 ]);
 
 // Presets whose range excludes $100 get a fixture at an amount inside their range.
@@ -149,6 +156,9 @@ const expectedFeesAt = new Map([
   ["stripe-us-instant-payout-minimum", { grossCents: 2_000n, feeCents: 50n }], // 1.5% of 2,000 is 30, below the 50 minimum
   ["poshmark-us-sale-under-15", { grossCents: 1_000n, feeCents: 295n }], // flat 295 under 1,500
   ["facebook-marketplace-us-shipped-minimum", { grossCents: 500n, feeCents: 80n }], // 10% of 500 is 50, below the 80 minimum
+  ["venmo-us-instant-transfer-minimum", { grossCents: 1_000n, feeCents: 25n }], // 1.75% of 1,000 is 17.5, below the 25 minimum
+  ["venmo-us-instant-transfer", { grossCents: 10_000n, feeCents: 175n }], // 1.75% of 10,000
+  ["venmo-us-instant-transfer-cap", { grossCents: 300_000n, feeCents: 2_500n }], // 1.75% of 300,000 is 5,250, above the 2,500 cap
 ]);
 
 for (const preset of feePresets) {
@@ -436,6 +446,59 @@ test("Patreon's PayPal payout bands meet at $25 and $2,000 with the same fee", (
   }
 
   assert.deepEqual(fee(999n), []);
+});
+
+test("Venmo's Instant Transfer bands meet at $14.28 and $1,428.58 with the same fee", () => {
+  const minimum = getFeePreset("venmo-us-instant-transfer-minimum");
+  const percent = getFeePreset("venmo-us-instant-transfer");
+  const cap = getFeePreset("venmo-us-instant-transfer-cap");
+
+  assert.ok(minimum && percent && cap);
+
+  // 1.75% with a $0.25 minimum and a $25 cap, checked independently on both
+  // sides of each boundary, including where a minimum meets the rate.
+  const fee = (grossCents: bigint) =>
+    [minimum, percent, cap].flatMap((preset) => {
+      try {
+        return [calculateFees({ preset, grossCents }).feeCents];
+      } catch (error) {
+        if (error instanceof GrossOutOfRangeError) return [];
+
+        throw error;
+      }
+    });
+
+  const oracle = (grossCents: bigint) => {
+    const rate = (grossCents * 175n + 5000n) / 10000n;
+
+    return rate < 25n ? 25n : rate > 2_500n ? 2_500n : rate;
+  };
+
+  for (const grossCents of [
+    1n,
+    999n,
+    1_399n,
+    1_400n,
+    1_427n,
+    1_428n,
+    1_429n,
+    5_000n,
+    10_000n,
+    100_000n,
+    142_857n,
+    142_858n,
+    142_859n,
+    142_885n,
+    142_886n,
+    300_000n,
+    1_000_000n,
+  ]) {
+    const fees = fee(grossCents);
+
+    assert.ok(fees.length > 0, `${grossCents} is covered`);
+
+    for (const value of fees) assert.equal(value, oracle(grossCents), `${grossCents}`);
+  }
 });
 
 test("Poshmark earnings fall at the $15 threshold, as Fee Policy 1.7 sets it", () => {

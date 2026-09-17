@@ -40,6 +40,8 @@ const feeHeights: Readonly<Record<FeeCalculatorId, number>> = {
   poshmark: 1_600,
   mercari: 1_750,
   "facebook-marketplace": 1_900,
+  "cash-app": 1_750,
+  venmo: 1_820,
   kickstarter: 1_650,
   patreon: 2_150,
   kofi: 1_800,

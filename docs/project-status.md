@@ -670,6 +670,61 @@ Argent):
 | Embeds at 360 px                                           | Default heights Depop 1,764, Poshmark 1,460, Mercari 1,594, Facebook Marketplace 1,760 px; with an amount error 1,891, 1,587, 1,721, and 1,887 px, all within the suggested heights. With an error in "keep a target" mode they are 24 to 72 px taller and scroll inside the frame, as a sales count already does in every fee embed |
 | iOS Safari                                                 | Facebook Marketplace: $5 shipping on a $100 item keeps $89.50, with the decimal keypad                                                                                                                                                                                                                                               |
 
+### Payment app fee calculators (2026-09-17)
+
+Branch `feat/payment-app-fees`, built on the reseller fee work:
+
+- `/fees/cash-app-fee-calculator/`: business payments from a customer's Cash
+  App account at 2.6% + 15¢, business Tap to Pay at 3%, and personal credit
+  card payments the sender funds at 3%. Sending from a balance, bank, or debit
+  card, receiving personal payments, and the Earn in P2P service are free under
+  Cash App's terms. Cash App instant transfers are listed as unsupported: the
+  disclosed 0.5% to 2.5% range with a 25¢ to $1 minimum and $75 maximum is
+  per-transaction and shown in the app, so no single rate exists to estimate.
+- `/fees/venmo-fee-calculator/`: goods and services payments at a 2.99% seller
+  fee, business profile payments at 1.9% + 10¢ (2.29% + 9¢ through Tap to Pay),
+  and credit card payments the sender funds at 3%. Venmo keeps the seller fee
+  when a payment is refunded, as the user agreement states.
+- The payout calculator gained a Venmo Instant Transfer method: 1.75% with a
+  25¢ minimum fee and $25 maximum, deducted from the transfer amount, priced as
+  three bands that meet where the percentage reaches each limit.
+- Every rule was read on the platforms' own pages on 2026-09-17: Cash App's US
+  terms of service (which contain the fee table), its business fees help page,
+  and its transfer speed options page; Venmo's fees page, user agreement, and
+  Instant Bank Transfer FAQ.
+- Sender-paid fees are a new `feeCharged: "sender"` scenario flag. The
+  calculator asks what the recipient gets and answers with what the payment
+  costs the sender: the amount label reads "What you send", the primary result
+  is "It costs you", a "The recipient gets" row appears, and the received/target
+  mode fieldset and monthly volume field are hidden, because both describe the
+  receiver's side. The engine is unchanged; this is UI composition.
+- Both presets are tax-free (taxMode zero-only): neither platform's reviewed
+  pages involve sales tax in these scenarios, so no tax field is shown.
+- Cash App's terms note banker's rounding for the credit card fee and instant
+  transfers; the engine rounds half up, and both pages say a fee landing
+  exactly on half a cent can differ by one cent.
+
+Checks on 2026-09-17 (preview build at `:4321`; in-app browser, Chrome 153
+over the DevTools protocol, and iOS Safari on the iPhone 17 simulator through
+Argent):
+
+| Check                                                      | Observed result                                                                                                                                                                                                                                                                                                                          |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run lint`, `pnpm run format:check`                   | Passed (two files reformatted, then clean)                                                                                                                                                                                                                                                                                               |
+| `pnpm run check-types`                                     | Passed: 7 of 7 tasks                                                                                                                                                                                                                                                                                                                     |
+| `pnpm run test`                                            | Passed: 172 calculator tests and 122 web tests, including hand-derived fixtures for all 11 new presets and the Venmo instant band edges                                                                                                                                                                                                  |
+| Guard build (`REQUIRE_SITE_URL=true`, no site)             | Failed as intended                                                                                                                                                                                                                                                                                                                       |
+| Site build (`PUBLIC_SITE_URL=https://calculators.example`) | Passed; 99 pages                                                                                                                                                                                                                                                                                                                         |
+| `pnpm run budget`                                          | Passed: largest page 119.8 KB, Venmo page 118.6 KB against the 130 KB budget                                                                                                                                                                                                                                                             |
+| Independent calculation, both directions                   | Cash App 21 cases (3 scenarios × 7 amounts from 1¢ to $14,999.99), Venmo 28 cases (4 scenarios × 7 amounts), Venmo instant 13 cases including $14.27/$14.28/$14.29 and $1,428.56/$1,428.57/$1,428.58, and keep-a-target 20 cases (8 Cash App, 12 Venmo) matched a brute-force oracle; 90 cases, 0 mismatches                             |
+| Existing calculators                                       | Stripe with tax, both directions (4 cases); PayPal Checkout and Square in-person spot checks matched; the Stripe fee base and tax display are unchanged from `HEAD`                                                                                                                                                                      |
+| Errors                                                     | 0, −5, and 12.345 each show their message and blank the result; sender mode rejects 0 the same way                                                                                                                                                                                                                                       |
+| Keyboard, copy, reset, layout                              | Tab order amount → sales per month → Update → Reset; Reset restores the business example; copied sender text reads "Cash App credit card payment of $1,000.00: $30.00 fee, it costs $1,030.00, and the recipient gets $1,000.00. Estimate; source reviewed 2026-09-17."; no sideways scroll at 360 px in any scenario; no console errors |
+| Announcements                                              | Each finished change one polite status message ("You keep from this sale: $486.85."); the loss note and copy confirmations still use the fee message region                                                                                                                                                                              |
+| Titles, descriptions, structured data                      | Titles 56 and 58 characters, descriptions 146 and 147 characters, canonicals, WebApplication and BreadcrumbList JSON-LD as on every other calculator page                                                                                                                                                                                |
+| Embeds at 360 px                                           | With an amount error showing: Cash App 1,742 px, Venmo 1,816 px; suggested heights set to 1,750 and 1,820                                                                                                                                                                                                                                |
+| iOS Safari                                                 | Cash App: $100 business payment keeps $97.25; typing 250 on the decimal keypad updates live to $243.35 and $6.65; the credit card scenario shows "It costs you $257.50", fee $7.50, and "The recipient gets $250.00", with the mode fieldset gone. Venmo default $100 goods and services keeps $97.01                                    |
+
 ### Infrastructure and deployment
 
 Alchemy remains the infrastructure owner for the existing Cloudflare Workers,

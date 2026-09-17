@@ -182,6 +182,22 @@ const cards = [
     path: "/fees/facebook-marketplace-fee-calculator/",
   },
   {
+    file: "cash-app",
+    eyebrow: "Payment fees / Cash App",
+    accent: palette.navy,
+    title: "Cash App fee calculator",
+    description: "Business payment fees and what sending with a credit card costs.",
+    path: "/fees/cash-app-fee-calculator/",
+  },
+  {
+    file: "venmo",
+    eyebrow: "Payment fees / Venmo",
+    accent: palette.gold,
+    title: "Venmo fee calculator",
+    description: "Goods and services and business profile fees, and what a card send costs.",
+    path: "/fees/venmo-fee-calculator/",
+  },
+  {
     file: "upwork",
     eyebrow: "Payment fees / Upwork",
     accent: palette.gold,

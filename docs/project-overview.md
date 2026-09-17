@@ -63,6 +63,8 @@ outside launch scope.
 | `/fees/poshmark-fee-calculator/`                | Poshmark's $2.95 or 20% fee and seller earnings             |
 | `/fees/mercari-fee-calculator/`                 | Mercari's 10% selling fee with buyer-paid shipping          |
 | `/fees/facebook-marketplace-fee-calculator/`    | Facebook Marketplace's selling fee on shipped orders        |
+| `/fees/cash-app-fee-calculator/`                | Cash App business fees and credit card sends                |
+| `/fees/venmo-fee-calculator/`                   | Venmo goods-and-services, business, and credit card fees    |
 | `/fees/upwork-fee-calculator/`                  | Upwork service fee on a contract and withdrawal fees        |
 | `/fees/fiverr-fee-calculator/`                  | Fiverr's seller commission and withdrawal fees              |
 | `/fees/kickstarter-fee-calculator/`             | Kickstarter and processing fees per pledge and per campaign |

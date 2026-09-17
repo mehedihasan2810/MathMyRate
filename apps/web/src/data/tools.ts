@@ -24,6 +24,8 @@ export type ToolId =
   | "poshmark-fees"
   | "mercari-fees"
   | "facebook-marketplace-fees"
+  | "cash-app-fees"
+  | "venmo-fees"
   | "upwork-fees"
   | "fiverr-fees"
   | "kickstarter-fees"
@@ -250,6 +252,27 @@ export const tools: readonly Tool[] = [
       "Facebook Marketplace's 10% selling fee on shipped orders, with its 80¢ minimum, and what you keep.",
     searchTerms:
       "facebook marketplace fees selling fee shipped orders checkout seller fb marketplace how much does facebook charge",
+  },
+  {
+    id: "cash-app-fees",
+    hub: "fees",
+    href: "/fees/cash-app-fee-calculator/",
+    name: "Cash App Fee Calculator",
+    menuLabel: "Cash App fees",
+    summary: "Cash App for Business fees on a payment, and what sending with a credit card costs.",
+    searchTerms:
+      "cash app fees fee calculator business payment tap to pay credit card send receive instant transfer how much does cash app take",
+  },
+  {
+    id: "venmo-fees",
+    hub: "fees",
+    href: "/fees/venmo-fee-calculator/",
+    name: "Venmo Fee Calculator",
+    menuLabel: "Venmo fees",
+    summary:
+      "Venmo's goods and services and business profile fees, and what sending with a credit card costs.",
+    searchTerms:
+      "venmo fees fee calculator goods and services business profile tap to pay credit card instant transfer how much does venmo charge to pay someone",
   },
   {
     id: "upwork-fees",

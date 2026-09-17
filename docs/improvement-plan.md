@@ -273,6 +273,8 @@ then Cash App and Venmo). Candidates, grouped by hub:
 
 **Update 2026-09-17** (branch `feat/reseller-fees`). Built the Depop, Poshmark, Mercari, and Facebook Marketplace fee calculators, the top four gaps in the keyword research. Each fee was checked on the platform's own pages. Fee calculators now support price bands (Poshmark's $15 threshold, Facebook's $0.80 minimum) and a buyer-paid shipping field that counts toward the fee but not toward what the seller keeps. Cash App and Venmo are next in the research ranking.
 
+**Update 2026-09-17** (branch `feat/payment-app-fees`). Built the Cash App and Venmo fee calculators, ranks 5 and 6, from the platforms' own terms and fee pages. Sender-paid fees (credit card payments on both apps) are modeled as what the payment costs the sender, because the recipient still gets the full amount. Venmo Instant Transfer joined the payout calculator as three bands (1.75%, $0.25 minimum, $25 maximum). Cash App instant transfers stay unsupported: Cash App discloses a per-transaction range, not a rate.
+
 Freelance pricing
 
 - Day rate to annual salary (and salary to hourly for contractors).

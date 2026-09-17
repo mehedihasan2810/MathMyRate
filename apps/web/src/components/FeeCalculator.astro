@@ -35,6 +35,12 @@ const defaultPreset = requirePreset(defaultScenario.presetId);
 
 const example = calculateBandedFees(scenarioPresetIds(defaultScenario).map(requirePreset), 10000n);
 
+// A sender-paid scenario charges the fee on top of the payment, so the build-time
+// example is the total cost, not the amount kept.
+const defaultSenderPaid = defaultScenario.feeCharged === "sender";
+
+const examplePrimary = defaultSenderPaid ? example.grossCents + example.feeCents : example.sellerProceedsCents;
+
 const acceptsTax = config.scenarios.some((scenario) => requirePreset(scenario.presetId).taxMode === "caller-supplied");
 
 const defaultTaxShown = defaultPreset.taxMode === "caller-supplied";
@@ -71,7 +77,7 @@ const scenarioColumns = config.scenarios.length === 3 ? "sm:grid-cols-3" : "sm:g
         ))}
       </div>
     </fieldset>
-    <fieldset class="mt-6">
+    <fieldset id="fee-mode-fieldset" hidden={defaultSenderPaid} class="mt-6">
       <legend class="text-sm font-semibold">What do you want to work out?</legend>
       <div class="mt-3 grid gap-2 sm:grid-cols-2">
         <label class="flex items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-sm font-medium"><input type="radio" name="feeMode" value="received" class="mt-1" checked /><span>Customer paid an amount<span class="mt-1 block text-xs font-normal text-ink/55">See the fee and what you keep.</span></span></label>
@@ -84,17 +90,18 @@ const scenarioColumns = config.scenarios.length === 3 ? "sm:grid-cols-3" : "sm:g
       {acceptsTax ? (
         <NumberField id="taxIncluded" wrapperId="tax-field" hidden={!defaultTaxShown} label={itemised ? "Sales tax the buyer paid (optional)" : "Tax collected (optional)"} unit="usd" placeholder="0.00" help={config.taxHelp} />
       ) : null}
-      <NumberField id="salesPerMonth" label={volume.fieldLabel} inputMode="numeric" placeholder="e.g. 250" help={volume.fieldHelp} />
+      <NumberField id="salesPerMonth" label={volume.fieldLabel} inputMode="numeric" placeholder="e.g. 250" help={volume.fieldHelp} wrapperId="volume-field" />
     </div>
     <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="fee-update">Update fees</button><button id="fee-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
   </form>
   <aside id="fee-panel" data-result-panel class:list={["print-card h-fit rounded-[1.5rem] p-7 text-paper shadow-[0_16px_45px_rgba(19,31,51,.16)] md:p-9", panelClass]}>
-    <p class="eyebrow !text-[#c3d2ea]" id="primary-label" data-primary-label>You keep from this sale</p>
-    <p id="fee-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.sellerProceedsCents)}</p>
+    <p class="eyebrow !text-[#c3d2ea]" id="primary-label" data-primary-label>{defaultSenderPaid ? "It costs you" : "You keep from this sale"}</p>
+    <p id="fee-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(examplePrimary)}</p>
     <p class="mt-1 text-paper/70">before expenses and income tax</p>
     <div class="my-7 border-t border-paper/25"></div>
     <div class="[&>:first-child]:mt-0">
       <ResultRow label={`${config.provider} fee`} valueId="fee-total-result" value={formatUsdGrouped(example.feeCents)} />
+      <ResultRow label="The recipient gets" valueId="recipient-result" rowId="recipient-row" hidden value={formatUsdGrouped(example.grossCents)} />
       <div id="line-items" class="mt-1">
         {example.lineItems.length > 1 ? example.lineItems.map((item) => (
           <div class="mt-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 text-sm text-paper/70"><span>{item.label}</span><strong class="ml-auto text-right text-paper">{formatUsdGrouped(item.feeCents)}</strong></div>
