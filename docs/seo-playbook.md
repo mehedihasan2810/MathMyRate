@@ -11,18 +11,22 @@ sources and review dates, said plainly on every page.
 
 ## Metadata templates
 
-Primary keyword = the phrase people type, in this order of preference:
-"{provider} fee calculator", "{thing} calculator", "{a} vs {b} fees".
+Primary keyword = the phrase people type most, from the
+[keyword map](#keyword-map-for-existing-pages). For most tools it is
+"{provider} fee calculator", "{thing} calculator", or "{a} vs {b} fees". For
+creator platforms, [keyword research](keyword-research.md) found that people
+type "{provider} fees" or "how much does {provider} charge" far more often, so
+the title leads with "{Provider} Fees" while the H1 keeps the tool name.
 
-| Element     | Rule                                                                                                | Example                                                                                                                                      |
-| ----------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `<title>`   | Primary keyword first, then the sourced rate or year, then the brand; 50 to 60 characters           | `Stripe Fee Calculator (2.9% + 30¢) \| MathMyRate`                                                                                           |
-| H1          | Exactly the primary keyword, title case, one per page                                               | `Stripe Fee Calculator`                                                                                                                      |
-| Subtitle    | The former tagline as a `<p>` under the H1                                                          | `Know the fee before you quote.`                                                                                                             |
-| Description | 140 to 160 characters: what it does, the rate, the differentiator                                   | `Estimate Stripe's 2.9% + 30¢ US card fee, what you keep from a sale, and what to charge to net a target, using Stripe's published pricing.` |
-| Canonical   | Absolute, trailing slash, from `Astro.site`; never a query string                                   | `https://<site>/fees/stripe-fee-calculator/`                                                                                                 |
-| OG/Twitter  | Same title and description; per-page 1200×630 image; absolute URL                                   | already wired in `Layout.astro`                                                                                                              |
-| URL         | Lowercase, hyphenated, ends with `-calculator/` for tools, stable forever; redirect if ever renamed | `/fees/paypal-fee-calculator/`                                                                                                               |
+| Element     | Rule                                                                                                              | Example                                                                                                                                      |
+| ----------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<title>`   | Primary keyword first, then the sourced rate or year, then the brand; 50 to 60 characters                         | `Stripe Fee Calculator (2.9% + 30¢) \| MathMyRate`, `Substack Fees 2026: How Much Substack Takes \| MathMyRate`                              |
+| H1          | The tool name from the registry, title case, one per page; it contains the primary keyword or its calculator form | `Stripe Fee Calculator`                                                                                                                      |
+| Subtitle    | The former tagline as a `<p>` under the H1                                                                        | `Know the fee before you quote.`                                                                                                             |
+| Description | 140 to 160 characters: what it does, the rate, the differentiator                                                 | `Estimate Stripe's 2.9% + 30¢ US card fee, what you keep from a sale, and what to charge to net a target, using Stripe's published pricing.` |
+| Canonical   | Absolute, trailing slash, from `Astro.site`; never a query string                                                 | `https://<site>/fees/stripe-fee-calculator/`                                                                                                 |
+| OG/Twitter  | Same title and description; per-page 1200×630 image; absolute URL                                                 | already wired in `Layout.astro`                                                                                                              |
+| URL         | Lowercase, hyphenated, ends with `-calculator/` for tools, stable forever; redirect if ever renamed               | `/fees/paypal-fee-calculator/`                                                                                                               |
 
 Never put the year in the URL. Put it in the title only when the content is
 actually reviewed that year, and update the title on each review.
