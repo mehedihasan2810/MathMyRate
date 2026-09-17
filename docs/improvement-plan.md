@@ -266,7 +266,10 @@ assumptions, exclusions, and inverse tests:
 
 Add tools inside the niche so topical authority compounds. Verify demand in
 Search Console and Keyword Planner before building; do not publish a tool
-without the eight content sections. Candidates, grouped by hub:
+without the eight content sections. Free demand and competition research from 2026-09-16 is in
+[keyword research](keyword-research.md); its section 3 ranks the next pages
+(reseller fees such as Depop, Poshmark, Mercari, and Facebook Marketplace,
+then Cash App and Venmo). Candidates, grouped by hub:
 
 Freelance pricing
 
