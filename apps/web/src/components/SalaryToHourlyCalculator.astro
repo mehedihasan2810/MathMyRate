@@ -41,7 +41,7 @@ const example = convertPay({ amountCents: 5_200_000n, period: "year", hoursPerWe
     </div>
     <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="pay-update">Update pay</button><button id="pay-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
   </form>
-  <aside id="pay-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
+  <aside id="pay-panel" data-result-panel class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
     <p class="eyebrow !text-[#f2e3bd]" id="primary-label" data-primary-label>Hourly pay</p><p id="primary-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.hourlyCents)}</p><p class="mt-1 text-[#f3f5fa]/80">gross, before tax and deductions</p>
     <div class="my-7 border-t border-[#f3f5fa]/30"></div>
     <div class="[&>:first-child]:mt-0">
@@ -70,12 +70,14 @@ const example = convertPay({ amountCents: 5_200_000n, period: "year", hoursPerWe
     InputProblem,
     markResultsCurrent,
     markResultsStale,
+    repeatMessage,
     requireHtmlButton,
     requireHtmlElement,
     requireHtmlForm,
     requireHtmlInput,
     requireHtmlSelect,
     setFieldState,
+    setTextContent,
     shouldDeferProblem,
     usdToCents,
     watchCalculatorFields,
@@ -103,7 +105,7 @@ const example = convertPay({ amountCents: 5_200_000n, period: "year", hoursPerWe
   let latest: { readonly amountCents: bigint; readonly period: PayPeriod; readonly pay: PayConversionResult } | null = null;
 
   function setText(id: string, text: string): void {
-    requireHtmlElement(id).textContent = text;
+    setTextContent(id, text);
   }
 
   function currentPeriod(): PayPeriod {
@@ -200,9 +202,9 @@ const example = convertPay({ amountCents: 5_200_000n, period: "year", hoursPerWe
 
     try {
       await navigator.clipboard.writeText(text);
-      setText("pay-message", "Result copied.");
+      repeatMessage("pay-message", "Result copied.");
     } catch {
-      setText("pay-message", "Copy was unavailable. Select the result to copy it manually.");
+      repeatMessage("pay-message", "Copy was unavailable. Select the result to copy it manually.");
     }
   });
 

@@ -51,7 +51,7 @@ const hint = "mt-1 block text-xs font-normal text-ink/55";
             <option value="premium-color">Premium color</option>
           </select>
           <p id="kdpInk-help" class="mt-1 text-xs text-ink/55">Hardcovers offer black ink or premium color.</p>
-          <span id="kdpInk-error" class="field-error" role="alert"></span>
+          <span id="kdpInk-error" class="field-error"></span>
         </div>
         <NumberField id="kdpPages" label="Page count" value="300" inputMode="numeric" required />
       </div>
@@ -70,7 +70,7 @@ const hint = "mt-1 block text-xs font-normal text-ink/55";
     </div>
     <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="kdp-update">Update royalty</button><button id="kdp-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
   </form>
-  <aside id="kdp-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-navy p-7 text-paper shadow-[0_16px_45px_rgba(19,31,51,.16)] md:p-9">
+  <aside id="kdp-panel" data-result-panel class="print-card h-fit rounded-[1.5rem] bg-navy p-7 text-paper shadow-[0_16px_45px_rgba(19,31,51,.16)] md:p-9">
     <p class="eyebrow !text-[#c3d2ea]" data-primary-label>Royalty per sale</p>
     <p id="kdp-royalty" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.royaltyCents)}</p>
     <p class="mt-1 text-paper/70">on Amazon.com, before income tax</p>
@@ -106,12 +106,14 @@ const hint = "mt-1 block text-xs font-normal text-ink/55";
     InputProblem,
     markResultsCurrent,
     markResultsStale,
+    repeatMessage,
     requireHtmlButton,
     requireHtmlElement,
     requireHtmlForm,
     requireHtmlInput,
     requireHtmlSelect,
     setFieldState,
+    setTextContent,
     shouldDeferProblem,
     usdToCents,
     watchCalculatorFields,
@@ -131,7 +133,7 @@ const hint = "mt-1 block text-xs font-normal text-ink/55";
     let latestCopy: string | null = null;
 
     const setText = (id: string, text: string): void => {
-      requireHtmlElement(id).textContent = text;
+      setTextContent(id, text);
     };
 
     const checked = (name: string): string | undefined =>
@@ -302,9 +304,9 @@ const hint = "mt-1 block text-xs font-normal text-ink/55";
 
       try {
         await navigator.clipboard.writeText(`${latestCopy} Estimate from KDP's published rates.`);
-        setText("kdp-message", "Result copied.");
+        repeatMessage("kdp-message", "Result copied.");
       } catch {
-        setText("kdp-message", "Copy was unavailable. Select the result to copy it manually.");
+        repeatMessage("kdp-message", "Copy was unavailable. Select the result to copy it manually.");
       }
     });
 

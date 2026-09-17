@@ -27,7 +27,7 @@ const rows = upworkFiverrRows.map((row) => {
     <NumberField id="comparisonAmount" label="Job price" value="500.00" unit="usd" required help="What the client pays for the work, before any client fee." />
     <NumberField id="comparisonUpworkFee" label="Your Upwork service fee" value={String(upwork.exampleFeeBps / 100)} unit="percent" required help="Shown on your Upwork proposal, offer, or contract: 0% to 15%." />
   </form>
-  <div id="service-comparison-panel" data-result-panel aria-live="polite" class="guide-table mt-6">
+  <div id="service-comparison-panel" data-result-panel class="guide-table mt-6">
     <table>
       <caption>Freelancer fees on the same job, in USD</caption>
       <thead>
@@ -66,6 +66,7 @@ const rows = upworkFiverrRows.map((row) => {
     requireHtmlForm,
     requireHtmlInput,
     setFieldState,
+    setTextContent,
     shouldDeferProblem,
     usdToCents,
     watchCalculatorFields,
@@ -77,7 +78,7 @@ const rows = upworkFiverrRows.map((row) => {
     const panel = requireHtmlElement("service-comparison-panel");
 
     const setText = (id: string, text: string): void => {
-      requireHtmlElement(id).textContent = text;
+      setTextContent(id, text);
     };
 
     const calculate = (trigger: CalculationTrigger): void => {

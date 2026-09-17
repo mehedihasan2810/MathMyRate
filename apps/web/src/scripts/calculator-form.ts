@@ -32,6 +32,31 @@ export function requireHtmlElement(id: string): HTMLElement {
   return element;
 }
 
+/**
+ * Writes an element's text only when it changes. Messages and errors sit in
+ * live regions, and rewriting the same text on every recalculation makes a
+ * screen reader repeat it.
+ */
+export function setTextContent(id: string, text: string): void {
+  const element = requireHtmlElement(id);
+
+  if (element.textContent !== text) element.textContent = text;
+}
+
+/**
+ * Shows a message a screen reader should hear even when the same text is
+ * already there, such as "Result copied." after a second copy.
+ */
+export function repeatMessage(id: string, text: string): void {
+  const element = requireHtmlElement(id);
+
+  element.textContent = "";
+
+  window.setTimeout(() => {
+    element.textContent = text;
+  }, 50);
+}
+
 export function requireHtmlForm(id: string): HTMLFormElement {
   const element = document.getElementById(id);
 
@@ -257,7 +282,10 @@ export function setFieldState(form: HTMLFormElement, problem?: InputProblem): vo
     node.setAttribute("aria-invalid", active ? "true" : "false");
 
     if (error) {
-      error.textContent = active && problem ? problem.message : "";
+      const message = active && problem ? problem.message : "";
+
+      if (error.textContent !== message) error.textContent = message;
+
       error.classList.toggle("visible", Boolean(active));
     }
   });
@@ -265,7 +293,15 @@ export function setFieldState(form: HTMLFormElement, problem?: InputProblem): vo
   const summary = form.querySelector("[data-error-summary]");
 
   if (summary instanceof HTMLElement) {
-    summary.textContent = problem ? problem.message : "";
+    const message = problem ? problem.message : "";
+
+    // The summary is an alert, so a changed message is read at once. The
+    // revision lets the result announcer tell a new error from an old one.
+    if (summary.textContent !== message) {
+      summary.textContent = message;
+      summary.dataset.revision = String(Number(summary.dataset.revision ?? "0") + 1);
+    }
+
     summary.hidden = !problem;
   }
 }
@@ -312,6 +348,86 @@ export function markResultsCurrent(
   }
 }
 
+/**
+ * The sentence a screen reader hears after a finished change: the primary
+ * result and its label, or a note that a comparison table changed. There is
+ * nothing to say while the result is out of date or empty.
+ */
+export function resultAnnouncement(result: {
+  readonly label: string | null;
+  readonly value: string | null;
+  readonly stale: boolean;
+}): string | null {
+  if (result.stale) return null;
+
+  if (result.value === null) return "Comparison updated.";
+
+  const value = result.value.replace(/\s+/gu, " ").trim();
+
+  if (value === "" || value === "—") return null;
+
+  const label = result.label?.replace(/\s+/gu, " ").trim() ?? "";
+
+  return label === "" ? `${value}.` : `${label}: ${value}.`;
+}
+
+/**
+ * Result panels are not live regions, so a screen reader does not read every
+ * number while someone types. Instead, one polite status message is spoken
+ * after each finished change: a committed edit, an option change, or a form
+ * button press. Triggers that land together, such as a blur followed by a
+ * click on Update, are merged into one message.
+ *
+ * While an error shows, a new error is left to the summary alert. An error
+ * that did not change is repeated here, so a change or an Update press is
+ * never met with silence.
+ */
+function createResultAnnouncer(form: HTMLFormElement): () => void {
+  const status = document.createElement("p");
+
+  status.className = "sr-only";
+  status.setAttribute("role", "status");
+  status.setAttribute("aria-atomic", "true");
+  status.dataset.resultStatus = "";
+  document.body.appendChild(status);
+
+  let pending = 0;
+  let heardRevision = "";
+
+  const speak = () => {
+    const panel = document.querySelector<HTMLElement>("[data-result-panel]");
+    const summary = form.querySelector<HTMLElement>("[data-error-summary]");
+
+    if (!panel) return;
+
+    if (summary && !summary.hidden) {
+      const revision = summary.dataset.revision ?? "";
+
+      if (revision === heardRevision) status.textContent = summary.textContent ?? "";
+
+      heardRevision = revision;
+
+      return;
+    }
+
+    const message = resultAnnouncement({
+      label: panel.querySelector("[data-primary-label]")?.textContent ?? null,
+      value: panel.querySelector("[data-primary-result]")?.textContent ?? null,
+      stale: panel.hasAttribute("data-stale"),
+    });
+
+    if (message !== null) status.textContent = message;
+  };
+
+  return () => {
+    window.clearTimeout(pending);
+
+    // Clearing first makes an unchanged message count as a new one.
+    status.textContent = "";
+    pending = window.setTimeout(speak, 50);
+  };
+}
+
 function tidyMoneyField(input: HTMLInputElement): void {
   if (input.value.trim().length === 0) return;
 
@@ -325,7 +441,8 @@ function tidyMoneyField(input: HTMLInputElement): void {
 /**
  * Recalculates on every keystroke. When an edit is finished (the change event
  * fires as the field loses focus), money fields are tidied to "1,250.00" and
- * the inputs are validated in full.
+ * the inputs are validated in full. Finished changes are announced to screen
+ * readers once.
  *
  * A mouse press on a button blurs the field before the button's click fires.
  * Showing a new error at that moment would push the button down, the release
@@ -340,13 +457,24 @@ export function watchCalculatorFields(
   let pointerHeld = false;
   let commitWaiting = false;
 
+  const announce = createResultAnnouncer(form);
+
+  const commit = () => {
+    calculate("commit");
+    announce();
+  };
+
+  // Option changes and form buttons run their own handlers first; announce
+  // once those have updated the result.
+  const announceAfterHandlers = () => window.setTimeout(announce, 0);
+
   const releasePointer = () => {
     pointerHeld = false;
 
     if (!commitWaiting) return;
 
     commitWaiting = false;
-    window.setTimeout(() => calculate("commit"), 0);
+    window.setTimeout(commit, 0);
   };
 
   document.addEventListener(
@@ -374,7 +502,20 @@ export function watchCalculatorFields(
         return;
       }
 
-      calculate("commit");
+      commit();
     });
   });
+
+  form.addEventListener("change", (event) => {
+    if (event.target instanceof HTMLInputElement && event.target.dataset.field !== undefined)
+      return;
+
+    announceAfterHandlers();
+  });
+
+  form.addEventListener("click", (event) => {
+    if (event.target instanceof Element && event.target.closest("button")) announceAfterHandlers();
+  });
+
+  form.addEventListener("submit", announceAfterHandlers);
 }

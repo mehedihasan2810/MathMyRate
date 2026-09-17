@@ -147,17 +147,39 @@ any template change.
 
 ## Performance budget (mobile, throttled)
 
-| Metric                        | Budget                           |
-| ----------------------------- | -------------------------------- |
-| Largest Contentful Paint      | under 2.0 s                      |
-| Cumulative Layout Shift       | under 0.05                       |
-| Interaction to Next Paint     | under 200 ms                     |
-| JavaScript per page (gzipped) | under 40 KB                      |
-| Fonts                         | 2 weights, preloaded body weight |
-| HTML per page                 | under 60 KB                      |
+| Metric                               | Budget       | Measured 2026-09-16                     |
+| ------------------------------------ | ------------ | --------------------------------------- |
+| Largest Contentful Paint             | under 2.0 s  | 0.63 to 0.81 s                          |
+| Cumulative Layout Shift              | under 0.05   | 0 to 0.019                              |
+| Interaction to Next Paint            | under 200 ms | not measured; total blocking 0 to 25 ms |
+| JavaScript per page (gzipped)        | under 60 KB  | 25 KB freelance, 48 KB fee pages        |
+| CSS per page (gzipped)               | under 12 KB  | 6.7 KB                                  |
+| Fonts per page                       | under 50 KB  | 47 KB, one Latin variable Inter file    |
+| HTML per page (gzipped)              | under 20 KB  | 11.5 KB at most                         |
+| Total first-visit download (gzipped) | under 130 KB | 113 KB at most (eBay)                   |
 
-Measure with Lighthouse on a "Moto G" profile before each release and after
-ads ship. Ad slots have fixed reserved heights.
+Why the numbers are what they are:
+
+- **JavaScript.** Fee pages ship Effect Schema (about 23 KB), which the engine
+  uses to decode inputs, and the preset registry (about 18 KB), which the
+  engine needs to check every preset before it prices a fee. The earlier
+  40 KB budget did not allow for either; replacing them would weaken the
+  engine's checks. Pages that price no fee do not load the registry, because
+  the calculators package is marked free of side effects.
+- **Fonts.** One variable file covers every weight the site uses. It is not
+  preloaded: on a slow connection a preload delayed first paint by about
+  150 ms. Astro's Fonts API gives the system fallback fonts size-adjusted
+  metrics, so text does not reflow when Inter arrives. Before this, the reflow
+  gave fee pages a layout shift of 0.21 to 0.24.
+- **HTML.** Measured gzipped, as it is sent. The largest page is about 60 KB
+  before compression.
+
+Check sizes on every release: build, then run `pnpm run budget` in
+`apps/web`. It fails when a page is over budget, and it counts every font file
+a page's `@font-face` rules name, even ones a browser would skip. Check timing
+metrics in Chrome with 4x CPU slowdown and a slow 4G profile, and with
+PageSpeed Insights on the heaviest page once the site has a public URL. Ad
+slots have fixed reserved heights.
 
 ## E-E-A-T checklist (every calculator page)
 
@@ -234,7 +256,8 @@ the form, none on 404, privacy, terms, or methodology.
 - [ ] About names the operator; Privacy is true for launch day.
 - [ ] Search Console and Bing verified; sitemap submitted; cookieless
       analytics live and disclosed.
-- [ ] Lighthouse mobile within budget on the heaviest page (Gumroad).
+- [ ] `pnpm run budget` passes, and PageSpeed Insights mobile is within budget
+      on the heaviest page (eBay).
 - [ ] `pnpm run lint`, `pnpm run format:check`, `pnpm run check-types`,
       `pnpm run test`, and the browser pass recorded in
       [project status](project-status.md).
@@ -245,5 +268,5 @@ the form, none on 404, privacy, terms, or methodology.
   keyword map; index coverage errors; Core Web Vitals report.
 - Monthly: re-check every official pricing source, update review dates only
   when actually reviewed, and update titles that carry a year.
-- Per release: Rich Results test on changed templates, Lighthouse on the
-  heaviest page, and the browser pass.
+- Per release: Rich Results test on changed templates, `pnpm run budget`, a
+  throttled timing check on the heaviest page, and the browser pass.

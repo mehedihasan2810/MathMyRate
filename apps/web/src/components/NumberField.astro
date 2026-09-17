@@ -58,5 +58,5 @@ const padding = unit === "usd" ? "pl-7 pr-3" : unit === "percent" ? "pl-3 pr-9" 
     {unit === "percent" ? <span class="field-adornment right-3" aria-hidden="true">%</span> : null}
   </div>
   {help ? <p id={`${id}-help`} class="mt-1 text-xs text-ink/55">{help}</p> : null}
-  <span id={`${id}-error`} class="field-error" role="alert"></span>
+  <span id={`${id}-error`} class="field-error"></span>
 </div>

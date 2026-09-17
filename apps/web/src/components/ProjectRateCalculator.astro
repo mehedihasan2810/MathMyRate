@@ -33,7 +33,7 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
     </div>
     <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="project-update">Update quote</button><button id="project-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
   </form>
-  <aside id="project-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
+  <aside id="project-panel" data-result-panel class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
     <p class="eyebrow !text-[#f2e3bd]" data-primary-label>Target project receipts</p><p id="quote-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.targetReceiptsCents)}</p><p class="mt-1 text-[#f3f5fa]/80">before any project-specific payment processing fees</p>
     <div class="my-7 border-t border-[#f3f5fa]/30"></div>
     <div class="[&>:first-child]:mt-0">
@@ -52,19 +52,21 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
   import { calculateProjectRate } from "@MathMyRate/calculators";
   import {
     type CalculationTrigger,
-    formatUsdGrouped,
     focusProblemField,
+    formatUsdGrouped,
     formatUsdInput,
     hoursToMinutes,
     InputProblem,
     markResultsCurrent,
     markResultsStale,
     percentToBps,
+    repeatMessage,
     requireHtmlButton,
     requireHtmlElement,
     requireHtmlForm,
     requireHtmlInput,
     setFieldState,
+    setTextContent,
     shouldDeferProblem,
     usdToCents,
     watchCalculatorFields,
@@ -81,7 +83,7 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
   let transferMessage = "";
 
   function setResult(id: string, text: string): void {
-    requireHtmlElement(id).textContent = text;
+    setTextContent(id, text);
   }
 
   function clear(): void {
@@ -123,7 +125,7 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
       setResult("time-result", `${(delivery + admin) / 60} hours`);
       latest = result.targetReceiptsCents;
       markResultsCurrent(panel, [copyButton]);
-      requireHtmlElement("project-message").textContent = transferMessage;
+      setTextContent("project-message", transferMessage);
       setFieldState(form);
     } catch (error) {
       const problem =
@@ -139,7 +141,7 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
       setFieldState(form, problem);
 
       if (trigger === "submit") focusProblemField(form, problem);
-      requireHtmlElement("project-message").textContent = "";
+      setTextContent("project-message", "");
     }
   }
 
@@ -186,10 +188,9 @@ const example = calculateProjectRate({ hourlyRateCents: 11250n, estimatedMinutes
 
     try {
       await navigator.clipboard.writeText(`Target project receipts: ${formatUsdGrouped(latest)}`);
-      requireHtmlElement("project-message").textContent = "Quote copied.";
+      repeatMessage("project-message", "Quote copied.");
     } catch {
-      requireHtmlElement("project-message").textContent =
-        "Copy was unavailable. Select the result to copy it manually.";
+      repeatMessage("project-message", "Copy was unavailable. Select the result to copy it manually.");
     }
   });
 

@@ -221,6 +221,8 @@ assumptions, exclusions, and inverse tests:
 
 ### P1.7 Accessibility polish (S)
 
+**Status: done 2026-09-16** (branch `feat/a11y-performance`). Result panels are no longer live regions. One polite status message per calculator is spoken after each finished change: a committed edit, an option change, Update, Reset, or Enter. It gives the primary result with its label, such as "Reaches you: $970.00.", or "Comparison updated." for comparison tables. Typing announces nothing. Per-field errors lost `role="alert"`, so an error is read once, by the summary. Text is written only when it changes, so notes and errors are not repeated on every recalculation; an unchanged error is repeated once through the status message when the user commits a change or presses Update, so no action is met with silence. Copy confirmations repeat on a second copy. Help text was already outside the labels. Verified by recording every live region change in Chrome on all 39 calculator and comparison pages; no real screen reader was run, because enabling VoiceOver control is a system setting.
+
 - Move `aria-live` to the primary result and a status line; drop
   `role="alert"` from per-field errors (keep it on the summary).
 - Move help text out of the `<label>` element (keep `aria-describedby`).
@@ -228,6 +230,8 @@ assumptions, exclusions, and inverse tests:
   once per change.
 
 ### P1.8 Performance trim (M)
+
+**Status: done 2026-09-16** (branch `feat/a11y-performance`), with three deviations, each measured. (1) Effect Schema stays in the browser, as the plan allows; the bigger cost was the fee preset registry on every calculator page, which marking the calculators package side-effect free removed from pages that price no fee (the hourly rate page went from 193 KB to 73 KB of JavaScript before compression). (2) Instead of two static weights, one Latin variable Inter file (47 KB) covers all four weights the design uses (95 KB before), with identical page height and heading widths. It is not preloaded, because a preload delayed first paint by about 150 ms on slow 4G. The same work fixed a layout shift of 0.21 to 0.24 on fee pages: Astro's Fonts API now gives the fallback fonts size-adjusted metrics. (3) The budget is enforced by `pnpm run budget` after each build; a Lighthouse or PageSpeed Insights run waits for a public URL, and timing was measured in Chrome with 4x CPU slowdown and slow 4G instead.
 
 - Keep Effect Schema for tests and the build-time example, but decode in the
   browser with a small hand-written guard so the shipped chunk drops from

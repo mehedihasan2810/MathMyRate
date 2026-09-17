@@ -6,6 +6,7 @@ import {
   formatUsdGrouped,
   requireHtmlElement,
   requireHtmlInput,
+  setTextContent,
   wholeNumber,
 } from "./calculator-form";
 
@@ -26,7 +27,7 @@ export function readSalesPerMonth(): number | null {
 }
 
 function setText(id: string, text: string): void {
-  requireHtmlElement(id).textContent = text;
+  setTextContent(id, text);
 }
 
 /**

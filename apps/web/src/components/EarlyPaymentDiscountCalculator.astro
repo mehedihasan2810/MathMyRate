@@ -29,7 +29,7 @@ const example = calculateEarlyPaymentDiscount({ invoiceCents: 100_000n, discount
     </div>
     <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="discount-update">Update terms</button><button id="discount-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
   </form>
-  <aside id="discount-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
+  <aside id="discount-panel" data-result-panel class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
     <p class="eyebrow !text-[#f2e3bd]" data-primary-label>Paid early, the client pays</p><p id="discount-total-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.discountedTotalCents)}</p><p id="discount-note" class="mt-1 text-[#f3f5fa]/80">within 10 days, instead of {formatUsdGrouped(example.invoiceCents)} by day 30</p>
     <div class="my-7 border-t border-[#f3f5fa]/30"></div>
     <div class="[&>:first-child]:mt-0">
@@ -55,11 +55,13 @@ const example = calculateEarlyPaymentDiscount({ invoiceCents: 100_000n, discount
     markResultsCurrent,
     markResultsStale,
     percentToBps,
+    repeatMessage,
     requireHtmlButton,
     requireHtmlElement,
     requireHtmlForm,
     requireHtmlInput,
     setFieldState,
+    setTextContent,
     shouldDeferProblem,
     usdToCents,
     watchCalculatorFields,
@@ -81,7 +83,7 @@ const example = calculateEarlyPaymentDiscount({ invoiceCents: 100_000n, discount
   let latest: { readonly terms: Terms; readonly result: EarlyPaymentResult } | null = null;
 
   function setText(id: string, text: string): void {
-    requireHtmlElement(id).textContent = text;
+    setTextContent(id, text);
   }
 
   /** When the discount applies: "within 10 days", or "on the invoice date" for a 0-day period. */
@@ -178,9 +180,9 @@ const example = calculateEarlyPaymentDiscount({ invoiceCents: 100_000n, discount
 
     try {
       await navigator.clipboard.writeText(copyText(latest.terms, latest.result));
-      setText("discount-message", "Result copied.");
+      repeatMessage("discount-message", "Result copied.");
     } catch {
-      setText("discount-message", "Copy was unavailable. Select the result to copy it manually.");
+      repeatMessage("discount-message", "Copy was unavailable. Select the result to copy it manually.");
     }
   });
 

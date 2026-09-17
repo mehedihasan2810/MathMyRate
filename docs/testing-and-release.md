@@ -54,6 +54,14 @@ PUBLIC_SITE_URL=https://calculators.example PUBLIC_SERVER_URL=https://api.exampl
 `PUBLIC_SITE_URL`, `REQUIRE_SITE_URL`, and `ALCHEMY_STAGE` are Turborepo
 global environment keys, so changing them invalidates the cached build.
 
+After a build, check page weight against the
+[performance budget](seo-playbook.md#performance-budget-mobile-throttled). It
+fails when any page is over:
+
+```sh
+pnpm --filter web run budget
+```
+
 ## Math test matrix
 
 ### Freelance and project engines

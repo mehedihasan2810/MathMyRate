@@ -34,13 +34,13 @@ const example = compareContractorWithEmployee({ salaryCents: 10_000_000n, benefi
           <option value="head-of-household">Head of household</option>
         </select>
         <p id="filingStatus-help" class="mt-1 text-xs text-ink/55">Sets the Additional Medicare Tax threshold.</p>
-        <span id="filingStatus-error" class="field-error" role="alert"></span>
+        <span id="filingStatus-error" class="field-error"></span>
       </div>
       <NumberField id="billableHours" label="Billable hours a year" value="1,840" required help="Hours you would invoice. 1,840 is 40 a week for 46 weeks." />
     </div>
     <div class="calculator-actions mt-7 flex flex-wrap gap-3"><button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper" type="button" id="contractor-update">Update comparison</button><button id="contractor-reset" class="rounded-full border border-line px-5 py-2.5 text-sm font-semibold" type="button">Reset example</button></div>
   </form>
-  <aside id="contractor-panel" data-result-panel aria-live="polite" class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
+  <aside id="contractor-panel" data-result-panel class="print-card h-fit rounded-[1.5rem] bg-[#2b3c5e] p-7 text-[#f3f5fa] shadow-[0_16px_45px_rgba(19,31,51,.18)] md:p-9">
     <p class="eyebrow !text-[#f2e3bd]" data-primary-label>Contractor income to match</p><p id="contractor-revenue-result" data-primary-result class="result-value display mt-4 text-6xl font-bold">{formatUsdGrouped(example.contractorRevenueCents)}</p><p class="mt-1 text-[#f3f5fa]/80">a year, before income tax</p>
     <div class="my-7 border-t border-[#f3f5fa]/30"></div>
     <div class="[&>:first-child]:mt-0">
@@ -70,12 +70,14 @@ const example = compareContractorWithEmployee({ salaryCents: 10_000_000n, benefi
     InputProblem,
     markResultsCurrent,
     markResultsStale,
+    repeatMessage,
     requireHtmlButton,
     requireHtmlElement,
     requireHtmlForm,
     requireHtmlInput,
     requireHtmlSelect,
     setFieldState,
+    setTextContent,
     shouldDeferProblem,
     usdToCents,
     watchCalculatorFields,
@@ -92,7 +94,7 @@ const example = compareContractorWithEmployee({ salaryCents: 10_000_000n, benefi
   let latest: { readonly minutes: number; readonly result: ContractorComparisonResult } | null = null;
 
   function setText(id: string, text: string): void {
-    requireHtmlElement(id).textContent = text;
+    setTextContent(id, text);
   }
 
   function currentStatus(): FilingStatus {
@@ -205,9 +207,9 @@ const example = compareContractorWithEmployee({ salaryCents: 10_000_000n, benefi
 
     try {
       await navigator.clipboard.writeText(copyText(latest.minutes, latest.result));
-      setText("contractor-message", "Result copied.");
+      repeatMessage("contractor-message", "Result copied.");
     } catch {
-      setText("contractor-message", "Copy was unavailable. Select the result to copy it manually.");
+      repeatMessage("contractor-message", "Copy was unavailable. Select the result to copy it manually.");
     }
   });
 
