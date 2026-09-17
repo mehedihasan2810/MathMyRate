@@ -1,0 +1,114 @@
+---
+import { calculateFees, effectiveFeeRateBps } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatPercentBps, formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("depop-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const preset = requireOfficialPreset("depop-us-sale");
+
+/** A US sale: the buyer's shipping pays for the label and the tax goes to the state, so neither is kept. */
+const sale = (itemCents: bigint, shippingCents = 0n, taxCents = 0n) => {
+  const result = calculateFees({ preset, grossCents: itemCents + shippingCents + taxCents, taxCents });
+
+  return { total: result.grossCents, fee: result.feeCents, keep: result.sellerProceedsCents - shippingCents };
+};
+
+const hundred = sale(10_000n);
+
+const example = sale(5_000n, 800n, 464n);
+
+const amountRows = [1_000n, 2_500n, 5_000n, 10_000n, 25_000n].map((item) => {
+  const alone = sale(item);
+  const shipped = sale(item, 800n);
+
+  return [formatSaleLabel(item), formatUsdGrouped(alone.fee), formatUsdGrouped(alone.keep), formatUsdGrouped(shipped.fee), formatUsdGrouped(shipped.keep)];
+});
+
+const shareOnTen = formatPercentBps(effectiveFeeRateBps(sale(1_000n).fee, 1_000n));
+
+const shareOnHundred = formatPercentBps(effectiveFeeRateBps(hundred.fee, 10_000n));
+
+const updatedOn = "2026-09-17";
+
+const description = "Depop fees for US sellers: no selling fee, and 3.3% + 45¢ processing on the item, shipping, and tax. See what Depop takes and what you keep from a sale.";
+
+const sources = [
+  { title: "Seller fees and charges – Depop Help Centre", url: "https://depophelp.zendesk.com/hc/en-gb/articles/360001791127-Seller-fees-and-charges" },
+  { title: "What is the Marketplace fee? – Depop Help Centre", url: "https://depophelp.zendesk.com/hc/en-gb/articles/21752555753361-What-is-the-Marketplace-fee" },
+  { title: "How do I get paid? - US – Depop Help Centre", url: "https://depophelp.zendesk.com/hc/en-gb/articles/9057092334865-How-do-I-get-paid-US" },
+  { title: "Depop removes selling fees in the United States, evolves fee structure | Depop newsroom", url: "https://news.depop.com/company-news/depop-removes-selling-fees-in-the-united-states-evolves-fee-structure/" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Depop take from a sale?", answer: `Depop charges US sellers no selling fee. It takes a payment processing fee of 3.3% + $0.45 on the whole order, including shipping and sales tax. A $100 item with no shipping or tax pays ${formatUsdGrouped(hundred.fee)} and leaves ${formatUsdGrouped(hundred.keep)}.` },
+  { question: "Does Depop charge a selling fee in the US?", answer: "No. Depop removed its 10% selling fee for US sellers on July 15, 2024, and its fees page says no Depop selling fees are charged to sellers based in the US. The payment processing fee still applies." },
+  { question: "What is Depop's Marketplace fee?", answer: "It is a fee Depop charges buyers in the US since July 18, 2024: up to 5% of the item price plus up to $1, excluding tax and shipping. Depop lists it for buyers rather than among seller fees, and the exact amount shows only at checkout, so this calculator leaves it out." },
+  { question: "Does the processing fee apply to shipping and tax?", answer: `Yes. Depop charges it on the item sale price plus shipping costs and any applicable taxes. A $50 item with $8 shipping and $4.64 tax is a ${formatUsdGrouped(example.total)} order, which pays ${formatUsdGrouped(example.fee)}.` },
+  { question: "When do I get paid on Depop?", answer: "Depop sends the money to your Depop Balance 2 business days after the item shows as delivered, or 10 business days after the sale, whichever comes first. You can then withdraw it to your linked bank account." },
+  { question: "Do I get Depop's fees back if I refund a buyer?", answer: "Yes. Depop says that if a sale is refunded, all its fees are reversed too, and this happens automatically for sales through Depop Payments." },
+  { question: "What does boosting a listing cost?", answer: "Boosting is optional. For US listings created from March 23, 2026, Depop charges a 12% boosting fee on a boosted sale, on the item price and, if you did not use a Depop shipping label, the shipping. This calculator does not include it." },
+];
+---
+<Layout title="Depop Fees 2026: No Selling Fee, 3.3% + 45¢ | MathMyRate" description={description} ogImage="/og/depop.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Depop fees, worked out: what Depop's payment processing takes from a US sale, with shipping and tax, and what reaches your Depop Balance.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={preset.checkedOn} />
+    <FeeCalculator calculatorId="depop" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>Depop charges US sellers <strong>no selling fee</strong>. The only Depop fee on a sale is payment processing of <strong>3.3% + $0.45</strong>, charged on everything the buyer paid: the item, shipping, and sales tax. A $100 item with no shipping or tax pays <strong>{formatUsdGrouped(hundred.fee)}</strong>, and you keep <strong>{formatUsdGrouped(hundred.keep)}</strong>.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Enter the item's sale price.</li>
+        <li>Enter the shipping the buyer paid, if any. With a Depop shipping label it pays for the label, so it is not counted as yours.</li>
+        <li>Enter the sales tax on the order, if any. It is part of the fee base, but it goes to the state.</li>
+        <li>To see monthly totals, enter how many same-size sales you make a month.</li>
+      </ol>
+
+      <h2>How the fee is built</h2>
+      <p>Take a $50 item with $8 shipping and $4.64 sales tax. The buyer pays {formatUsdGrouped(example.total)}. Depop's processing fee is 3.3% of that total, rounded to the cent, plus $0.45: <strong>{formatUsdGrouped(example.fee)}</strong>. The shipping pays for the label and the tax goes to the state, so you keep <strong>{formatUsdGrouped(example.keep)}</strong>.</p>
+      <p>Because $0.45 is charged on every order, small sales lose a bigger share: {shareOnTen} of a $10 sale, against {shareOnHundred} of a $100 sale.</p>
+
+      <h2>Depop fees at common prices</h2>
+      <p>No sales tax. The "$8 shipping" columns show how shipping raises the fee without adding to what you keep.</p>
+      <DataTable caption="Depop fee and what you keep, by item price, with and without $8 buyer-paid shipping" headers={["Item price", "Fee, no shipping", "You keep", "Fee with $8 shipping", "You keep"]} rows={amountRows} />
+
+      <h2>Other Depop costs and rules</h2>
+      <ul>
+        <li><strong>Marketplace fee:</strong> charged to buyers, up to 5% of the item price plus up to $1, since July 18, 2024. It is not part of this estimate.</li>
+        <li><strong>Boosted listings:</strong> optional. A boosted sale of a US listing created from March 23, 2026 pays 12% on the item price and, without a Depop shipping label, the shipping.</li>
+        <li><strong>Refunds:</strong> if a sale is refunded, Depop reverses all its fees automatically for sales through Depop Payments.</li>
+        <li><strong>Getting paid:</strong> money reaches your Depop Balance 2 business days after delivery or 10 business days after the sale, whichever comes first.</li>
+        <li><strong>Outside the US:</strong> sellers in other countries pay different fees, which this calculator does not estimate.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="depop" />
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId={tool.id} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Depop's pages were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Depop. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

@@ -4,13 +4,9 @@
  * with a minimum fee or a cap is split into bands by payout amount, in order.
  */
 
-import {
-  calculateFees,
-  effectiveFeeRateBps,
-  getFeePreset,
-  GrossOutOfRangeError,
-  type FeePreset,
-} from "@MathMyRate/calculators";
+import { effectiveFeeRateBps, getFeePreset, type FeePreset } from "@MathMyRate/calculators";
+
+import { calculateBandedFees } from "../lib/fee-bands";
 
 import { formatPercentBps } from "../scripts/calculator-form";
 
@@ -163,7 +159,7 @@ export interface PayoutBreakdown {
   readonly feeCents: bigint;
   readonly receivedCents: bigint;
   readonly balanceUsedCents: bigint;
-  readonly result: ReturnType<typeof calculateFees>;
+  readonly result: ReturnType<typeof calculateBandedFees>;
 }
 
 /** Prices a payout and says what reaches you and what leaves your balance. */
@@ -187,30 +183,10 @@ export function payoutBreakdown(method: PayoutMethod, payoutCents: bigint): Payo
       };
 }
 
-/**
- * Prices a payout with the band that covers it. When no band does, throws a
- * GrossOutOfRangeError spanning every band, so the message names the whole
- * range the method covers.
- */
+/** Prices a payout with the band that covers it. */
 export function calculatePayout(
   method: PayoutMethod,
   payoutCents: bigint,
-): ReturnType<typeof calculateFees> {
-  const presets = payoutPresets(method);
-
-  for (const preset of presets) {
-    try {
-      return calculateFees({ preset, grossCents: payoutCents });
-    } catch (error) {
-      if (!(error instanceof GrossOutOfRangeError)) throw error;
-    }
-  }
-
-  const first = presets[0]?.grossRangeCents?.minCents;
-  const last = presets.at(-1)?.grossRangeCents?.maxCents;
-
-  throw new GrossOutOfRangeError(
-    first === undefined ? null : BigInt(first),
-    last === undefined ? null : BigInt(last),
-  );
+): ReturnType<typeof calculateBandedFees> {
+  return calculateBandedFees(payoutPresets(method), payoutCents);
 }

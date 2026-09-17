@@ -1,13 +1,13 @@
 ---
-import { calculateFees, getFeePreset, GrossOutOfRangeError } from "@MathMyRate/calculators";
+import { GrossOutOfRangeError } from "@MathMyRate/calculators";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import DataTable from "../../components/DataTable.astro";
-import { feeCalculators } from "../../data/fee-calculators";
+import { feeCalculators, scenarioPresetIds } from "../../data/fee-calculators";
 import { serviceFeeCalculators } from "../../data/service-fee-calculators";
 import { hubBreadcrumbs, toolsInHub } from "../../data/tools";
 import Layout from "../../layouts/Layout.astro";
 import { formatReadableDate } from "../../lib/dates";
-import { formatCombinedRate } from "../../lib/fee-labels";
+import { bandedRateLabel, calculateBandedFees } from "../../lib/fee-bands";
 import { requireOfficialPreset } from "../../lib/fee-tables";
 import { formatUsdGrouped } from "../../scripts/calculator-form";
 
@@ -22,7 +22,9 @@ const summaryRows = feeCalculators.map((config) => {
 
   const preset = requireOfficialPreset(first.presetId);
 
-  return [config.provider, first.label, formatCombinedRate(preset.components), String(config.scenarios.length), preset.checkedOn ? formatReadableDate(preset.checkedOn) : "Not reviewed"];
+  const rate = bandedRateLabel(scenarioPresetIds(first).map(requireOfficialPreset));
+
+  return [config.provider, first.label, rate, String(config.scenarios.length), preset.checkedOn ? formatReadableDate(preset.checkedOn) : "Not reviewed"];
 });
 
 const serviceSummaryRows = serviceFeeCalculators.map((config) => [
@@ -35,14 +37,15 @@ const serviceSummaryRows = serviceFeeCalculators.map((config) => [
 
 const smallSaleRows = feeCalculators.map((config) => {
   const [first] = config.scenarios;
-  const preset = first ? getFeePreset(first.presetId) : undefined;
 
-  if (!first || !preset) throw new Error(`${config.provider} has no usable fee scenario.`);
+  if (!first) throw new Error(`${config.provider} has no usable fee scenario.`);
+
+  const presets = scenarioPresetIds(first).map(requireOfficialPreset);
 
   // A scenario that does not cover the amount, such as Skool's band up to $899, shows a dash.
   const at = (grossCents: bigint) => {
     try {
-      return formatUsdGrouped(calculateFees({ preset, grossCents }).feeCents);
+      return formatUsdGrouped(calculateBandedFees(presets, grossCents).feeCents);
     } catch (error) {
       if (error instanceof GrossOutOfRangeError) return "—";
 

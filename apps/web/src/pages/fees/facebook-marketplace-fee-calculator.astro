@@ -1,0 +1,113 @@
+---
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { calculateBandedFees } from "../../lib/fee-bands";
+import { formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("facebook-marketplace-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const presets = ["facebook-marketplace-us-shipped-minimum", "facebook-marketplace-us-shipped"].map(requireOfficialPreset);
+
+const [minimumBand] = presets;
+
+if (!minimumBand) throw new Error("The Facebook Marketplace fee bands are missing.");
+
+/** A shipped order: the buyer's shipping pays for the label and the tax goes to the state. */
+const sale = (itemCents: bigint, shippingCents = 0n, taxCents = 0n) => {
+  const result = calculateBandedFees(presets, itemCents + shippingCents + taxCents, taxCents);
+
+  return { total: result.grossCents, fee: result.feeCents, keep: result.sellerProceedsCents - shippingCents };
+};
+
+const example = sale(2_000n, 500n, 100n);
+
+const small = sale(500n);
+
+const hundred = sale(10_000n);
+
+const amountRows = [500n, 800n, 1_000n, 2_500n, 5_000n, 10_000n, 25_000n].map((item) => {
+  const alone = sale(item);
+  const shipped = sale(item, 500n);
+
+  return [formatSaleLabel(item), formatUsdGrouped(alone.fee), formatUsdGrouped(alone.keep), formatUsdGrouped(shipped.fee), formatUsdGrouped(shipped.keep)];
+});
+
+const updatedOn = "2026-09-17";
+
+const description = "Facebook Marketplace fees on shipped orders: 10% of the sale, shipping, and tax, with an 80¢ minimum. See what Meta takes and what you keep from a sale.";
+
+const sources = [
+  { title: "Onsite Checkout Payments Features Terms and Conditions | Facebook", url: "https://www.facebook.com/legal/checkout_terms" },
+  { title: "Facebook Marketplace Seller Protection Policy | Facebook", url: "https://www.facebook.com/legal/merchant_policies" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Facebook Marketplace charge to sell?", answer: `For shipped orders paid through checkout, Meta charges US individual sellers a selling fee of 10% with a minimum fee of $0.80. A $100 item with no shipping or tax pays ${formatUsdGrouped(hundred.fee)}; a $5 item pays the ${formatUsdGrouped(small.fee)} minimum.` },
+  { question: "Does the fee include shipping and tax?", answer: `Yes. Meta calculates the selling fee on the entire transaction, including the sale price, shipping, and sales tax. A $20 item with $5 shipping and $1 tax is a ${formatUsdGrouped(example.total)} order, which pays ${formatUsdGrouped(example.fee)}.` },
+  { question: "When does the $0.80 minimum apply?", answer: "When 10% of the order is less than $0.80, which is any order total of $8.00 or less. Above that, the fee is 10% of the total." },
+  { question: "Is there a fee for local pickup?", answer: "Meta's selling fee is set in its checkout terms, for sales paid through checkout on Facebook. This calculator covers shipped orders through checkout, not sales paid in person." },
+  { question: "Does the fee cover payment processing?", answer: "Meta's terms say its selling fees do not include any fees your payment provider may charge separately, and they give no amount for those, so this calculator cannot include them." },
+  { question: "Do I get the fee back if I refund the buyer?", answer: "Meta's terms say selling fees are non-refundable except as provided in its seller policies. Meta also charges $20 per chargeback, waived if the chargeback is successfully disputed and you followed its terms." },
+];
+---
+<Layout title="Facebook Marketplace Fees 2026: 10% or 80¢ | MathMyRate" description={description} ogImage="/og/facebook-marketplace.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Facebook Marketplace fees, worked out: what Meta's selling fee takes from a shipped order, with shipping and tax, and what you keep.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={minimumBand.checkedOn} />
+    <FeeCalculator calculatorId="facebook-marketplace" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>For shipped orders paid through checkout, Meta charges US individual sellers a selling fee of <strong>10%</strong>, with a minimum fee of <strong>$0.80</strong>, on the whole order: the sale price, shipping, and sales tax. A $20 item with $5 shipping and $1 tax pays <strong>{formatUsdGrouped(example.fee)}</strong>, and you keep <strong>{formatUsdGrouped(example.keep)}</strong>.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Enter the item's sale price.</li>
+        <li>Enter the shipping the buyer paid, if any. It is part of the fee, but it pays for the label, so it is not counted as yours.</li>
+        <li>Enter the sales tax on the order, if any. It is also part of the fee.</li>
+        <li>To see monthly totals, enter how many same-size orders you ship a month.</li>
+      </ol>
+
+      <h2>How the fee is built</h2>
+      <p>Meta adds up the sale price, shipping, and tax, and takes 10% of the total, rounded to the cent, or $0.80 if that is more. The $20 item above makes a {formatUsdGrouped(example.total)} order, so the fee is {formatUsdGrouped(example.fee)}. Take away the fee, the $5 for the label, and the $1 of tax, and {formatUsdGrouped(example.keep)} reaches you. Goods shipped together count as one order.</p>
+      <p>Small orders pay the minimum: a $5 item with no shipping or tax pays {formatUsdGrouped(small.fee)} and leaves {formatUsdGrouped(small.keep)}.</p>
+
+      <h2>Facebook Marketplace fees at common prices</h2>
+      <p>No sales tax. The "$5 shipping" columns show buyer-paid shipping, which raises the fee without adding to what you keep.</p>
+      <DataTable caption="Facebook Marketplace fee and what you keep, by item price, with and without $5 buyer-paid shipping" headers={["Item price", "Fee, no shipping", "You keep", "Fee with $5 shipping", "You keep"]} rows={amountRows} />
+
+      <h2>What the fee does not cover</h2>
+      <ul>
+        <li><strong>Payment provider fees:</strong> Meta's terms say a payment provider may charge separately, with no amount given.</li>
+        <li><strong>Tax on the fee:</strong> Meta's fees are exclusive of taxes, which may be added where required.</li>
+        <li><strong>Chargebacks:</strong> $20 per chargeback, waived if it is successfully disputed.</li>
+        <li><strong>Refunds:</strong> selling fees are non-refundable except as Meta's seller policies provide.</li>
+        <li><strong>Not estimated:</strong> sales paid in person outside checkout, business Shops, and label costs above the shipping the buyer paid.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="facebook-marketplace" />
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId={tool.id} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Meta's terms were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Meta or Facebook. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

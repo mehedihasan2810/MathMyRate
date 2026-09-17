@@ -31,6 +31,8 @@ export function formatCombinedRate(components: readonly FeeComponent[]): string 
   const rateBps = components.reduce((sum, component) => sum + component.rateBps, 0);
   const fixedCents = components.reduce((sum, component) => sum + component.fixedCents, 0);
 
+  if (rateBps === 0 && fixedCents > 0) return formatFixed(fixedCents);
+
   return fixedCents === 0
     ? formatPercent(rateBps)
     : `${formatPercent(rateBps)} + ${formatFixed(fixedCents)}`;

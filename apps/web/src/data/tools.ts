@@ -20,6 +20,10 @@ export type ToolId =
   | "square-fees"
   | "etsy-fees"
   | "ebay-fees"
+  | "depop-fees"
+  | "poshmark-fees"
+  | "mercari-fees"
+  | "facebook-marketplace-fees"
   | "upwork-fees"
   | "fiverr-fees"
   | "kickstarter-fees"
@@ -203,6 +207,49 @@ export const tools: readonly Tool[] = [
     summary: "eBay's final value fee and per-order fee on a sale, by category, and what you keep.",
     searchTerms:
       "ebay seller fees final value fee per order fee store international category selling",
+  },
+  {
+    id: "depop-fees",
+    hub: "fees",
+    href: "/fees/depop-fee-calculator/",
+    name: "Depop Fee Calculator",
+    menuLabel: "Depop fees",
+    summary:
+      "Depop's 3.3% + 45¢ processing fee on a US sale, with no selling fee, and what you keep.",
+    searchTerms:
+      "depop fees fee calculator seller resale clothing processing fee marketplace fee how much does depop take",
+  },
+  {
+    id: "poshmark-fees",
+    hub: "fees",
+    href: "/fees/poshmark-fee-calculator/",
+    name: "Poshmark Fee Calculator",
+    menuLabel: "Poshmark fees",
+    summary: "Poshmark's $2.95 fee under $15 and 20% from $15, and what you earn from a sale.",
+    searchTerms:
+      "poshmark fees commission seller earnings resale clothing 20 percent how much does poshmark take",
+  },
+  {
+    id: "mercari-fees",
+    hub: "fees",
+    href: "/fees/mercari-fee-calculator/",
+    name: "Mercari Fee Calculator",
+    menuLabel: "Mercari fees",
+    summary:
+      "Mercari's 10% selling fee on the item price and buyer-paid shipping, and what you keep.",
+    searchTerms:
+      "mercari fees selling fee seller resale how much does mercari take buyer protection",
+  },
+  {
+    id: "facebook-marketplace-fees",
+    hub: "fees",
+    href: "/fees/facebook-marketplace-fee-calculator/",
+    name: "Facebook Marketplace Fee Calculator",
+    menuLabel: "Facebook Marketplace",
+    summary:
+      "Facebook Marketplace's 10% selling fee on shipped orders, with its 80¢ minimum, and what you keep.",
+    searchTerms:
+      "facebook marketplace fees selling fee shipped orders checkout seller fb marketplace how much does facebook charge",
   },
   {
     id: "upwork-fees",

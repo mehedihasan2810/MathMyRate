@@ -123,6 +123,10 @@ const expectedFees = new Map([
   ["lemon-squeezy-us-bank-payout", 0n], // free in the US
   ["lemon-squeezy-us-paypal-payout", 50n], // flat 50
   ["stripe-us-standard-payout", 0n], // free
+  ["depop-us-sale", 375n], // 3.3% of 10,000 = 330, + 45
+  ["mercari-us-sale", 1000n], // 10% of 10,000
+  ["poshmark-us-sale", 2000n], // 20% of 10,000
+  ["facebook-marketplace-us-shipped", 1000n], // 10% of 10,000
   ["stripe-us-instant-payout", 150n], // 1.5% of 10,000
   ["skool-us-pro-standard", 320n], // 2.9% = 290, + 30
   ["skool-us-hobby", 1_030n], // 10% = 1000, + 30
@@ -143,6 +147,8 @@ const expectedFeesAt = new Map([
   ["patreon-us-paypal-payout-minimum", { grossCents: 2_000n, feeCents: 25n }], // 1% of 2,000 is 20, below the 25 minimum
   ["patreon-us-paypal-payout-cap", { grossCents: 300_000n, feeCents: 2_000n }], // 1% of 300,000 is 3,000, above the 2,000 cap
   ["stripe-us-instant-payout-minimum", { grossCents: 2_000n, feeCents: 50n }], // 1.5% of 2,000 is 30, below the 50 minimum
+  ["poshmark-us-sale-under-15", { grossCents: 1_000n, feeCents: 295n }], // flat 295 under 1,500
+  ["facebook-marketplace-us-shipped-minimum", { grossCents: 500n, feeCents: 80n }], // 10% of 500 is 50, below the 80 minimum
 ]);
 
 for (const preset of feePresets) {
@@ -430,4 +436,47 @@ test("Patreon's PayPal payout bands meet at $25 and $2,000 with the same fee", (
   }
 
   assert.deepEqual(fee(999n), []);
+});
+
+test("Poshmark earnings fall at the $15 threshold, as Fee Policy 1.7 sets it", () => {
+  const under = getFeePreset("poshmark-us-sale-under-15");
+  const over = getFeePreset("poshmark-us-sale");
+
+  assert.ok(under && over);
+
+  // $14.99 pays the flat $2.95 and earns $12.04; $15.00 pays 20% ($3.00) and earns $12.00.
+  assert.equal(calculateFees({ preset: under, grossCents: 1_499n }).sellerProceedsCents, 1_204n);
+  assert.equal(calculateFees({ preset: over, grossCents: 1_500n }).sellerProceedsCents, 1_200n);
+  assert.throws(() => calculateFees({ preset: under, grossCents: 1_500n }), GrossOutOfRangeError);
+  assert.throws(() => calculateFees({ preset: over, grossCents: 1_499n }), GrossOutOfRangeError);
+});
+
+test("Facebook Marketplace's $0.80 minimum and 10% meet at $8.00", () => {
+  const minimum = getFeePreset("facebook-marketplace-us-shipped-minimum");
+  const percent = getFeePreset("facebook-marketplace-us-shipped");
+
+  assert.ok(minimum && percent);
+  assert.equal(calculateFees({ preset: minimum, grossCents: 800n }).feeCents, 80n);
+  assert.equal(calculateFees({ preset: percent, grossCents: 800n }).feeCents, 80n);
+  // 10% of $8.04 is 80.4 cents, rounded to 80; 10% of $8.05 is 80.5, rounded half up to 81.
+  assert.equal(calculateFees({ preset: percent, grossCents: 804n }).feeCents, 80n);
+  assert.equal(calculateFees({ preset: percent, grossCents: 805n }).feeCents, 81n);
+
+  // Sales tax is part of the base: $26.00 including $1.00 tax pays $2.60 and keeps $22.40.
+  const taxed = calculateFees({ preset: percent, grossCents: 2_600n, taxCents: 100n });
+
+  assert.equal(taxed.feeCents, 260n);
+  assert.equal(taxed.sellerProceedsCents, 2_240n);
+});
+
+test("Depop charges its processing fee on item, shipping, and tax together", () => {
+  const preset = getFeePreset("depop-us-sale");
+
+  assert.ok(preset);
+
+  // $100 item + $10 shipping + $8.25 tax = $118.25; 3.3% is 390.225 cents, rounded to 390, + 45.
+  const result = calculateFees({ preset, grossCents: 11_825n, taxCents: 825n });
+
+  assert.equal(result.feeCents, 435n);
+  assert.equal(result.sellerProceedsCents, 10_565n);
 });

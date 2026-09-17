@@ -271,6 +271,8 @@ without the eight content sections. Free demand and competition research from 20
 (reseller fees such as Depop, Poshmark, Mercari, and Facebook Marketplace,
 then Cash App and Venmo). Candidates, grouped by hub:
 
+**Update 2026-09-17** (branch `feat/reseller-fees`). Built the Depop, Poshmark, Mercari, and Facebook Marketplace fee calculators, the top four gaps in the keyword research. Each fee was checked on the platform's own pages. Fee calculators now support price bands (Poshmark's $15 threshold, Facebook's $0.80 minimum) and a buyer-paid shipping field that counts toward the fee but not toward what the seller keeps. Cash App and Venmo are next in the research ranking.
+
 Freelance pricing
 
 - Day rate to annual salary (and salary to hourly for contractors).

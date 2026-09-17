@@ -1,6 +1,6 @@
 ---
 import { getFeePreset, type FeePreset } from "@MathMyRate/calculators";
-import { findFeeCalculator, type FeeCalculatorId } from "../data/fee-calculators";
+import { findFeeCalculator, scenarioPresetIds, type FeeCalculatorId } from "../data/fee-calculators";
 import { formatCombinedRate } from "../lib/fee-labels";
 
 interface Props {
@@ -21,7 +21,12 @@ const { calculatorId, blockedPresetIds = [] } = Astro.props;
 
 const config = findFeeCalculator(calculatorId);
 
-const scenarios = config.scenarios.map((scenario) => ({ scenario, preset: requirePreset(scenario.presetId) }));
+// A scenario with price bands lists each band as its own rule.
+const scenarios = config.scenarios.flatMap((scenario) => {
+  const presets = scenarioPresetIds(scenario).map(requirePreset);
+
+  return presets.map((preset) => ({ heading: presets.length > 1 ? preset.label : scenario.label, preset }));
+});
 
 const blocked = blockedPresetIds.map(requirePreset);
 
@@ -35,9 +40,9 @@ for (const { preset } of scenarios) {
 <section aria-labelledby="fee-rules-heading">
   <h2 id="fee-rules-heading">Every supported scenario, with its assumptions</h2>
   <p>Each scenario below is one official rule. The rate is the total of its published components, applied to the amount charged.</p>
-  {scenarios.map(({ scenario, preset }) => (
+  {scenarios.map(({ heading, preset }) => (
     <div>
-      <h3>{scenario.label}: {formatCombinedRate(preset.components)}</h3>
+      <h3>{heading}: {formatCombinedRate(preset.components)}</h3>
       <p class="text-base"><strong>Assumptions.</strong></p>
       <ul class="text-base">{preset.assumptions.map((assumption) => <li>{assumption}</li>)}</ul>
       <p class="text-base"><strong>Not covered.</strong></p>
