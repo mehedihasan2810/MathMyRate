@@ -59,7 +59,7 @@ const guideSources = [
 ];
 
 const faq: readonly FaqEntry[] = [
-  { question: "How much does Substack take from a paid subscription?", answer: `Substack keeps 10% of each paid transaction, and Stripe charges 2.9% + 30¢ for the card plus a 0.7% Billing fee on recurring payments. A $10 monthly subscription paid by a US card pays ${formatUsdGrouped(ten.feeCents)} in fees and leaves ${formatUsdGrouped(ten.sellerProceedsCents)}.` },
+  { question: "How much does Substack charge?", answer: `Substack keeps 10% of each paid transaction, and Stripe charges 2.9% + 30¢ for the card plus a 0.7% Billing fee on recurring payments. A $10 monthly subscription paid by a US card pays ${formatUsdGrouped(ten.feeCents)} in fees and leaves ${formatUsdGrouped(ten.sellerProceedsCents)}.` },
   { question: "What is Stripe's Billing fee on Substack?", answer: "Stripe charges a Billing fee on recurring subscription payments, on top of its card fee. Substack's cost page gives 0.7% as of July 2024, and Stripe's Billing pricing page lists 0.7% of Billing volume. One older Substack page still says 0.5%, a rate Substack says ended June 30, 2025 for accounts that had it. Stripe shows the Billing fee apart from its processing fee." },
   { question: "Does Substack take more on the iOS app?", answer: "Yes. Apple's in-app purchase fee comes out of your revenue along with Substack's fee, and Substack describes it only as 15-30%, so this calculator does not estimate it. By default Substack raises in-app prices to cover Apple's fee, and in-app payment cannot be turned off while payments are connected." },
   { question: "How long do Substack payouts take?", answer: "Money goes to your own Stripe account. Substack says payments usually reach your bank within 48 hours of each transaction, and the first payout on a new Stripe account takes 7-14 days." },
@@ -68,11 +68,11 @@ const faq: readonly FaqEntry[] = [
   { question: "What is the lowest price I can charge on Substack?", answer: "Substack's paid publication setup page lists a minimum of $5 a month and $30 a year for US-dollar Stripe accounts." },
 ];
 ---
-<Layout title="Substack Fee Calculator: 10% Fee and Stripe Costs | MathMyRate" description="Estimate Substack's 10% fee plus Stripe's 2.9% + 30¢ card fee and 0.7% Billing fee on a paid subscription, and see what you keep at common prices." ogImage="/og/substack.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+<Layout title="Substack Fees 2026: How Much Substack Takes | MathMyRate" description="How much Substack charges: its 10% fee plus Stripe's 2.9% + 30¢ card fee and 0.7% Billing fee on a paid subscription, and what you keep at common prices." ogImage="/og/substack.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
     <Breadcrumbs items={breadcrumbs} />
     <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
-    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Substack's 10% fee and Stripe's card and Billing fees take from a paid subscription, and what reaches your Stripe account.</p>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">How much Substack charges: what its 10% fee and Stripe's card and Billing fees take from a paid subscription, and what reaches your Stripe account.</p>
     <PageByline updatedOn={updatedOn} reviewedOn={domestic.checkedOn} />
     <FeeCalculator calculatorId="substack" />
     <article class="guide mt-14 border-t border-line pt-4">

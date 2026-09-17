@@ -40,9 +40,9 @@ const scenarioRows = scenarioRowsAt(config.scenarios, 10000n);
 
 const updatedOn = "2026-09-15";
 
-const title = `${tool.name} (${rate}) | MathMyRate`;
+const title = `Lemon Squeezy Fees 2026 (${rate}) Calculator | MathMyRate`;
 
-const description = `Estimate Lemon Squeezy's ${rate} fee on the order total, plus international, PayPal, and subscription fees, what you keep, and what to charge.`;
+const description = `Lemon Squeezy fees: the ${rate} fee on the order total, plus international, PayPal, and subscription fees, what you keep, and what to charge.`;
 
 const guideSources = [
   { title: "Docs: Fees • Lemon Squeezy", url: "https://docs.lemonsqueezy.com/help/getting-started/fees" },
@@ -68,7 +68,7 @@ const faq: readonly FaqEntry[] = [
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
     <Breadcrumbs items={breadcrumbs} />
     <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
-    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Lemon Squeezy's fee, down to the cent, for US and international card orders, PayPal orders, and subscription payments, with tax included.</p>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Lemon Squeezy fees, down to the cent, for US and international card orders, PayPal orders, and subscription payments, with tax included.</p>
     <PageByline updatedOn={updatedOn} reviewedOn={domestic.checkedOn} />
     <FeeCalculator calculatorId="lemon-squeezy" />
     <article class="guide mt-14 border-t border-line pt-4">

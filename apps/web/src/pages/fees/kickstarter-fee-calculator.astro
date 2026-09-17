@@ -94,11 +94,11 @@ const faq: readonly FaqEntry[] = [
   { question: "What happens to fees when I refund a backer?", answer: "If you refund a campaign pledge before your project's payout, Kickstarter returns its 5% fee and the processing fees to the backer directly. After the payout, you cover the cost of the fees." },
 ];
 ---
-<Layout title={`${tool.name} (${headlineRate}) | MathMyRate`} description="Estimate Kickstarter's 5% fee and 3% + 30¢ payment processing on each pledge, the micropledge rate under $10, and your campaign's total fees." ogImage="/og/kickstarter.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+<Layout title={`Kickstarter Fees 2026 (${headlineRate}) | MathMyRate`} description="Kickstarter fees on each pledge: the 5% platform fee and 3% + 30¢ payment processing, the micropledge rate under $10, and your campaign's total fees." ogImage="/og/kickstarter.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
     <Breadcrumbs items={breadcrumbs} />
     <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
-    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Kickstarter and payment processing take from each pledge, and add up the fees across a whole campaign.</p>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Kickstarter fees, worked out: what Kickstarter and payment processing take from each pledge, and the fees across a whole campaign.</p>
     <PageByline updatedOn={updatedOn} reviewedOn={standard.checkedOn} />
     <FeeCalculator calculatorId="kickstarter" />
     <article class="guide mt-14 border-t border-line pt-4">

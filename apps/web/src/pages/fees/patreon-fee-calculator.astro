@@ -76,11 +76,11 @@ const faq: readonly FaqEntry[] = [
   { question: "What about the older Pro and Founders plans?", answer: "Creators whose pages were published on or before August 4, 2025 and have stayed published keep their legacy plan: Pro at 8%, or Founders at 5% for creators who joined before May 7, 2019. This calculator includes Pro; Founders uses its own processing rates." },
 ];
 ---
-<Layout title={`${tool.name} (${headlineRate}) | MathMyRate`} description="Estimate Patreon's 10% platform fee, 2.9% + 30¢ processing, currency conversion, and iOS App Store fees on a membership, and what you keep each month." ogImage="/og/patreon.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+<Layout title={`Patreon Fees 2026: ${headlineRate} Calculator | MathMyRate`} description="Patreon fees explained: the 10% platform fee, 2.9% + 30¢ processing, currency conversion, and iOS App Store fees on a membership, and what you keep." ogImage="/og/patreon.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
     <Breadcrumbs items={breadcrumbs} />
     <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
-    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Patreon, payment processing, and Apple take from a membership payment, and what you keep across your members each month.</p>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Patreon fees, worked out: what Patreon, payment processing, and Apple take from a membership payment, and what you keep across your members each month.</p>
     <PageByline updatedOn={updatedOn} reviewedOn={web.checkedOn} />
     <FeeCalculator calculatorId="patreon" />
     <article class="guide mt-14 border-t border-line pt-4">

@@ -58,11 +58,11 @@ const faq: readonly FaqEntry[] = [
   { question: "What about ACH, crypto, or local payment methods?", answer: "They are not estimated here. Whop's fee page and its local payment methods page state different rates for several of them, including ACH at 1.5% capped at $5 on one page and 0.8% capped at $5 on the other." },
 ];
 ---
-<Layout title="Whop Fee Calculator: 2.7% + 30¢ Card Fee | MathMyRate" description="Estimate Whop's 2.7% + 30¢ card fee and its international card rate on a sale, see the optional add-ons, and find what a sale leaves you." ogImage="/og/whop.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+<Layout title="Whop Fees 2026: 2.7% + 30¢ Card Fee Calculator | MathMyRate" description="Whop fees on a sale: the 2.7% + 30¢ card fee, the added rate for international cards, the optional add-ons, and what a sale leaves you after fees." ogImage="/og/whop.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
     <Breadcrumbs items={breadcrumbs} />
     <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
-    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Whop keeps from a community, course, or digital product sale, and what reaches you.</p>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Whop fees, worked out: what Whop keeps from a community, course, or digital product sale, and what reaches you.</p>
     <PageByline updatedOn={updatedOn} reviewedOn={domestic.checkedOn} />
     <FeeCalculator calculatorId="whop" />
     <article class="guide mt-14 border-t border-line pt-4">
