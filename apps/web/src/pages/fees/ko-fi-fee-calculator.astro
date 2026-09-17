@@ -62,11 +62,11 @@ const faq: readonly FaqEntry[] = [
   { question: "Does Ko-fi return its fee on a refund?", answer: "Refunds made in Ko-fi are for the full amount only, within 180 days, and Ko-fi says PayPal or Stripe usually keep their transaction fee. Ko-fi's pages do not say whether its own 5% is returned." },
 ];
 ---
-<Layout title="Ko-fi Fee Calculator: 5% Fee and Stripe Costs | MathMyRate" description="Estimate Ko-fi's 5% service fee and Stripe's 2.9% + 30¢ card processing on tips, shop sales, and memberships, and how much Ko-fi Gold saves you." ogImage="/og/kofi.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+<Layout title="Ko-fi Fees 2026: 5% Fee and Stripe Costs | MathMyRate" description="Ko-fi fees on tips, shop sales, and memberships: the 5% service fee and Stripe's 2.9% + 30¢ card processing, and how much Ko-fi Gold saves you." ogImage="/og/kofi.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
     <Breadcrumbs items={breadcrumbs} />
     <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
-    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Ko-fi's service fee and card processing take from a tip, shop sale, or membership, and when Ko-fi Gold pays for itself.</p>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Ko-fi fees, worked out: what the service fee and card processing take from a tip, shop sale, or membership, and when Ko-fi Gold pays for itself.</p>
     <PageByline updatedOn={updatedOn} reviewedOn={withFee.checkedOn} />
     <FeeCalculator calculatorId="kofi" />
     <article class="guide mt-14 border-t border-line pt-4">

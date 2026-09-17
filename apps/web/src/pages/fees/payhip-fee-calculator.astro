@@ -85,11 +85,11 @@ const faq: readonly FaqEntry[] = [
   { question: "Does Payhip charge for refunds?", answer: "You refund a customer from your PayPal or Stripe account, and the refund shows in Payhip. Payhip's pages do not say whether its own fee is returned." },
 ];
 ---
-<Layout title="Payhip Fee Calculator: Free, Plus & Pro Plan Fees | MathMyRate" description="Estimate Payhip's 5%, 2%, or 0% transaction fee plus Stripe's 2.9% + 30¢ on a sale, and find the monthly sales where Plus or Pro pays for itself." ogImage="/og/payhip.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+<Layout title="Payhip Fees 2026: Free, Plus and Pro Plans | MathMyRate" description="Payhip fees by plan: the 5%, 2%, or 0% transaction fee plus Stripe's 2.9% + 30¢ on a sale, and the monthly sales where Plus or Pro pays for itself." ogImage="/og/payhip.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
   <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
     <Breadcrumbs items={breadcrumbs} />
     <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
-    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">See what Payhip's plan fee and Stripe's card processing take from a digital product, course, or coaching sale, and which plan costs least for your sales.</p>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Payhip fees, worked out: what the plan fee and Stripe's card processing take from a digital product, course, or coaching sale, and which plan costs least for your sales.</p>
     <PageByline updatedOn={updatedOn} reviewedOn={free.checkedOn} />
     <FeeCalculator calculatorId="payhip" />
     <article class="guide mt-14 border-t border-line pt-4">
