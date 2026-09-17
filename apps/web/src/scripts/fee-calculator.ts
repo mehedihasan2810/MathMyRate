@@ -76,6 +76,7 @@ export function mountFeeCalculator(): void {
   const panel = requireHtmlElement("fee-panel");
   const copyButton = requireHtmlButton("copy-fee");
   const taxField = document.getElementById("tax-field");
+  const volumeField = document.getElementById("volume-field");
   let latestCopy: string | null = null;
 
   const currentScenario = (): FeeScenario => {
@@ -95,6 +96,10 @@ export function mountFeeCalculator(): void {
 
     return checked instanceof HTMLInputElement && checked.value === "net" ? "net" : "received";
   };
+
+  // A sender-paid fee, such as a credit card fee, is charged on top of the
+  // payment, so the receiver-side modes do not apply.
+  const currentSenderPaid = (): boolean => currentScenario().feeCharged === "sender";
 
   const scenarioAcceptsTax = (): boolean =>
     requirePreset(currentScenario().presetId).taxMode === "caller-supplied";
@@ -122,21 +127,40 @@ export function mountFeeCalculator(): void {
     const scenario = currentScenario();
     const acceptsTax = scenarioAcceptsTax();
     const net = currentMode() === "net";
+    const senderPaid = currentSenderPaid();
 
     setText("scenario-note", scenario.note);
     setText(
       "amount-label",
-      net
-        ? "Amount you want to keep"
-        : (config.amountLabels?.fieldLabel ??
+      senderPaid
+        ? "What you send"
+        : net
+          ? "Amount you want to keep"
+          : (config.amountLabels?.fieldLabel ??
             (itemised ? "Item price" : "Amount the customer paid")),
     );
-    setText("amount-help", amountHelp(net, acceptsTax));
+    setText(
+      "amount-help",
+      senderPaid
+        ? "What the recipient gets. You pay the fee on top of it."
+        : amountHelp(net, acceptsTax),
+    );
     setText(
       "primary-label",
-      net ? (itemised ? "List the item at" : "Charge the customer") : "You keep from this sale",
+      senderPaid
+        ? "It costs you"
+        : net
+          ? itemised
+            ? "List the item at"
+            : "Charge the customer"
+          : "You keep from this sale",
     );
-    requireHtmlElement("keep-row").hidden = !net;
+    requireHtmlElement("keep-row").hidden = !net || senderPaid;
+    requireHtmlElement("net-row").hidden = itemised || senderPaid;
+    requireHtmlElement("recipient-row").hidden = !senderPaid;
+    requireHtmlElement("fee-mode-fieldset").hidden = senderPaid;
+
+    if (volumeField) volumeField.hidden = senderPaid;
 
     if (taxField) taxField.hidden = !acceptsTax;
   };
@@ -182,7 +206,8 @@ export function mountFeeCalculator(): void {
   const calculate = (trigger: CalculationTrigger): void => {
     const scenario = currentScenario();
     const presets = scenarioPresetIds(scenario).map(requirePreset);
-    const mode = currentMode();
+    const senderPaid = currentSenderPaid();
+    const mode: FeeMode = senderPaid ? "received" : currentMode();
 
     try {
       const amount = usdToCents(requireHtmlInput("amount").value, "amount");
@@ -198,7 +223,7 @@ export function mountFeeCalculator(): void {
         throw new InputProblem("amount", "Enter an item price above zero.");
       }
 
-      const salesPerMonth = readSalesPerMonth();
+      const salesPerMonth = senderPaid ? null : readSalesPerMonth();
 
       // The buyer's shipping is part of the fee base but pays for the label, so it is never kept.
       const result =
@@ -206,13 +231,24 @@ export function mountFeeCalculator(): void {
           ? calculateBandedFees(presets, amount + shipping + (itemised ? tax : 0n), tax)
           : grossUpBandedFees(presets, amount + shipping, tax);
 
-      const keptCents = result.sellerProceedsCents - shipping;
+      // A sender-paid fee adds to what you pay instead of reducing what they get.
+      const keptCents = senderPaid ? result.grossCents : result.sellerProceedsCents - shipping;
       const listPriceCents = result.grossCents - shipping - (itemised ? tax : 0n);
 
-      setText("fee-result", formatUsdGrouped(mode === "received" ? keptCents : listPriceCents));
+      setText(
+        "fee-result",
+        formatUsdGrouped(
+          senderPaid
+            ? result.grossCents + result.feeCents
+            : mode === "received"
+              ? keptCents
+              : listPriceCents,
+        ),
+      );
       setText("fee-total-result", formatUsdGrouped(result.feeCents));
       setText("net-result", formatUsdGrouped(result.netAfterFeesCents));
       setText("total-result", formatUsdGrouped(result.grossCents));
+      setText("recipient-result", formatUsdGrouped(result.grossCents));
       renderLineItems(result.lineItems.length > 1 ? result.lineItems : []);
 
       const taxRow = requireHtmlElement("tax-row");
@@ -241,19 +277,22 @@ export function mountFeeCalculator(): void {
       const reviewed = result.checkedOn ?? "date not recorded";
       const shippingText = shipping > 0n ? ` with ${formatUsdGrouped(shipping)} shipping` : "";
 
-      const saleText = itemised
-        ? mode === "received"
-          ? `${scenario.copyName}, item ${formatUsdGrouped(amount)}${shippingText}${tax > 0n ? ` and ${formatUsdGrouped(tax)} tax` : ""}: ${formatUsdGrouped(result.feeCents)} fee, you keep ${formatUsdGrouped(keptCents)}.`
-          : `To keep ${formatUsdGrouped(amount)} from a ${scenario.copyName}${shippingText}, list the item at ${formatUsdGrouped(listPriceCents)}.`
-        : mode === "received"
-          ? `${scenario.copyName} of ${formatUsdGrouped(result.grossCents)}: ${formatUsdGrouped(result.feeCents)} fee, you keep ${formatUsdGrouped(keptCents)}.`
-          : `To keep ${formatUsdGrouped(amount)} from a ${scenario.copyName}, charge ${formatUsdGrouped(result.grossCents)}.`;
+      const saleText = senderPaid
+        ? `${scenario.copyName} of ${formatUsdGrouped(result.grossCents)}: ${formatUsdGrouped(result.feeCents)} fee, it costs ${formatUsdGrouped(result.grossCents + result.feeCents)}, and the recipient gets ${formatUsdGrouped(result.grossCents)}.`
+        : itemised
+          ? mode === "received"
+            ? `${scenario.copyName}, item ${formatUsdGrouped(amount)}${shippingText}${tax > 0n ? ` and ${formatUsdGrouped(tax)} tax` : ""}: ${formatUsdGrouped(result.feeCents)} fee, you keep ${formatUsdGrouped(keptCents)}.`
+            : `To keep ${formatUsdGrouped(amount)} from a ${scenario.copyName}${shippingText}, list the item at ${formatUsdGrouped(listPriceCents)}.`
+          : mode === "received"
+            ? `${scenario.copyName} of ${formatUsdGrouped(result.grossCents)}: ${formatUsdGrouped(result.feeCents)} fee, you keep ${formatUsdGrouped(keptCents)}.`
+            : `To keep ${formatUsdGrouped(amount)} from a ${scenario.copyName}, charge ${formatUsdGrouped(result.grossCents)}.`;
 
       latestCopy = `${saleText}${volumeText} Estimate; source reviewed ${reviewed}.`;
       markResultsCurrent(panel, [copyButton]);
 
-      const lossNote =
-        mode !== "received" || keptCents > 0n
+      const lossNote = senderPaid
+        ? ""
+        : mode !== "received" || keptCents > 0n
           ? ""
           : keptCents === 0n
             ? "The fees take this whole payment, so nothing reaches you."

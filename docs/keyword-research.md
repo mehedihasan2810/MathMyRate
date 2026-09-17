@@ -167,7 +167,7 @@ Ranked by demand signals, page one, fit with the site, and whether official
 fee pages exist. Volumes are unknown; confirm in Keyword Planner first.
 
 Ranks 1 to 4 (Depop, Poshmark, Mercari, and Facebook Marketplace) were built
-on 2026-09-17.
+on 2026-09-17. Ranks 5 and 6 (Cash App and Venmo) were built on 2026-09-17.
 
 | Rank | Topic                                         | Demand signals (score)                                                                               | Page one    | Fit and sourcing                                                         |
 | ---- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------ |

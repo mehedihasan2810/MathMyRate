@@ -1,0 +1,134 @@
+---
+import { calculateFees, effectiveFeeRateBps } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatPercentBps, formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("venmo-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const goods = requireOfficialPreset("venmo-us-goods-and-services");
+
+const business = requireOfficialPreset("venmo-us-business-profile");
+
+const card = requireOfficialPreset("venmo-us-credit-card-send");
+
+const goodsAt = (cents: bigint) => calculateFees({ preset: goods, grossCents: cents });
+
+const businessAt = (cents: bigint) => calculateFees({ preset: business, grossCents: cents });
+
+const cardAt = (cents: bigint) => calculateFees({ preset: card, grossCents: cents });
+
+const hundred = goodsAt(10_000n);
+
+const businessHundred = businessAt(10_000n);
+
+const cardHundred = cardAt(10_000n);
+
+const cardThousand = cardAt(100_000n);
+
+const goodsThousand = goodsAt(100_000n);
+
+const amountRows = [1_000n, 2_500n, 5_000n, 10_000n, 25_000n, 50_000n, 100_000n, 500_000n].map((cents) => {
+  const goodsRow = goodsAt(cents);
+  const businessRow = businessAt(cents);
+  const cardRow = cardAt(cents);
+
+  return [
+    formatSaleLabel(cents),
+    formatUsdGrouped(goodsRow.feeCents),
+    formatUsdGrouped(goodsRow.sellerProceedsCents),
+    formatUsdGrouped(businessRow.feeCents),
+    formatUsdGrouped(businessRow.sellerProceedsCents),
+    formatUsdGrouped(cardRow.feeCents),
+    formatUsdGrouped(cardRow.grossCents + cardRow.feeCents),
+  ];
+});
+
+const shareOnTen = formatPercentBps(effectiveFeeRateBps(goodsAt(1_000n).feeCents, 1_000n));
+
+const shareOnHundred = formatPercentBps(effectiveFeeRateBps(hundred.feeCents, 10_000n));
+
+const updatedOn = "2026-09-17";
+
+const description = "Venmo fees: free to send from a balance or bank, 3% by credit card, and a 2.99% goods and services fee. See what a payment costs and what you keep.";
+
+const sources = [
+  { title: "About Venmo Fees | Venmo", url: "https://venmo.com/about/fees/" },
+  { title: "User Agreement | Venmo", url: "https://venmo.com/legal/us-user-agreement/" },
+  { title: "Instant Bank Transfer FAQ | Venmo", url: "https://help.venmo.com/cs/articles/instant-bank-transfer-faq-vhel302" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Venmo charge to pay someone?", answer: `Nothing when you pay from your Venmo balance, a linked debit card, or a bank account. Paying with a credit card costs 3% of the payment, which you pay on top: a $100 payment costs ${formatUsdGrouped(cardHundred.grossCents + cardHundred.feeCents)} and the recipient still gets $100.00.` },
+  { question: "What is the Venmo goods and services fee?", answer: `When the sender marks a payment as for goods and services, the receiver pays a 2.99% seller transaction fee. A $100.00 payment tagged that way pays ${formatUsdGrouped(hundred.feeCents)} and leaves ${formatUsdGrouped(hundred.sellerProceedsCents)}. Personal payments without the goods and services tag are free to receive.` },
+  { question: "Does Venmo charge to receive money?", answer: "Receiving a personal payment is free. You pay only when the sender tags the payment as for goods and services (2.99%), or when the payment goes to a business profile (1.9% + $0.10, or 2.29% + $0.09 through Tap to Pay)." },
+  { question: "What is Venmo's instant transfer fee?", answer: `An Instant Transfer to an eligible linked debit card or bank account costs 1.75% of the transfer, with a minimum fee of $0.25 and a maximum fee of $25, deducted from the transfer amount. Transferring $100.00 instantly costs $1.75, so $98.25 arrives. The <a href="/fees/payout-fee-calculator/">payout fee calculator</a> prices it at any amount.` },
+  { question: "Is there a fee to send $1,000 on Venmo?", answer: `From your balance, a debit card, or a bank account, no. With a credit card, the 3% fee is ${formatUsdGrouped(cardThousand.feeCents)}, so a $1,000 payment costs ${formatUsdGrouped(cardThousand.grossCents + cardThousand.feeCents)}.` },
+  { question: "Does Venmo refund its fee when I refund a customer?", answer: "No. Venmo's user agreement says that if you refund a transaction, there are no fees to make the refund, but the fees you originally paid as the seller are not returned. Refunding a $100.00 goods and services payment therefore costs you the $2.99 fee and the $100.00." },
+  { question: "What does Venmo charge a business profile?", answer: "A business profile pays 1.9% + $0.10 on payments it receives, and 2.29% + $0.09 when the payment comes through Tap to Pay. The fee is deducted from what lands in the profile." },
+  { question: "Do I pay Venmo's seller fee when a buyer pays a merchant with Venmo?", answer: `That payment goes through the merchant's PayPal account, not your Venmo profile, so it is PayPal's fee that applies. The <a href="/fees/paypal-fee-calculator/">PayPal fee calculator</a>'s Checkout scenario covers it, including Pay with Venmo at PayPal Checkout's rate.` },
+];
+---
+<Layout title="Venmo Fees 2026: 2.99% Goods and Services Fee | MathMyRate" description={description} ogImage="/og/venmo.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Venmo fees, worked out: what a goods and services or business profile payment leaves you, and what sending with a credit card costs.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={goods.checkedOn} />
+    <FeeCalculator calculatorId="venmo" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>Sending money on Venmo is free from your balance, a linked debit card, or a bank account; a credit card costs the sender 3%. The fees you can receive start when a payment is for work: Venmo charges the receiver a <strong>2.99% seller fee</strong> when the sender tags a payment as for goods and services, and <strong>1.9% + $0.10</strong> on payments to a business profile (2.29% + $0.09 through Tap to Pay). Pick a scenario, enter the amount, and the calculator shows the fee and what lands in your account. Payments a buyer makes to a merchant through Venmo go through PayPal instead, which the <a href="/fees/paypal-fee-calculator/">PayPal fee calculator</a> prices; the <a href="/fees/">fees hub</a> lists every tool.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Pick the scenario: a goods and services payment, a business profile payment, a business Tap to Pay payment, or a payment you are sending with a credit card.</li>
+        <li>For a payment you received, enter the amount the sender paid. For a credit card payment, enter what the recipient gets.</li>
+        <li>To see monthly totals, enter how many same-size payments you receive a month. The monthly view applies to the receiving scenarios, so it is hidden while a credit card send is selected.</li>
+        <li>Read the fee, what you keep or what it costs, and the share the fee takes.</li>
+      </ol>
+
+      <h2>How the fee is built</h2>
+      <p>A goods and services payment of $100.00 pays 2.99% of $100.00: <strong>{formatUsdGrouped(hundred.feeCents)}</strong>, so you keep <strong>{formatUsdGrouped(hundred.sellerProceedsCents)}</strong>. The same $100.00 to a business profile pays 1.9% ($1.90) plus $0.10: <strong>{formatUsdGrouped(businessHundred.feeCents)}</strong>, leaving {formatUsdGrouped(businessHundred.sellerProceedsCents)}.</p>
+      <p>A credit card payment works the other way. Pay someone $100.00 with a credit card and Venmo charges you 3% of it ($3.00) on top, so it costs <strong>{formatUsdGrouped(cardHundred.grossCents + cardHundred.feeCents)}</strong> and the recipient still gets $100.00. Venmo's user agreement authorizes charging your card for the payment amount and any applicable fees, which is why the calculator asks what you are sending and answers with what it costs you.</p>
+      <p>The seller fee has no fixed part, so its share is flat at any size: {shareOnTen} of a $10 payment and {shareOnHundred} of a $100 payment alike.</p>
+
+      <h2>Venmo fees at common amounts</h2>
+      <p>The goods and services and business columns show the fee on a payment you receive and what you keep. The credit card columns show what the sender pays on top of the amount sent.</p>
+      <DataTable caption="Venmo fee and what you keep or pay, by amount, for goods and services, business profile, and credit card payments" headers={["Amount", "G&S fee", "You keep", "Business fee", "You keep", "Card send fee", "It costs you"]} rows={amountRows} />
+
+      <h2>Other Venmo costs and rules</h2>
+      <ul>
+        <li><strong>Instant transfers:</strong> 1.75% of the transfer, with a minimum fee of $0.25 and a maximum fee of $25, deducted from the transfer amount. The <a href="/fees/payout-fee-calculator/">payout fee calculator</a> prices it at any amount.</li>
+        <li><strong>Standard transfers:</strong> free, typically within 1-3 business days to a bank.</li>
+        <li><strong>Refunds:</strong> the seller fee is not returned. Venmo keeps the fees you originally paid when you refund a transaction, and on Tap to Pay it keeps the fee when a transaction is reversed or a chargeback succeeds.</li>
+        <li><strong>Charity profiles:</strong> 1.9% + $0.10, a different rule this calculator does not model.</li>
+        <li><strong>Cross-border payments:</strong> sending to a non-U.S. PayPal account costs 5% with a minimum of $0.99 and a maximum of $4.99, plus 3% on a credit card. Not estimated here.</li>
+        <li><strong>Out of scope:</strong> cash a check fees (2% or 5%, at least $6), adding cash at stores ($3.74), the Venmo Mastercard's fees, purchase protection, and disputes.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="venmo" />
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId={tool.id} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Venmo's pages were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Venmo or PayPal. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

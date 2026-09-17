@@ -15,6 +15,8 @@ export type FeeCalculatorId =
   | "poshmark"
   | "mercari"
   | "facebook-marketplace"
+  | "cash-app"
+  | "venmo"
   | "kickstarter"
   | "patreon"
   | "kofi"
@@ -44,6 +46,13 @@ export interface FeeScenario {
   readonly note: string;
   /** Names the payment in copied results, for example "Stripe domestic card payment". */
   readonly copyName: string;
+  /**
+   * For a fee the sender pays on top of the payment, such as a credit card
+   * fee. The amount becomes what the recipient gets, the result becomes what
+   * it costs the sender, and the receiver-side modes do not apply. Defaults
+   * to a fee taken from the amount received, as the engine prices it.
+   */
+  readonly feeCharged?: "sender";
 }
 
 /** Wording for the optional same-size volume field and its totals. */
@@ -481,6 +490,86 @@ export const feeCalculators: readonly FeeCalculatorConfig[] = [
         description: "10% of the order total, at least 80¢.",
         note: "Supported scenario: US individual seller using checkout on Facebook, items shipped together. Local pickup paid outside checkout is not covered.",
         copyName: "Facebook Marketplace shipped order",
+      },
+    ],
+  },
+  {
+    id: "cash-app",
+    toolId: "cash-app-fees",
+    provider: "Cash App",
+    formHeading: "Payment details",
+    scenarioLegend: "What kind of payment is it?",
+    panelTone: "navy",
+    taxHelp: "",
+    scenarios: [
+      {
+        id: "business-payment",
+        presetId: "cash-app-us-business-payment",
+        label: "Business payment received",
+        description: "Cash App for Business: 2.6% + 15¢ on the payment.",
+        note: "Supported scenario: US Cash App for Business account, USD payment received from a customer's Cash App account.",
+        copyName: "Cash App for Business payment",
+      },
+      {
+        id: "business-tap-to-pay",
+        presetId: "cash-app-us-business-tap-to-pay",
+        label: "Business Tap to Pay",
+        description: "3% on a payment accepted with Tap to Pay.",
+        note: "Supported scenario: US Cash App for Business account, USD payment accepted through Tap to Pay.",
+        copyName: "Cash App for Business Tap to Pay payment",
+      },
+      {
+        id: "credit-card-send",
+        presetId: "cash-app-us-credit-card-send",
+        label: "Sending with a credit card",
+        description: "3% on a personal payment. The sender pays it.",
+        note: "Supported scenario: US personal account sending a USD payment funded by a credit card. Enter what the recipient gets.",
+        copyName: "Cash App credit card payment",
+        feeCharged: "sender",
+      },
+    ],
+  },
+  {
+    id: "venmo",
+    toolId: "venmo-fees",
+    provider: "Venmo",
+    formHeading: "Payment details",
+    scenarioLegend: "What kind of payment is it?",
+    panelTone: "ink",
+    taxHelp: "",
+    scenarios: [
+      {
+        id: "goods-and-services",
+        presetId: "venmo-us-goods-and-services",
+        label: "Goods and services payment",
+        description: "The 2.99% seller fee when the sender tags a purchase.",
+        note: "Supported scenario: US personal profile, USD payment the sender identified as for goods and services.",
+        copyName: "Venmo goods and services payment",
+      },
+      {
+        id: "business-profile",
+        presetId: "venmo-us-business-profile",
+        label: "Business profile payment",
+        description: "1.9% + 10¢ on payments to a business profile.",
+        note: "Supported scenario: US business profile, USD payment received other than through Tap to Pay.",
+        copyName: "Venmo business profile payment",
+      },
+      {
+        id: "business-tap-to-pay",
+        presetId: "venmo-us-business-tap-to-pay",
+        label: "Business profile Tap to Pay",
+        description: "2.29% + 9¢ on Tap to Pay payments.",
+        note: "Supported scenario: US business profile, USD payment received through Tap to Pay.",
+        copyName: "Venmo business profile Tap to Pay payment",
+      },
+      {
+        id: "credit-card-send",
+        presetId: "venmo-us-credit-card-send",
+        label: "Sending with a credit card",
+        description: "3% on a payment you send. The sender pays it.",
+        note: "Supported scenario: US personal account sending a USD payment funded by a credit card. Enter what the recipient gets.",
+        copyName: "Venmo credit card payment",
+        feeCharged: "sender",
       },
     ],
   },
