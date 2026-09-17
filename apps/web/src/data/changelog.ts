@@ -12,6 +12,41 @@ export interface ChangelogEntry {
 
 export const changelog: readonly ChangelogEntry[] = [
   {
+    date: "2026-09-17",
+    title: "Depop, Poshmark, Mercari, and Facebook Marketplace calculators added",
+    changes: [
+      "Depop: US sellers pay no selling fee, which Depop removed on July 15, 2024. The only Depop fee on a sale is payment processing of 3.3% + $0.45, charged on the item price, shipping, and sales tax. The buyer's Marketplace fee and optional boosting fees are not included.",
+      "Poshmark: a flat $2.95 on sales under $15, and 20% on sales of $15 and above, under Fee Policy version 1.7. The calculator picks the fee from the price. Exactly $15.00 pays 20%, as the current policy says; older notices on the same page put $15.00 in the flat-fee band.",
+      "Mercari: a 10% selling fee on the item price plus buyer-paid shipping, for listings created or updated on or after January 6, 2025, with no separate processing fee. The buyer's 3.6% Buyer Protection fee is not part of it.",
+      "Facebook Marketplace: for shipped orders paid through checkout, a 10% selling fee with a minimum of $0.80, charged on the sale price, shipping, and sales tax, as Meta's checkout terms (last modified May 26, 2026) and seller policy state. Fees a payment provider may charge separately are not published and not included.",
+      "Fee calculators can now price a rule with price bands, such as Poshmark's $15 threshold, without asking which band applies. For marketplaces that charge their fee on the buyer's shipping, a shipping field adds it to the fee but not to what the seller keeps, because it pays for the label.",
+    ],
+    sources: [
+      {
+        title: "Seller fees and charges – Depop Help Centre",
+        url: "https://depophelp.zendesk.com/hc/en-gb/articles/360001791127-Seller-fees-and-charges",
+      },
+      {
+        title:
+          "Depop removes selling fees in the United States, evolves fee structure | Depop newsroom",
+        url: "https://news.depop.com/company-news/depop-removes-selling-fees-in-the-united-states-evolves-fee-structure/",
+      },
+      { title: "Fee Policy | Poshmark Legal Center", url: "https://poshmark.com/fee_policy" },
+      {
+        title: "Fees on Mercari | Mercari Help",
+        url: "https://www.mercari.com/us/help_center/article/169/",
+      },
+      {
+        title: "Onsite Checkout Payments Features Terms and Conditions | Facebook",
+        url: "https://www.facebook.com/legal/checkout_terms",
+      },
+      {
+        title: "Facebook Marketplace Seller Protection Policy | Facebook",
+        url: "https://www.facebook.com/legal/merchant_policies",
+      },
+    ],
+  },
+  {
     date: "2026-09-16",
     title: "Payout fee calculator added",
     changes: [

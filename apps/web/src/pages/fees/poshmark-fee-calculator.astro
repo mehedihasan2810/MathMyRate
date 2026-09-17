@@ -1,0 +1,112 @@
+---
+import { effectiveFeeRateBps } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { calculateBandedFees } from "../../lib/fee-bands";
+import { formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatPercentBps, formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("poshmark-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const presets = ["poshmark-us-sale-under-15", "poshmark-us-sale"].map(requireOfficialPreset);
+
+const [underFifteen] = presets;
+
+if (!underFifteen) throw new Error("The Poshmark fee bands are missing.");
+
+const sale = (priceCents: bigint) => calculateBandedFees(presets, priceCents);
+
+const fee = (priceCents: bigint): string => formatUsdGrouped(sale(priceCents).feeCents);
+
+const earn = (priceCents: bigint): string => formatUsdGrouped(sale(priceCents).sellerProceedsCents);
+
+// The lowest price at or above $15 that earns more than a $14.99 sale.
+let breakEvenCents = 1_500n;
+
+while (sale(breakEvenCents).sellerProceedsCents <= sale(1_499n).sellerProceedsCents) breakEvenCents += 1n;
+
+const amountRows = [500n, 1_000n, 1_499n, 1_500n, 2_500n, 5_000n, 10_000n, 25_000n].map((price) => {
+  const result = sale(price);
+
+  return [formatSaleLabel(price), formatUsdGrouped(result.feeCents), formatUsdGrouped(result.sellerProceedsCents), formatPercentBps(effectiveFeeRateBps(result.feeCents, price))];
+});
+
+const updatedOn = "2026-09-17";
+
+const description = "Poshmark fees for US sellers: a flat $2.95 on sales under $15 and 20% from $15. See what Poshmark takes, what you earn, and why $15 earns less than $14.99.";
+
+const sources = [
+  { title: "Fee Policy | Poshmark Legal Center", url: "https://poshmark.com/fee_policy" },
+  { title: "What are the shipping rates on Poshmark?", url: "https://support.poshmark.com/s/article/975218789?language=en_US" },
+  { title: "Tax Related | Poshmark Support", url: "https://support.poshmark.com/s/topic/0TOUn0000004zphOAA/tax-related?language=en_US" },
+];
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Poshmark take?", answer: `Poshmark takes a flat $2.95 on sales under $15, and 20% on sales of $15 and above, so you keep 80%. A $10 sale pays ${fee(1_000n)} and earns ${earn(1_000n)}; a $50 sale pays ${fee(5_000n)} and earns ${earn(5_000n)}.` },
+  { question: "Is a $15.00 sale charged $2.95 or 20%?", answer: `20%. Poshmark's current Fee Policy, version 1.7, charges 20% on sales of $15 and above, so $15.00 pays ${fee(1_500n)}. Older notices on the same page said $2.95 applied to sales of $15 and under; this calculator follows the current version.` },
+  { question: "Why does a $15 sale earn less than a $14.99 sale?", answer: `The fee jumps from $2.95 to 20% at $15. A $14.99 sale earns ${earn(1_499n)}, but a $15.00 sale earns ${earn(1_500n)}. You need a price of ${formatUsdGrouped(breakEvenCents)} or more to earn more than a $14.99 sale does.` },
+  { question: "Does Poshmark take a fee on shipping?", answer: "No. Poshmark deducts its fee from the final order price. The buyer pays a flat $6.49 shipping fee for the order, which is not part of the fee." },
+  { question: "Does Poshmark charge buyers a fee?", answer: "Poshmark removed its Buyer Protection Fee when it went back to its original fees, effective October 24, 2024. Buyers pay shipping and any sales tax." },
+  { question: "Is there a separate payment processing fee?", answer: "Poshmark's Fee Policy lists no separate payment processing fee for US sellers; the $2.95 or 20% is the fee on a sale." },
+  { question: "Do Texas sellers pay more?", answer: "Since October 1, 2025, sellers located in Texas also pay a Texas Seller Fee Tax, applied to 80% of Poshmark's seller fee. This calculator does not include it." },
+];
+---
+<Layout title="Poshmark Fees 2026: $2.95 Under $15, Then 20% | MathMyRate" description={description} ogImage="/og/poshmark.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Poshmark fees, worked out: what Poshmark takes from a sale on either side of $15, and what you earn.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={underFifteen.checkedOn} />
+    <FeeCalculator calculatorId="poshmark" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>Poshmark charges US sellers a flat <strong>$2.95</strong> on sales under $15, and <strong>20%</strong> on sales of $15 and above. A $10 sale pays {fee(1_000n)} and earns <strong>{earn(1_000n)}</strong>; a $100 sale pays {fee(10_000n)} and earns <strong>{earn(10_000n)}</strong>. The calculator picks the right fee for the price you enter.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Enter the final order price: the price after any offer or discount, without the buyer's shipping or tax.</li>
+        <li>Or choose "I want to keep a target" to find the lowest price that earns it.</li>
+        <li>To see monthly totals, enter how many same-size sales you make a month.</li>
+      </ol>
+
+      <h2>How the fee is built</h2>
+      <p>Poshmark deducts its fee from the final order price. Under $15 the fee is always $2.95, so a $5 sale earns {earn(500n)}. From $15 the fee is 20% of the price, rounded to the cent, and you keep the rest. Poshmark lists no separate payment processing fee, and the buyer pays shipping.</p>
+
+      <h2>Pricing around $15</h2>
+      <p>Because the fee jumps at $15, a <strong>$14.99</strong> sale earns <strong>{earn(1_499n)}</strong> while a <strong>$15.00</strong> sale earns <strong>{earn(1_500n)}</strong>. A price needs to reach <strong>{formatUsdGrouped(breakEvenCents)}</strong> to earn more than $14.99 does. When the calculator finds a price for a target, it checks both sides of $15 and gives the lower price.</p>
+
+      <h2>Poshmark fees at common prices</h2>
+      <DataTable caption="Poshmark fee and earnings by final order price" headers={["Sale price", "Poshmark fee", "You earn", "Fee share"]} rows={amountRows} />
+
+      <h2>Shipping, discounts, and taxes</h2>
+      <ul>
+        <li><strong>Shipping:</strong> the buyer pays a flat $6.49 for the order. It is not part of Poshmark's fee.</li>
+        <li><strong>Discounts:</strong> offers and seller discounts lower the final order price, and Poshmark's fee policy notes that earnings vary with them.</li>
+        <li><strong>Texas sellers:</strong> since October 1, 2025, a Texas Seller Fee Tax applies to 80% of Poshmark's fee. It is not included here.</li>
+        <li><strong>Not estimated:</strong> bundles, overweight labels, partial refunds, cancellations, and cash-out fees.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="poshmark" />
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId={tool.id} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Poshmark's pages were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Poshmark. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

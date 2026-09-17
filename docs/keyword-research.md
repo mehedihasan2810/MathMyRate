@@ -166,6 +166,9 @@ Competition: **E** easier, **M** medium, **H** hard, from the page-one check.
 Ranked by demand signals, page one, fit with the site, and whether official
 fee pages exist. Volumes are unknown; confirm in Keyword Planner first.
 
+Ranks 1 to 4 (Depop, Poshmark, Mercari, and Facebook Marketplace) were built
+on 2026-09-17.
+
 | Rank | Topic                                         | Demand signals (score)                                                                               | Page one    | Fit and sourcing                                                         |
 | ---- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------ |
 | 1    | Depop fee calculator                          | what fees do depop charge (25); what are the fees for depop (21); calculate depop fees (9)           | E           | Reseller hub with eBay. Ranking pages disagree on fees.                  |

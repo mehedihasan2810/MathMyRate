@@ -1,0 +1,101 @@
+---
+import { calculateFees } from "@MathMyRate/calculators";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import DataTable from "../../components/DataTable.astro";
+import EmbedSnippet from "../../components/EmbedSnippet.astro";
+import FaqSection from "../../components/FaqSection.astro";
+import FeeCalculator from "../../components/FeeCalculator.astro";
+import FeeRuleDetails from "../../components/FeeRuleDetails.astro";
+import PageByline from "../../components/PageByline.astro";
+import RelatedTools from "../../components/RelatedTools.astro";
+import { findTool, toolBreadcrumbs } from "../../data/tools";
+import Layout from "../../layouts/Layout.astro";
+import { formatSaleLabel, requireOfficialPreset } from "../../lib/fee-tables";
+import type { FaqEntry } from "../../lib/structured-data";
+import { formatUsdGrouped } from "../../scripts/calculator-form";
+
+const tool = findTool("mercari-fees");
+
+const breadcrumbs = toolBreadcrumbs(tool.id);
+
+const preset = requireOfficialPreset("mercari-us-sale");
+
+/** A sale where any shipping the buyer pays covers the label, so it is not kept. */
+const sale = (itemCents: bigint, buyerShippingCents = 0n) => {
+  const result = calculateFees({ preset, grossCents: itemCents + buyerShippingCents });
+
+  return { fee: result.feeCents, keep: result.sellerProceedsCents - buyerShippingCents };
+};
+
+const withShipping = sale(3_000n, 600n);
+
+const sellerShips = sale(3_000n);
+
+const amountRows = [1_000n, 2_500n, 5_000n, 10_000n, 25_000n].map((item) => {
+  const alone = sale(item);
+  const shipped = sale(item, 800n);
+
+  return [formatSaleLabel(item), formatUsdGrouped(alone.fee), formatUsdGrouped(alone.keep), formatUsdGrouped(shipped.fee), formatUsdGrouped(shipped.keep)];
+});
+
+const updatedOn = "2026-09-17";
+
+const description = "Mercari fees for US sellers: a 10% selling fee on the item price plus buyer-paid shipping, and no processing fee. See what Mercari takes and what you keep.";
+
+const sources = [{ title: "Fees on Mercari | Mercari Help", url: "https://www.mercari.com/us/help_center/article/169/" }];
+
+const faq: readonly FaqEntry[] = [
+  { question: "How much does Mercari take?", answer: `Mercari charges a 10% selling fee on the item price plus any shipping the buyer pays, for listings created or updated on or after January 6, 2025. A $30 item with $6 buyer-paid shipping pays ${formatUsdGrouped(withShipping.fee)} and leaves ${formatUsdGrouped(withShipping.keep)}.` },
+  { question: "Does Mercari charge a payment processing fee?", answer: "Not under the current fees. Mercari says that from January 6, 2025 there is no separate payment processing fee on new or updated listings." },
+  { question: "What is Mercari's Buyer Protection fee?", answer: "It is 3.6% of the item price plus buyer-paid shipping, charged to the buyer on new and updated listings from January 6, 2025. It is not part of the seller's fee." },
+  { question: "What if I pay for shipping myself?", answer: `Then the fee is 10% of the item price only, and the label cost is yours. A $30 item pays ${formatUsdGrouped(sellerShips.fee)}, leaving ${formatUsdGrouped(sellerShips.keep)} before the label. Leave the shipping field empty and subtract your label cost.` },
+  { question: "What does it cost to get paid?", answer: "Direct deposit to your bank has no fee, though Mercari charges $2 for a deposit that fails. Instant Pay costs $3 per transfer, up to $600 a month and once a day, on eligible debit cards." },
+  { question: "Can Mercari charge me for canceling an order?", answer: "Mercari says that if a seller has frequent cancelations, it may charge a cancelation fee of 5% of the item price, up to $25." },
+];
+---
+<Layout title="Mercari Fees 2026: 10% Selling Fee Calculator | MathMyRate" description={description} ogImage="/og/mercari.png" breadcrumbs={breadcrumbs} applicationName={tool.name}>
+  <main id="main-content" class="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1 class="display mt-3 text-3xl font-bold md:text-4xl">{tool.name}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink/70">Mercari fees, worked out: what the 10% selling fee takes from the item price and the buyer's shipping, and what you keep.</p>
+    <PageByline updatedOn={updatedOn} reviewedOn={preset.checkedOn} />
+    <FeeCalculator calculatorId="mercari" />
+    <article class="guide mt-14 border-t border-line pt-4">
+      <h2>What this calculator tells you</h2>
+      <p>Mercari charges US sellers a <strong>10% selling fee</strong> on the item price plus any shipping the buyer pays, with no separate payment processing fee. The buyer's shipping pays for the label, so the fee on it comes out of the item's money. A $30 item with $6 buyer-paid shipping pays <strong>{formatUsdGrouped(withShipping.fee)}</strong>, and you keep <strong>{formatUsdGrouped(withShipping.keep)}</strong>.</p>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Enter the item price.</li>
+        <li>Enter the shipping the buyer paid. If you pay for the label yourself, leave it empty; the fee is then on the item price only, and the label cost is yours.</li>
+        <li>To see monthly totals, enter how many same-size sales you make a month.</li>
+      </ol>
+
+      <h2>How the fee is built</h2>
+      <p>Mercari adds the item price and buyer-paid shipping, and takes 10% of the total, rounded to the cent. For a $30 item with $6 shipping, 10% of $36.00 is {formatUsdGrouped(withShipping.fee)}. The $6 pays for the label, so you keep {formatUsdGrouped(withShipping.keep)}. If you pay shipping yourself instead, the fee is {formatUsdGrouped(sellerShips.fee)} and you keep {formatUsdGrouped(sellerShips.keep)} before paying for the label.</p>
+
+      <h2>Mercari fees at common prices</h2>
+      <p>The "$8 shipping" columns show buyer-paid shipping, which raises the fee without adding to what you keep.</p>
+      <DataTable caption="Mercari fee and what you keep, by item price, with and without $8 buyer-paid shipping" headers={["Item price", "Fee, no shipping", "You keep", "Fee with $8 shipping", "You keep"]} rows={amountRows} />
+
+      <h2>Buyer fees, payouts, and cancelations</h2>
+      <ul>
+        <li><strong>Buyer Protection fee:</strong> 3.6% of the item price plus buyer-paid shipping, charged to the buyer, along with sales tax.</li>
+        <li><strong>Getting paid:</strong> direct deposit has no fee ($2 if a deposit fails); Instant Pay costs $3 per transfer, up to $600 a month.</li>
+        <li><strong>Cancelations:</strong> frequent cancelations may cost 5% of the item price, up to $25.</li>
+        <li><strong>Not estimated:</strong> label costs you pay, refunds, and returns.</li>
+      </ul>
+
+      <FeeRuleDetails calculatorId="mercari" />
+
+      <FaqSection entries={faq} />
+
+      <EmbedSnippet toolId={tool.id} />
+
+      <h2>Sources</h2>
+      <ul class="text-base">{sources.map((source) => <li><a href={source.url} rel="noopener">{source.title}</a></li>)}</ul>
+      <p class="text-sm text-ink/60">Mercari's pages were reviewed on the date shown at the top of this page. MathMyRate is not affiliated with Mercari. See <a href="/methodology/">how the numbers are made</a> and the <a href="/changelog/">changelog</a>.</p>
+    </article>
+    <RelatedTools current={tool.id} />
+  </main>
+</Layout>

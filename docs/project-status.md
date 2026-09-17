@@ -624,6 +624,52 @@ No real screen reader was run: controlling VoiceOver from a script needs a
 system setting to be changed. The live region checks record what each region
 would announce.
 
+### Reseller fee calculators (2026-09-17)
+
+Branch `feat/reseller-fees`, built on `feat/a11y-performance` with
+`feat/creator-fee-titles` merged in:
+
+- `/fees/depop-fee-calculator/`: no US selling fee; 3.3% + $0.45 processing
+  on the item price, shipping, and sales tax.
+- `/fees/poshmark-fee-calculator/`: $2.95 under $15 and 20% from $15, under
+  Fee Policy version 1.7, which puts exactly $15.00 in the 20% band.
+- `/fees/mercari-fee-calculator/`: 10% of the item price plus buyer-paid
+  shipping, with no processing fee, from January 6, 2025.
+- `/fees/facebook-marketplace-fee-calculator/`: 10% with a $0.80 minimum on
+  shipped checkout orders, charged on the sale price, shipping, and tax.
+- Every fee rule was read on the platform's own live pages on 2026-09-17. Facebook's
+  Help Center is not reachable from this location, so the Facebook rule comes
+  from Meta's live checkout terms and seller policy.
+- Fee calculator scenarios can list price bands (`bandPresetIds`); the
+  calculator picks the band that covers the amount and, for a target, the
+  cheapest price across bands. The payout calculator uses the same helper.
+- A `shipping` option adds a "Shipping the buyer paid" field: the amount
+  becomes the item price, shipping and tax are added to the fee base, and the
+  shipping is not counted as kept because it pays for the label.
+- Fixed while testing: in "keep a target" mode, a target smaller than the
+  sales tax was rejected as "Tax cannot be larger than the amount". That check
+  now applies only when the amount includes the tax. A flat-fee rate label
+  read "0% + $2.95"; it now reads "$2.95".
+
+Checks on 2026-09-17 (preview build at `:4321`; in-app browser, Chrome 153
+over the DevTools protocol, and iOS Safari on the iPhone 17 simulator through
+Argent):
+
+| Check                                                      | Observed result                                                                                                                                                                                                                                                                                                                      |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pnpm run lint`, `pnpm run format:check`                   | Passed                                                                                                                                                                                                                                                                                                                               |
+| `pnpm run check-types`                                     | Passed: 7 of 7 tasks; `astro check` 0 errors                                                                                                                                                                                                                                                                                         |
+| `pnpm run test`                                            | Passed: 160 calculator tests and 122 web tests, including band chaining for every fee scenario                                                                                                                                                                                                                                       |
+| Guard build (`REQUIRE_SITE_URL=true`, no site)             | Failed as intended                                                                                                                                                                                                                                                                                                                   |
+| Site build (`PUBLIC_SITE_URL=https://calculators.example`) | Passed; 95 pages; SEO audit 0 problems                                                                                                                                                                                                                                                                                               |
+| `pnpm run budget`                                          | Passed: largest page 114.8 KB, JavaScript 50.6 KB                                                                                                                                                                                                                                                                                    |
+| Independent calculation, both directions                   | Poshmark 29, Depop 288, Mercari 106, and Facebook Marketplace 288 cases matched, including $14.99/$15.00/$15.06 and $7.99/$8.00/$8.01                                                                                                                                                                                                |
+| Existing calculators                                       | Stripe with tax, both directions (21 cases); Skool and Teachable figures, errors, and copied text unchanged                                                                                                                                                                                                                          |
+| Announcements                                              | All 43 calculator and comparison pages: typing silent; each finished change one status message or one alert                                                                                                                                                                                                                          |
+| Keyboard, copy, reset, print, layout                       | Field order is item price, shipping, tax, sales count, then Update and Reset (Poshmark has no shipping field; Mercari has no tax field); copied text names the item, shipping, and tax; Reset clears shipping; no sideways scroll at 360 px; no console errors                                                                       |
+| Embeds at 360 px                                           | Default heights Depop 1,764, Poshmark 1,460, Mercari 1,594, Facebook Marketplace 1,760 px; with an amount error 1,891, 1,587, 1,721, and 1,887 px, all within the suggested heights. With an error in "keep a target" mode they are 24 to 72 px taller and scroll inside the frame, as a sales count already does in every fee embed |
+| iOS Safari                                                 | Facebook Marketplace: $5 shipping on a $100 item keeps $89.50, with the decimal keypad                                                                                                                                                                                                                                               |
+
 ### Infrastructure and deployment
 
 Alchemy remains the infrastructure owner for the existing Cloudflare Workers,

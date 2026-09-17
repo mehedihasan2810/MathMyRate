@@ -11,6 +11,10 @@ export type FeeCalculatorId =
   | "square"
   | "etsy"
   | "ebay"
+  | "depop"
+  | "poshmark"
+  | "mercari"
+  | "facebook-marketplace"
   | "kickstarter"
   | "patreon"
   | "kofi"
@@ -26,7 +30,14 @@ export type FeeCalculatorId =
 
 export interface FeeScenario {
   readonly id: string;
+  /** The headline rule, shown in summaries. */
   readonly presetId: string;
+  /**
+   * For a rule that changes with the amount, every band's preset, lowest
+   * amounts first. It includes presetId. The calculator picks the band that
+   * covers the amount, so the reader never has to choose one.
+   */
+  readonly bandPresetIds?: readonly string[];
   readonly label: string;
   readonly description: string;
   /** Names the supported scenario above the form. */
@@ -76,6 +87,32 @@ export interface FeeCalculatorConfig {
   readonly scenarios: readonly FeeScenario[];
   /** Wording for the volume field; defaults to monthly sales. */
   readonly volume?: VolumeLabels;
+  /**
+   * For marketplaces that charge their fee on shipping the buyer pays, where
+   * that shipping pays for the label. Adds a shipping field, the amount
+   * becomes the item price, and shipping and tax are added to it. The fee
+   * applies to the whole total, but the shipping is not counted as kept.
+   */
+  readonly shipping?: ShippingLabels;
+  /** Names the amount field when "Amount the customer paid" would mislead. */
+  readonly amountLabels?: AmountLabels;
+}
+
+/** Wording for the amount field in the customer-paid mode. */
+export interface AmountLabels {
+  readonly fieldLabel: string;
+  readonly fieldHelp: string;
+}
+
+/** Wording for the optional shipping field. */
+export interface ShippingLabels {
+  readonly fieldLabel: string;
+  readonly fieldHelp: string;
+}
+
+/** The presets a scenario prices with: its bands, or its single rule. */
+export function scenarioPresetIds(scenario: FeeScenario): readonly string[] {
+  return scenario.bandPresetIds ?? [scenario.presetId];
 }
 
 export const feeCalculators: readonly FeeCalculatorConfig[] = [
@@ -344,6 +381,106 @@ export const feeCalculators: readonly FeeCalculatorConfig[] = [
         description: "Most categories at 12.7%, orders over $10 up to $2,500.",
         note: "Supported scenario: US eBay account with a Basic, Premium, Anchor, or Enterprise Store, one item in an order over $10.00 and up to $2,500.00, in a category charged 12.7%.",
         copyName: "eBay Store sale",
+      },
+    ],
+  },
+  {
+    id: "depop",
+    toolId: "depop-fees",
+    provider: "Depop",
+    formHeading: "Sale details",
+    scenarioLegend: "How was it paid?",
+    panelTone: "navy",
+    taxHelp:
+      "Sales tax on this order. Depop charges its processing fee on the item, shipping, and tax together; this calculator never computes tax.",
+    shipping: {
+      fieldLabel: "Shipping the buyer paid (optional)",
+      fieldHelp: "It pays for the shipping label, so it is not counted as yours.",
+    },
+    scenarios: [
+      {
+        id: "depop-payments",
+        presetId: "depop-us-sale",
+        label: "Depop Payments",
+        description: "No selling fee; 3.3% + 45¢ processing on the whole order.",
+        note: "Supported scenario: US seller paid through Depop Payments, with no selling fee. The processing fee applies to the item price, shipping, and sales tax the buyer paid.",
+        copyName: "Depop sale",
+      },
+    ],
+  },
+  {
+    id: "poshmark",
+    toolId: "poshmark-fees",
+    provider: "Poshmark",
+    formHeading: "Sale details",
+    scenarioLegend: "What sold?",
+    panelTone: "ink",
+    taxHelp: "",
+    amountLabels: {
+      fieldLabel: "Sale price",
+      fieldHelp: "The final order price after offers and discounts, without shipping or tax.",
+    },
+    scenarios: [
+      {
+        id: "one-item",
+        presetId: "poshmark-us-sale",
+        bandPresetIds: ["poshmark-us-sale-under-15", "poshmark-us-sale"],
+        label: "One-item order",
+        description: "$2.95 under $15, and 20% from $15.",
+        note: "Supported scenario: US seller, one-item order. Enter the final order price after offers and discounts, without the buyer's shipping or sales tax.",
+        copyName: "Poshmark sale",
+      },
+    ],
+  },
+  {
+    id: "mercari",
+    toolId: "mercari-fees",
+    provider: "Mercari",
+    formHeading: "Sale details",
+    scenarioLegend: "What sold?",
+    panelTone: "navy",
+    taxHelp: "",
+    shipping: {
+      fieldLabel: "Shipping the buyer paid (optional)",
+      fieldHelp:
+        "Mercari's fee applies to it, but it pays for the label, so it is not counted as yours.",
+    },
+    scenarios: [
+      {
+        id: "sale",
+        presetId: "mercari-us-sale",
+        label: "Listing from January 6, 2025",
+        description: "10% of the item price plus buyer-paid shipping.",
+        note: "Supported scenario: US seller, listing created or updated on or after January 6, 2025. Leave shipping empty if you pay for the label yourself.",
+        copyName: "Mercari sale",
+      },
+    ],
+  },
+  {
+    id: "facebook-marketplace",
+    toolId: "facebook-marketplace-fees",
+    provider: "Facebook Marketplace",
+    formHeading: "Order details",
+    scenarioLegend: "How did it sell?",
+    panelTone: "ink",
+    taxHelp:
+      "Sales tax on this order. Meta charges the selling fee on the sale price, shipping, and tax together; this calculator never computes tax.",
+    shipping: {
+      fieldLabel: "Shipping the buyer paid (optional)",
+      fieldHelp: "Part of the fee base, but it pays for the label, so it is not counted as yours.",
+    },
+    scenarios: [
+      {
+        id: "shipped",
+        presetId: "facebook-marketplace-us-shipped",
+        bandPresetIds: [
+          "facebook-marketplace-us-shipped-minimum",
+          "facebook-marketplace-us-shipped",
+        ],
+        label: "Shipped with checkout",
+        description: "10% of the order total, at least 80¢.",
+        note: "Supported scenario: US individual seller using checkout on Facebook, items shipped together. Local pickup paid outside checkout is not covered.",
+        copyName: "Facebook Marketplace shipped order",
       },
     ],
   },

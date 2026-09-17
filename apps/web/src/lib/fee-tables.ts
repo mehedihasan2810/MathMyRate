@@ -6,7 +6,7 @@ import {
 } from "@MathMyRate/calculators";
 
 import { formatPercentBps, formatUsdGrouped } from "../scripts/calculator-form";
-import { formatCombinedRate } from "./fee-labels";
+import { bandedRateLabel, calculateBandedFees } from "./fee-bands";
 
 /** Sale amounts, in cents, used for the reference tables on fee pages. */
 export const commonSaleAmounts: readonly bigint[] = [
@@ -49,16 +49,20 @@ export function feeRowsByAmount(preset: FeePreset, amounts: readonly bigint[]): 
 
 /** One row per scenario for the same sale: scenario, combined rate, fee, and what you keep. */
 export function scenarioRowsAt(
-  scenarios: readonly { readonly label: string; readonly presetId: string }[],
+  scenarios: readonly {
+    readonly label: string;
+    readonly presetId: string;
+    readonly bandPresetIds?: readonly string[];
+  }[],
   grossCents: bigint,
 ): string[][] {
   return scenarios.map((scenario) => {
-    const preset = requireOfficialPreset(scenario.presetId);
-    const result = calculateFees({ preset, grossCents });
+    const presets = (scenario.bandPresetIds ?? [scenario.presetId]).map(requireOfficialPreset);
+    const result = calculateBandedFees(presets, grossCents);
 
     return [
       scenario.label,
-      formatCombinedRate(preset.components),
+      bandedRateLabel(presets),
       formatUsdGrouped(result.feeCents),
       formatUsdGrouped(result.sellerProceedsCents),
     ];

@@ -1,16 +1,12 @@
-import {
-  calculateFees,
-  type FeePreset,
-  getFeePreset,
-  GrossOutOfRangeError,
-  grossUpFees,
-} from "@MathMyRate/calculators";
+import { type FeePreset, getFeePreset, GrossOutOfRangeError } from "@MathMyRate/calculators";
 
 import {
   findFeeCalculator,
   type FeeCalculatorConfig,
   type FeeScenario,
+  scenarioPresetIds,
 } from "../data/fee-calculators";
+import { calculateBandedFees, grossUpBandedFees } from "../lib/fee-bands";
 import {
   type CalculationTrigger,
   focusProblemField,
@@ -103,25 +99,54 @@ export function mountFeeCalculator(): void {
   const scenarioAcceptsTax = (): boolean =>
     requirePreset(currentScenario().presetId).taxMode === "caller-supplied";
 
+  // With a shipping field, the amount is the item price and shipping and tax are added to it.
+  const itemised = config.shipping !== undefined;
+
+  const amountHelp = (net: boolean, acceptsTax: boolean): string => {
+    if (!net && config.amountLabels) return config.amountLabels.fieldHelp;
+
+    if (itemised) {
+      return net
+        ? `What should reach you after ${config.provider}'s fee, with shipping${acceptsTax ? " and tax" : ""} paid by the buyer.`
+        : `The item's price, before shipping${acceptsTax ? " and sales tax" : ""}.`;
+    }
+
+    return net
+      ? `What should reach you after ${config.provider}'s fee${acceptsTax ? " and any tax you collect" : ""}.`
+      : acceptsTax
+        ? "The full amount charged, including any tax."
+        : "The customer's full order amount.";
+  };
+
   const applyText = (): void => {
     const scenario = currentScenario();
     const acceptsTax = scenarioAcceptsTax();
     const net = currentMode() === "net";
 
     setText("scenario-note", scenario.note);
-    setText("amount-label", net ? "Amount you want to keep" : "Amount the customer paid");
     setText(
-      "amount-help",
+      "amount-label",
       net
-        ? `What should reach you after ${config.provider}'s fee${acceptsTax ? " and any tax you collect" : ""}.`
-        : acceptsTax
-          ? "The full amount charged, including any tax."
-          : "The customer's full order amount.",
+        ? "Amount you want to keep"
+        : (config.amountLabels?.fieldLabel ??
+            (itemised ? "Item price" : "Amount the customer paid")),
     );
-    setText("primary-label", net ? "Charge the customer" : "You keep from this sale");
+    setText("amount-help", amountHelp(net, acceptsTax));
+    setText(
+      "primary-label",
+      net ? (itemised ? "List the item at" : "Charge the customer") : "You keep from this sale",
+    );
     requireHtmlElement("keep-row").hidden = !net;
 
     if (taxField) taxField.hidden = !acceptsTax;
+  };
+
+  const readShipping = (): bigint => {
+    if (!itemised) return 0n;
+
+    const value = requireHtmlInput("shippingPaid").value.trim();
+
+    return value.length === 0 ? 0n : usdToCents(value, "shippingPaid");
   };
 
   const readTax = (): bigint => {
@@ -139,11 +164,14 @@ export function mountFeeCalculator(): void {
       "net-result",
       "tax-result",
       "keep-result",
+      "shipping-result",
+      "total-result",
     ]) {
       setText(id, "—");
     }
 
     requireHtmlElement("tax-row").hidden = true;
+    requireHtmlElement("shipping-row").hidden = true;
     renderLineItems([]);
     renderVolume(null, null);
     markResultsCurrent(panel, []);
@@ -153,31 +181,39 @@ export function mountFeeCalculator(): void {
 
   const calculate = (trigger: CalculationTrigger): void => {
     const scenario = currentScenario();
-    const preset = requirePreset(scenario.presetId);
+    const presets = scenarioPresetIds(scenario).map(requirePreset);
     const mode = currentMode();
 
     try {
       const amount = usdToCents(requireHtmlInput("amount").value, "amount");
+      const shipping = readShipping();
       const tax = readTax();
 
-      if (tax > amount) {
+      // Only a customer-paid amount includes the tax; a target to keep does not.
+      if (!itemised && mode === "received" && tax > amount) {
         throw new InputProblem("taxIncluded", "Tax cannot be larger than the amount.");
+      }
+
+      if (itemised && mode === "received" && amount === 0n) {
+        throw new InputProblem("amount", "Enter an item price above zero.");
       }
 
       const salesPerMonth = readSalesPerMonth();
 
+      // The buyer's shipping is part of the fee base but pays for the label, so it is never kept.
       const result =
         mode === "received"
-          ? calculateFees({ preset, grossCents: amount, taxCents: tax })
-          : grossUpFees({ preset, targetProceedsCents: amount, taxCents: tax });
+          ? calculateBandedFees(presets, amount + shipping + (itemised ? tax : 0n), tax)
+          : grossUpBandedFees(presets, amount + shipping, tax);
 
-      setText(
-        "fee-result",
-        formatUsdGrouped(mode === "received" ? result.sellerProceedsCents : result.grossCents),
-      );
+      const keptCents = result.sellerProceedsCents - shipping;
+      const listPriceCents = result.grossCents - shipping - (itemised ? tax : 0n);
+
+      setText("fee-result", formatUsdGrouped(mode === "received" ? keptCents : listPriceCents));
       setText("fee-total-result", formatUsdGrouped(result.feeCents));
       setText("net-result", formatUsdGrouped(result.netAfterFeesCents));
-      renderLineItems(preset.components.length > 1 ? result.lineItems : []);
+      setText("total-result", formatUsdGrouped(result.grossCents));
+      renderLineItems(result.lineItems.length > 1 ? result.lineItems : []);
 
       const taxRow = requireHtmlElement("tax-row");
 
@@ -185,23 +221,41 @@ export function mountFeeCalculator(): void {
 
       if (result.taxCents > 0n) setText("tax-result", formatUsdGrouped(result.taxCents));
 
-      if (mode === "net") setText("keep-result", formatUsdGrouped(result.sellerProceedsCents));
+      requireHtmlElement("shipping-row").hidden = shipping === 0n;
 
-      const volumeText = renderVolume(result, salesPerMonth, config.volume);
+      if (shipping > 0n) setText("shipping-result", formatUsdGrouped(shipping));
+
+      if (mode === "net") setText("keep-result", formatUsdGrouped(keptCents));
+
+      const volumeText = renderVolume(
+        {
+          grossCents: result.grossCents,
+          taxCents: result.taxCents,
+          feeCents: result.feeCents,
+          sellerProceedsCents: keptCents,
+        },
+        salesPerMonth,
+        config.volume,
+      );
+
       const reviewed = result.checkedOn ?? "date not recorded";
+      const shippingText = shipping > 0n ? ` with ${formatUsdGrouped(shipping)} shipping` : "";
 
-      const saleText =
-        mode === "received"
-          ? `${scenario.copyName} of ${formatUsdGrouped(result.grossCents)}: ${formatUsdGrouped(result.feeCents)} fee, you keep ${formatUsdGrouped(result.sellerProceedsCents)}.`
+      const saleText = itemised
+        ? mode === "received"
+          ? `${scenario.copyName}, item ${formatUsdGrouped(amount)}${shippingText}${tax > 0n ? ` and ${formatUsdGrouped(tax)} tax` : ""}: ${formatUsdGrouped(result.feeCents)} fee, you keep ${formatUsdGrouped(keptCents)}.`
+          : `To keep ${formatUsdGrouped(amount)} from a ${scenario.copyName}${shippingText}, list the item at ${formatUsdGrouped(listPriceCents)}.`
+        : mode === "received"
+          ? `${scenario.copyName} of ${formatUsdGrouped(result.grossCents)}: ${formatUsdGrouped(result.feeCents)} fee, you keep ${formatUsdGrouped(keptCents)}.`
           : `To keep ${formatUsdGrouped(amount)} from a ${scenario.copyName}, charge ${formatUsdGrouped(result.grossCents)}.`;
 
       latestCopy = `${saleText}${volumeText} Estimate; source reviewed ${reviewed}.`;
       markResultsCurrent(panel, [copyButton]);
 
       const lossNote =
-        mode !== "received" || result.sellerProceedsCents > 0n
+        mode !== "received" || keptCents > 0n
           ? ""
-          : result.sellerProceedsCents === 0n
+          : keptCents === 0n
             ? "The fees take this whole payment, so nothing reaches you."
             : "The fees are more than this payment, so you would lose money on it.";
 

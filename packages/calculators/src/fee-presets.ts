@@ -179,6 +179,36 @@ const stripePayouts = {
   title: "Receive payouts | Stripe Documentation",
 };
 
+const depopSellerFees = {
+  url: "https://depophelp.zendesk.com/hc/en-gb/articles/360001791127-Seller-fees-and-charges",
+  title: "Seller fees and charges – Depop Help Centre",
+};
+
+const depopMarketplaceFee = {
+  url: "https://depophelp.zendesk.com/hc/en-gb/articles/21752555753361-What-is-the-Marketplace-fee",
+  title: "What is the Marketplace fee? – Depop Help Centre",
+};
+
+const mercariFees = {
+  url: "https://www.mercari.com/us/help_center/article/169/",
+  title: "Fees on Mercari | Mercari Help",
+};
+
+const poshmarkFeePolicy = {
+  url: "https://poshmark.com/fee_policy",
+  title: "Fee Policy | Poshmark Legal Center",
+};
+
+const facebookCheckoutTerms = {
+  url: "https://www.facebook.com/legal/checkout_terms",
+  title: "Onsite Checkout Payments Features Terms and Conditions | Facebook",
+};
+
+const facebookSellerPolicy = {
+  url: "https://www.facebook.com/legal/merchant_policies",
+  title: "Facebook Marketplace Seller Protection Policy | Facebook",
+};
+
 const stripeBillingPricing = {
   url: "https://stripe.com/billing/pricing",
   title: "Stripe Billing | Pricing",
@@ -2416,6 +2446,198 @@ const officialPresetRecords: FeePreset[] = [
     exclusions: [
       "Instant Payouts outside the US, which cost 1% or 1.5% depending on the country, and currency conversion.",
       "Instant Payouts that Connect platforms offer to connected accounts, where the platform can add its own fee.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "depop-us-sale",
+    label: "Depop sale by a US seller",
+    provider: "depop",
+    taxMode: "caller-supplied",
+    paymentProduct: "Depop Payments",
+    channel: "depop.com marketplace",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "depop-processing",
+        label: "Payment processing fee",
+        rateBps: 330,
+        fixedCents: 45,
+        base: "gross",
+      },
+    ],
+    checkedOn: "2026-09-17",
+    sources: [depopSellerFees, depopMarketplaceFee],
+    assumptions: [
+      "US seller paid through Depop Payments. Depop charges no selling fee to sellers based in the US, and a payment processing fee of 3.3% + $0.45 per order.",
+      "The amount is what the buyer paid for the item, shipping, and sales tax, which is the base Depop names for the processing fee. The Marketplace fee the buyer pays is not part of the amount.",
+      "With a Depop shipping label the buyer's shipping pays for the label. A seller who ships another way pays the carrier separately, which this estimate does not subtract.",
+      "The estimator rounds the fee to cents; Depop's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "The buyer's Marketplace fee, which Depop charges buyers and whose exact rate shows only at checkout, and optional boosting fees.",
+      "Sellers outside the US, who pay different fees, refunds (Depop returns its seller fees automatically), and shipping costs a seller pays directly.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "mercari-us-sale",
+    label: "Mercari sale by a US seller",
+    provider: "mercari",
+    taxMode: "zero-only",
+    paymentProduct: "Mercari selling fee",
+    channel: "mercari.com marketplace",
+    tierPolicy: "not-applicable",
+    components: [
+      {
+        id: "mercari-selling",
+        label: "Selling fee",
+        rateBps: 1000,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    checkedOn: "2026-09-17",
+    sources: [mercariFees],
+    assumptions: [
+      "US seller on Mercari, where a 10% selling fee applies to the item price plus buyer-paid shipping for listings created or updated on or after January 6, 2025.",
+      "The amount is the item price plus any shipping the buyer pays. Sales tax is charged to the buyer separately and is not part of the fee.",
+      "Mercari charges sellers no separate payment processing fee under this fee structure.",
+      "The estimator rounds the fee to cents; Mercari's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "The 3.6% Buyer Protection fee and sales tax, which buyers pay, and shipping labels a seller pays for.",
+      "The seller cancelation fee, the $3 Instant Pay fee, refunds, and returns.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "poshmark-us-sale-under-15",
+    label: "Poshmark sale under $15",
+    provider: "poshmark",
+    taxMode: "zero-only",
+    paymentProduct: "Poshmark selling fee",
+    channel: "poshmark.com marketplace",
+    tierPolicy: "pre-threshold",
+    components: [
+      {
+        id: "poshmark-selling",
+        label: "Poshmark fee",
+        rateBps: 0,
+        fixedCents: 295,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { maxCents: 1_499 },
+    checkedOn: "2026-09-17",
+    sources: [poshmarkFeePolicy],
+    assumptions: [
+      "US seller on Poshmark under Fee Policy version 1.7, effective November 25, 2024: a flat $2.95 for sales under $15, and 20% for sales of $15 and above.",
+      "The final order price is under $15.00, so the fee is the flat $2.95.",
+      "The amount is the final order price after offers and seller discounts, for a one-item order. The buyer pays shipping and sales tax, which are not part of the fee.",
+      "Poshmark lists no separate payment processing fee for US sellers.",
+      "The estimator rounds the fee to cents; Poshmark's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Sales of $15.00 or more, a separate scenario, and sales under $2.95, where the fee is more than the sale.",
+      "Shipping discounts a seller offers, overweight label charges, the Texas Seller Fee Tax, cash-out fees, bundles, partial refunds, and cancellations.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "poshmark-us-sale",
+    label: "Poshmark sale of $15 or more",
+    provider: "poshmark",
+    taxMode: "zero-only",
+    paymentProduct: "Poshmark selling fee",
+    channel: "poshmark.com marketplace",
+    tierPolicy: "post-threshold",
+    components: [
+      {
+        id: "poshmark-selling",
+        label: "Poshmark fee",
+        rateBps: 2000,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 1_500 },
+    checkedOn: "2026-09-17",
+    sources: [poshmarkFeePolicy],
+    assumptions: [
+      "US seller on Poshmark under Fee Policy version 1.7, effective November 25, 2024: a flat $2.95 for sales under $15, and 20% for sales of $15 and above.",
+      "The final order price is $15.00 or more, so the fee is 20%. Fee Policy version 1.7 puts exactly $15.00 in this band; older notices on the same page put $15.00 in the flat-fee band, and this estimate follows the current version.",
+      "The amount is the final order price after offers and seller discounts, for a one-item order. The buyer pays shipping and sales tax, which are not part of the fee.",
+      "Poshmark lists no separate payment processing fee for US sellers.",
+      "The estimator rounds the fee to cents; Poshmark's published pages do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Sales under $15.00, a separate scenario.",
+      "Shipping discounts a seller offers, overweight label charges, the Texas Seller Fee Tax, cash-out fees, bundles, partial refunds, and cancellations.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "facebook-marketplace-us-shipped-minimum",
+    label: "Facebook Marketplace shipped order of $8 or less",
+    provider: "facebook-marketplace",
+    taxMode: "caller-supplied",
+    paymentProduct: "Facebook Marketplace selling fee",
+    channel: "checkout on Facebook, shipped",
+    tierPolicy: "pre-threshold",
+    components: [
+      {
+        id: "facebook-selling",
+        label: "Minimum selling fee",
+        rateBps: 0,
+        fixedCents: 80,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { maxCents: 800 },
+    checkedOn: "2026-09-17",
+    sources: [facebookCheckoutTerms, facebookSellerPolicy],
+    assumptions: [
+      "US individual seller using checkout on Facebook Marketplace, where Meta's checkout terms (last modified May 26, 2026) set the selling fee at 10% with a minimum fee of $0.80.",
+      "The transaction is $8.00 or less, where 10% is at most $0.80, so the $0.80 minimum is the fee.",
+      "The amount is the whole transaction: the sale price, the shipping the buyer pays, and sales tax, which is the base Meta's terms name. Goods shipped together count as one transaction.",
+      "The estimator rounds the fee to cents; Meta's published terms do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Fees a payment provider may charge separately, which Meta's terms mention without an amount, and any tax charged on the selling fee.",
+      "Shipping label costs, the $20 chargeback fee, refunds (Meta's terms call selling fees non-refundable), local pickup and payments made outside checkout, and Shops.",
+    ],
+    status: "supported",
+  }),
+  official({
+    id: "facebook-marketplace-us-shipped",
+    label: "Facebook Marketplace shipped order over $8",
+    provider: "facebook-marketplace",
+    taxMode: "caller-supplied",
+    paymentProduct: "Facebook Marketplace selling fee",
+    channel: "checkout on Facebook, shipped",
+    tierPolicy: "post-threshold",
+    components: [
+      {
+        id: "facebook-selling",
+        label: "Selling fee",
+        rateBps: 1000,
+        fixedCents: 0,
+        base: "gross",
+      },
+    ],
+    grossRangeCents: { minCents: 800 },
+    checkedOn: "2026-09-17",
+    sources: [facebookCheckoutTerms, facebookSellerPolicy],
+    assumptions: [
+      "US individual seller using checkout on Facebook Marketplace, where Meta's checkout terms (last modified May 26, 2026) set the selling fee at 10% with a minimum fee of $0.80.",
+      "The transaction is $8.00 or more, where 10% is at least $0.80.",
+      "The amount is the whole transaction: the sale price, the shipping the buyer pays, and sales tax, which is the base Meta's terms name. Goods shipped together count as one transaction.",
+      "The estimator rounds the fee to cents; Meta's published terms do not establish a rounding policy.",
+    ],
+    exclusions: [
+      "Fees a payment provider may charge separately, which Meta's terms mention without an amount, and any tax charged on the selling fee.",
+      "Shipping label costs, the $20 chargeback fee, refunds (Meta's terms call selling fees non-refundable), local pickup and payments made outside checkout, and Shops.",
     ],
     status: "supported",
   }),

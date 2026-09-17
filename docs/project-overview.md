@@ -59,6 +59,10 @@ outside launch scope.
 | `/fees/square-fee-calculator/`                  | Square fees by plan and payment channel                     |
 | `/fees/etsy-fee-calculator/`                    | Etsy transaction, processing, and listing fees              |
 | `/fees/ebay-fee-calculator/`                    | eBay final value and per-order fees by category             |
+| `/fees/depop-fee-calculator/`                   | Depop's processing fee on a US sale, with no selling fee    |
+| `/fees/poshmark-fee-calculator/`                | Poshmark's $2.95 or 20% fee and seller earnings             |
+| `/fees/mercari-fee-calculator/`                 | Mercari's 10% selling fee with buyer-paid shipping          |
+| `/fees/facebook-marketplace-fee-calculator/`    | Facebook Marketplace's selling fee on shipped orders        |
 | `/fees/upwork-fee-calculator/`                  | Upwork service fee on a contract and withdrawal fees        |
 | `/fees/fiverr-fee-calculator/`                  | Fiverr's seller commission and withdrawal fees              |
 | `/fees/kickstarter-fee-calculator/`             | Kickstarter and processing fees per pledge and per campaign |
